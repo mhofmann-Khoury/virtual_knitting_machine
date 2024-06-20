@@ -1,6 +1,7 @@
 from knit_graphs.Loop import Loop
-from knitting_errors.machine_knitting_utils.knitting_machine_exceptions.Needle_Exception import Slider_Loop_Exception, Xfer_Dropped_Loop_Exception
-from virtual_knitting_machine.machine_knitting_utils.machine_components.needles.Needle import Needle
+
+from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import Slider_Loop_Exception, Xfer_Dropped_Loop_Exception
+from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 
 class Machine_Knit_Loop(Loop):

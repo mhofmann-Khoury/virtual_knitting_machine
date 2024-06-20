@@ -1,8 +1,12 @@
+"""Module containing the Machine Knit Yarn Class"""
+import warnings
+
 from knit_graphs.Yarn import Yarn, Yarn_Properties
-from knitting_errors.machine_knitting_utils.knitting_machine_exceptions.Yarn_Carrier_Error_State import Use_Cut_Yarn_Exception
-from virtual_knitting_machine.knitting_warnings.Yarn_Carrier_System_Warning import Long_Float_Error
-from virtual_knitting_machine.machine_knitting_utils.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_knitting_utils.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+
+from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Use_Cut_Yarn_Exception
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Long_Float_Warning
+from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 
 class Machine_Knit_Yarn(Yarn):
@@ -86,7 +90,7 @@ class Machine_Knit_Yarn(Yarn):
             raise Use_Cut_Yarn_Exception(self.carrier.carrier_id)
         last_needle = self.last_needle()
         if last_needle is not None and abs(holding_needle.position - last_needle.position) > self.MAX_FLOAT_LENGTH:
-            raise Long_Float_Error(self.carrier.carrier_id, last_needle, holding_needle)
+            warnings.warn(Long_Float_Warning(self.carrier.carrier_id, last_needle, holding_needle))
         loop = Machine_Knit_Loop(self._next_loop_id(knit_graph), self, holding_needle)
         self.add_loop_to_end(knit_graph, loop)
         return loop

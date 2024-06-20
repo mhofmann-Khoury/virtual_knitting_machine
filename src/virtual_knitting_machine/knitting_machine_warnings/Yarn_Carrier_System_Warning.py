@@ -61,6 +61,6 @@ class Duplicate_Carriers_In_Set(Yarn_Carrier_Warning):
         super().__init__(carrier_id, f"Removed last duplicate {carrier_id} form {carrier_set}", ignore_instruction=False)
 
 
-class Long_Float_Error(Yarn_Carrier_Warning):
+class Long_Float_Warning(Yarn_Carrier_Warning):
     def __init__(self, carrier_id: int, prior_needle, next_needle):
         super().__init__(carrier_id, f"Long float formed between {prior_needle} and {next_needle}.", ignore_instruction=False)
