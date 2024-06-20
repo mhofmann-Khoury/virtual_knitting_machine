@@ -1,0 +1,2 @@
+networkx~=3.2.1
+knit-graphs~=0.0.1
