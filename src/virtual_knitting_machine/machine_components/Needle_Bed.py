@@ -1,6 +1,7 @@
 """Representation of a needle bed on a machine"""
 from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import Non_Existent_Needle_Exception
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Sheet_Needle import Sheet_Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
@@ -92,7 +93,7 @@ class Needle_Bed:
         needle.drop()
         return loops
 
-    def __getitem__(self, item: Machine_Knit_Loop | Needle | slice) -> Needle | list[Needle] | None:
+    def __getitem__(self, item: Machine_Knit_Loop | Needle | slice | Sheet_Needle) -> Needle | list[Needle] | None:
         """
         Gets an indexed needle on the bed.
         :param item: The needle position to get a loop from.
@@ -102,7 +103,7 @@ class Needle_Bed:
             return self.needles[item]
         elif isinstance(item, Machine_Knit_Loop):
             return self.get_needle_of_loop(item)
-        elif isinstance(item, Needle):
+        elif isinstance(item, Sheet_Needle) or isinstance(item, Needle):
             if item.position < 0 or item.position >= self.needle_count:
                 raise Non_Existent_Needle_Exception(item)
             if item.is_slider:

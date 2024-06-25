@@ -1,6 +1,5 @@
 """Module containing the Knitting Machine class."""
 import warnings
-from typing import Iterator
 
 from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.artin_wale_braids.Crossing_Direction import Crossing_Direction
@@ -334,11 +333,11 @@ class Knitting_Machine:
         self.carriage.transferring = False
         self.carriage.move(direction, needle.position)
 
-    def front_needles(self) -> Iterator[Needle]:
+    def front_needles(self) -> list[Needle]:
         """
         :return: iterator over the front needles.
         """
-        return iter(self.front_bed)
+        return self.front_bed.needles
 
     def front_sliders(self) -> list[Slider_Needle]:
         """
@@ -346,11 +345,11 @@ class Knitting_Machine:
         """
         return self.front_bed.sliders
 
-    def back_needles(self) -> Iterator[Slider_Needle]:
+    def back_needles(self) -> list[Needle]:
         """
         :return: iterator over the back bed needles.
         """
-        return iter(self.back_bed)
+        return self.back_bed.needles
 
     def back_sliders(self) -> list[Slider_Needle]:
         """
