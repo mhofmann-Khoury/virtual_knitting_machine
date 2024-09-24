@@ -195,6 +195,9 @@ class Needle:
     def __int__(self):
         return self.position
 
+    def __index__(self):
+        return int(self)
+
     def at_racking_comparison(self, other, rack: int = 0, all_needle_racking: bool = False) -> int:
         """
         A comparison value between self and another needle at a given racking.

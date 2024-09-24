@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "virtual-knitting-machine"
+dynamic = ["version"]
+description = ''
+homepage = "https://github.com/mhofmann-Khoury/virtual_knitting_machine"
+repository = "https://github.com/mhofmann-Khoury/virtual_knitting_machine"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+keywords = ["knit", "machine knit", "textile", "Northeastern", "ACT Lab", "fabrication"]
+authors = [
+  { name = "Megan Hofmann", email = "m.hofmann@northeastern.edu" },
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Natural Language :: English",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Scientific/Engineering",
+]
+dependencies = [
+  "networkx~=3.2.1",
+  "knit-graphs~=0.0.1",
+]
+
+[project.urls]
+Documentation = "https://github.com/m.hofmann/virtual-knitting-machine#readme"
+Issues = "https://github.com/m.hofmann/virtual-knitting-machine/issues"
+Source = "https://github.com/m.hofmann/virtual-knitting-machine"
+
+[tool.hatch.version]
+path = "src/virtual_knitting_machine/__about__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "virtual_knitting_machine/*.py",
+]
+exclude = [
+  "/tests",
+  "requirements.txt",
+  ".gitignore",
+]
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/virtual_knitting_machine tests}"
+
+

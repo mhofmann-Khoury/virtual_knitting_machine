@@ -32,6 +32,7 @@ class Knitting_Machine:
             knit_graph = Knit_Graph()
         self.knit_graph: Knit_Graph = knit_graph
 
+
     @property
     def carrier_system(self) -> Yarn_Insertion_System:
         """

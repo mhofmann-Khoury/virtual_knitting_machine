@@ -11,7 +11,7 @@ class Carriage:
         Keep track of the Carriage's position and possible movements.
     """
 
-    def __init__(self, knitting_machine, right_needle_position: int, left_needle_position: int = 0, last_carriage_direction: Carriage_Pass_Direction = Carriage_Pass_Direction.Rightward):
+    def __init__(self, knitting_machine, right_needle_position: int, left_needle_position: int = 0, last_carriage_direction: Carriage_Pass_Direction = Carriage_Pass_Direction.Leftward):
         self.knitting_machine = knitting_machine
         assert left_needle_position < right_needle_position, f"Carriage must have range of motion."
         self._left_needle_position: int = left_needle_position
