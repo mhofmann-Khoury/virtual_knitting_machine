@@ -32,7 +32,6 @@ class Knitting_Machine:
             knit_graph = Knit_Graph()
         self.knit_graph: Knit_Graph = knit_graph
 
-
     @property
     def carrier_system(self) -> Yarn_Insertion_System:
         """
@@ -132,9 +131,9 @@ class Knitting_Machine:
          That is, at racking R, back needle index B is aligned to front needle index B+R.
          Needles are considered aligned if they can transfer.
          That is, at racking 2, it is possible to transfer from f3 to b1.
-         F = B + R
-         R = F - B
-         B = F - R
+         F = B + R.
+         R = F - B.
+         B = F - R.
         :param needle: the needle to find the aligned needle to.
         :param aligned_slider: If true, ill return a slider needle.
         :return: Needle aligned with the given needle at current racking.
@@ -228,7 +227,7 @@ class Knitting_Machine:
         self.carriage.move(direction, needle.position)
         return new_loops
 
-    def knit(self, carrier_set: Yarn_Carrier_Set, needle: Needle, direction: Carriage_Pass_Direction) -> list[Machine_Knit_Loop]:
+    def knit(self, carrier_set: Yarn_Carrier_Set, needle: Needle, direction: Carriage_Pass_Direction) -> tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]:
         """
         Form new loops from the carrier set by pulling them through all loops on the given Needle.
         Drop the needles currently on the old needle.
@@ -236,7 +235,8 @@ class Knitting_Machine:
         :param direction: The direction to knit in.
         :param carrier_set: Set of yarns to make loops with.
         :param needle: Needle to knit on.
-        :return: List of new loops made by knitting.
+        :return: List of loops stitched through and dropped of needle by knitting process.
+            List of loops formed in the knitting process.
         """
         needle = self[needle]
         if not needle.has_loops:
@@ -249,7 +249,7 @@ class Knitting_Machine:
         for parent in parent_loops:  # todo: ensure order is correct for both needle bed sides
             for child in child_loops:
                 self.knit_graph.connect_loops(parent, child, needle.pull_direction)
-        return child_loops
+        return parent_loops, child_loops
 
     def drop(self, needle: Needle) -> list[Machine_Knit_Loop]:
         """

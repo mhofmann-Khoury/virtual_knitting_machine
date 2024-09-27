@@ -1,3 +1,4 @@
+"""Module containing the Machine Knit Loop Class"""
 from knit_graphs.Loop import Loop
 
 from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import Slider_Loop_Exception, Xfer_Dropped_Loop_Exception
@@ -5,7 +6,9 @@ from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 
 class Machine_Knit_Loop(Loop):
-
+    """
+    An extension of the loop structure to capture information about the machine knitting process that created it.
+    """
     def __init__(self, loop_id: int, yarn, source_needle: Needle):
         super().__init__(loop_id, yarn)
         self.needle_history: list[Needle | None] = [source_needle]
@@ -19,6 +22,16 @@ class Machine_Knit_Loop(Loop):
         :return: The needle currently holding this loop or None if not on a needle.
         """
         return self.needle_history[-1]
+
+    @property
+    def last_needle(self) -> Needle:
+        """
+        :return: The last needle that held this loop before it was dropped.
+        """
+        for n in reversed(self.needle_history):
+            if n is not None:
+                return n
+        assert False, f"Machine knit loops must have at least a source needle."
 
     @property
     def on_needle(self) -> bool:
@@ -35,9 +48,9 @@ class Machine_Knit_Loop(Loop):
         return not self.on_needle
 
     @property
-    def source_needle(self) -> Needle | None:
+    def source_needle(self) -> Needle:
         """
-        :return: The needle this loop was created on or None if not on a needle
+        :return: The needle this loop was created on.
         """
         return self.needle_history[0]
 
