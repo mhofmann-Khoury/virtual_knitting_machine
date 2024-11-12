@@ -31,6 +31,8 @@ class Yarn_Carrier_Set:
                 duplicates.add(c)
                 self._carrier_ids.append(c)
 
+    #todo: Add position property to get position of the carrier set
+
     def get_carriers(self, carrier_system) -> list[Yarn_Carrier]:
         """
         :param carrier_system: carrier system referenced by set

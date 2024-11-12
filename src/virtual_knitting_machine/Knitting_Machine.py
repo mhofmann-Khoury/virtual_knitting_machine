@@ -4,6 +4,7 @@ import warnings
 from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.artin_wale_braids.Crossing_Direction import Crossing_Direction
 
+from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Change_Active_Carrier_System_Exception
 from virtual_knitting_machine.knitting_machine_exceptions.racking_errors import Max_Rack_Exception
 from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import Knit_on_Empty_Needle_Warning
@@ -19,18 +20,25 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop i
 
 class Knitting_Machine:
     """A virtual representation of a V-Bed WholeGarment knitting machine"""
-    MAX_RACK = 4
 
-    def __init__(self, needle_count: int = 540, carrier_count: int = 10, knit_graph: Knit_Graph | None = None):
-        self.front_bed: Needle_Bed = Needle_Bed(is_front=True, needle_count=needle_count)
-        self.back_bed: Needle_Bed = Needle_Bed(is_front=False, needle_count=needle_count)
-        self._carrier_system: Yarn_Insertion_System = Yarn_Insertion_System(self, carrier_count)
+    def __init__(self, machine_specification=Knitting_Machine_Specification(), knit_graph: Knit_Graph | None = None):
+        self.machine_specification = machine_specification
+        self.front_bed: Needle_Bed = Needle_Bed(is_front=True, needle_count=self.machine_specification.needle_count)
+        self.back_bed: Needle_Bed = Needle_Bed(is_front=False, needle_count=self.machine_specification.needle_count)
+        self._carrier_system: Yarn_Insertion_System = Yarn_Insertion_System(self, self.machine_specification.carrier_count)
         self.carriage: Carriage = Carriage(self, self.needle_count - 1)
         self._rack: int = 0
         self._all_needle_rack: bool = False
         if knit_graph is None:
             knit_graph = Knit_Graph()
         self.knit_graph: Knit_Graph = knit_graph
+
+    @property
+    def max_rack(self) -> int:
+        """
+        :return: The maximum distance that the machine can rack.
+        """
+        return self.machine_specification.maximum_rack
 
     @property
     def carrier_system(self) -> Yarn_Insertion_System:
@@ -86,8 +94,8 @@ class Knitting_Machine:
 
     @rack.setter
     def rack(self, new_rack: int):
-        if abs(new_rack) > Knitting_Machine.MAX_RACK:
-            raise Max_Rack_Exception(new_rack, Knitting_Machine.MAX_RACK)
+        if abs(new_rack) > self.max_rack:
+            raise Max_Rack_Exception(new_rack, self.max_rack)
         self._rack = int(new_rack)
         self._all_needle_rack = abs(new_rack - int(new_rack)) != 0.0
 
