@@ -22,7 +22,7 @@ class Yarn_Carrier:
         if yarn is not None:
             self._yarn = yarn
         elif yarn_properties is None:
-            self.yarn = Yarn_Properties.default_yarn()
+            self.yarn = Yarn_Properties()
         else:
             self.yarn = yarn_properties
 

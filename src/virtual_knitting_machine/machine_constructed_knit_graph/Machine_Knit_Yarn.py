@@ -14,7 +14,7 @@ class Machine_Knit_Yarn(Yarn):
 
     def __init__(self, carrier, properties: Yarn_Properties | None, instance: int = 0):
         if properties is None:
-            properties = Yarn_Properties.default_yarn()
+            properties = Yarn_Properties()
         properties.name = f"{instance}_Yarn on c{carrier.carrier_id}"
         super().__init__(properties)
         self._instance: int = instance
@@ -57,13 +57,17 @@ class Machine_Knit_Yarn(Yarn):
         self._carrier = None
         return Machine_Knit_Yarn(self.carrier, self.properties, instance=self._instance + 1)
 
+    @property
+    def last_loop(self) -> Machine_Knit_Loop | None:
+        assert isinstance(self._last_loop, Machine_Knit_Loop)
+        return self._last_loop
+
     def last_needle(self) -> Needle | None:
         """
         :return: The needle that holds the loop closest to the end of the yarn or None if the yarn has been dropped entirely
         """
         if self.last_loop is None:
             return None
-        assert isinstance(self.last_loop, Machine_Knit_Loop)
         return self.last_loop.holding_needle
 
     def active_floats(self) -> dict[Machine_Knit_Loop, Machine_Knit_Loop]:
