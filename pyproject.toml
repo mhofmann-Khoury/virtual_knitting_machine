@@ -7,10 +7,9 @@ name = "virtual-knitting-machine"
 dynamic = ["version"]
 description = 'A data structure representing the state and operations of a virtual V-Bed with sliders whole garment knitting machine based on the whole garment knitting machines made by Shima Seiki.'
 homepage = "https://github.com/mhofmann-Khoury/virtual_knitting_machine"
-repository = "https://github.com/mhofmann-Khoury/virtual_knitting_machinehat"
+repository = "https://github.com/mhofmann-Khoury/virtual_knitting_machine"
 readme = "README.md"
 requires-python = ">=3.11"
-license = "MIT"
 keywords = ["knit", "machine knit", "textile", "Northeastern", "ACT Lab", "fabrication"]
 authors = [
   { name = "Megan Hofmann", email = "m.hofmann@northeastern.edu" },

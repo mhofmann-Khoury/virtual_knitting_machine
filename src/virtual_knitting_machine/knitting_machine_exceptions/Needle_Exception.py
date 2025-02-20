@@ -8,11 +8,6 @@ class Needle_Exception(Knitting_Machine_Exception):
         super().__init__(message)
 
 
-class Non_Existent_Needle_Exception(Needle_Exception):
-    def __init__(self, needle):
-        super().__init__(needle, f"No needle {needle}")
-
-
 class Slider_Loop_Exception(Needle_Exception):
     def __init__(self, needle):
         super().__init__(needle, f"Slider {needle} cannot form a new loop")

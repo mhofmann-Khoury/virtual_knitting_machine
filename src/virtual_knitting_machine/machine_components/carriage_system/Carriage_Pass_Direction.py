@@ -116,7 +116,6 @@ class Carriage_Pass_Direction(Enum):
             return Carriage_Pass_Direction.Rightward
 
     def sort_needles(self, needles: Iterable[Needle], racking: int = 0) -> list[Needle]:
-        # Todo Test this function
         """
         Return needles sorted in direction at given racking
         :param racking: The racking to sort needles in. Sets back bed offset
@@ -127,16 +126,6 @@ class Carriage_Pass_Direction(Enum):
         position_sorted = sorted(needles,
                                  key=functools.cmp_to_key(lambda x, y: Needle.needle_at_racking_cmp(x, y, racking, all_needle_racking=True)),
                                  reverse=not ascending)
-        # for i in range(1, len(position_sorted) - 1):
-        #     l = position_sorted[i - 1]
-        #     n = position_sorted[i]
-        #     r = position_sorted[i + 1]
-        #     if l.racked_position_on_front(racking) == n.racked_position_on_front(racking) and (not l.is_front) and n.is_front:
-        #         position_sorted[i - 1] = n
-        #         position_sorted[i] = l
-        #     elif n.racked_position_on_front(racking) == r.racked_position_on_front(racking) and (not n.is_front) and r.is_front:
-        #         position_sorted[i] = r
-        #         position_sorted[i + 1] = n
         return position_sorted
 
     def __str__(self):

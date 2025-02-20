@@ -141,7 +141,7 @@ class Carriage:
             # raise Carriage_Cannot_Move_In_Direction(self, direction)
         direction_to_position = self.direction_to(end_position)
         if (direction_to_position is not direction) and (direction_to_position is not None):
-            warnings.warn(Carriage_Return_Warning(self, self.current_needle_position, end_position, direction))
+            # warnings.warn(Carriage_Return_Warning(self, self.current_needle_position, end_position, direction))
             self.move_to(end_position)
         if end_position < self._left_needle_position:
             warnings.warn(Carriage_Off_Edge_Warning(self, end_position, Carriage_Side.Left_Side, self._left_needle_position, self._right_needle_position))

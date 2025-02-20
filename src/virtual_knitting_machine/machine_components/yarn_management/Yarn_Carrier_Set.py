@@ -31,14 +31,22 @@ class Yarn_Carrier_Set:
                 duplicates.add(c)
                 self._carrier_ids.append(c)
 
-    #todo: Add position property to get position of the carrier set
+    def positions(self, carrier_system) -> list[None | int]:
+        """
+        :param carrier_system: The carrier system to reference position data from.
+        :return: The list of positions of each carrier in the carrier set.
+        """
+        return [c.position for c in self.get_carriers(carrier_system)]
 
     def get_carriers(self, carrier_system) -> list[Yarn_Carrier]:
         """
-        :param carrier_system: carrier system referenced by set
-        :return: carriers that correspond to the ids in the carrier set
+        :param carrier_system: carrier system referenced by set.
+        :return: carriers that correspond to the ids in the carrier set.
         """
-        return [carrier_system[cid] for cid in self.carrier_ids]
+        carriers = carrier_system[self]
+        if not isinstance(carriers, list):
+            carriers = [carriers]
+        return carriers
 
     def position_carriers(self, carrier_system, position: Needle | int | None):
         """

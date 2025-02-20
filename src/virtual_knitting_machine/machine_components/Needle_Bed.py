@@ -1,5 +1,4 @@
 """Representation of a needle bed on a machine"""
-from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import Non_Existent_Needle_Exception
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Sheet_Needle import Sheet_Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
@@ -105,7 +104,7 @@ class Needle_Bed:
             return self.get_needle_of_loop(item)
         elif isinstance(item, Sheet_Needle) or isinstance(item, Needle):
             if item.position < 0 or item.position >= self.needle_count:
-                raise Non_Existent_Needle_Exception(item)
+                raise KeyError(f'Needle {item} is out of range of the needle bed')
             if item.is_slider:
                 return self.sliders[item.position]
             else:

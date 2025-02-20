@@ -1,5 +1,6 @@
 """Module containing the Knitting Machine class."""
 import warnings
+from collections import defaultdict
 
 from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.artin_wale_braids.Crossing_Direction import Crossing_Direction
@@ -13,9 +14,11 @@ from virtual_knitting_machine.machine_components.carriage_system.Carriage import
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import Machine_Knit_Yarn
 
 
 class Knitting_Machine:
@@ -32,6 +35,35 @@ class Knitting_Machine:
         if knit_graph is None:
             knit_graph = Knit_Graph()
         self.knit_graph: Knit_Graph = knit_graph
+
+    def copy(self, starting_state=None):
+        """
+        Creates a crude copy of this machine state with all relevant yarns inhooked and loops formed on required locations.
+        Note that this copy does not guarantee continuity of the knitgraph structure or history. It only ensures loops and carriers are correctly positioned to mimic the current state.
+        :param starting_state: A machine state to copy into. Otherwise, creates a new machine state with the same machine specification as this machine.
+        :return: A copy of the current  machine state.
+        """
+        if starting_state is None:
+            copy_machine_state = Knitting_Machine(machine_specification=self.machine_specification)
+        else:
+            copy_machine_state = starting_state
+        hold_to_hook = self.carrier_system.hooked_carrier
+        for carrier in self.carrier_system.active_carriers:
+            if carrier != hold_to_hook and not copy_machine_state.carrier_system.is_active([carrier.carrier_id]):
+                copy_machine_state.in_hook(carrier.carrier_id)
+                copy_machine_state.release_hook()
+        if hold_to_hook is not None:
+            copy_machine_state.in_hook(hold_to_hook.carrier_id)
+        carrier_to_needles: dict[int, list[Needle]] = defaultdict(list)
+        for needle in Carriage_Pass_Direction.Leftward.sort_needles(self.all_loops()):
+            for loop in needle.held_loops:
+                assert isinstance(loop, Machine_Knit_Loop)
+                assert isinstance(loop.yarn, Machine_Knit_Yarn)
+                carrier_to_needles[loop.yarn.carrier.carrier_id].append(needle)
+        for cid, needles in carrier_to_needles.items():
+            for needle in needles:
+                copy_machine_state.tuck(Yarn_Carrier_Set([cid]), needle, Carriage_Pass_Direction.Leftward)
+        return copy_machine_state
 
     @property
     def max_rack(self) -> int:
@@ -51,6 +83,7 @@ class Knitting_Machine:
     def carrier_system(self, carrier_count: int = 10):
         if len(self.carrier_system.active_carriers) > 0:
             raise Change_Active_Carrier_System_Exception()
+        self.machine_specification.carrier_count = carrier_count
         old_system = self.carrier_system
         self._carrier_system = Yarn_Insertion_System(self, carrier_count)
         for carrier in old_system:  # reset old yarn settings
@@ -59,14 +92,14 @@ class Knitting_Machine:
     @property
     def needle_count(self) -> int:
         """
-        :return: The needle width of the machine
+        :return: The needle width of the machine.
         """
         return self.front_bed.needle_count
 
     def get_needle_of_loop(self, loop: Machine_Knit_Loop) -> None | Needle:
         """
-        :return: the needle holding the loop or None if it is not held
-        :param loop: The loop to search for
+        :return: The needle holding the loop or None if it is not held.
+        :param loop: The loop to search for.
         """
         front_needle = self.front_bed.get_needle_of_loop(loop)
         back_needle = self.back_bed.get_needle_of_loop(loop)
@@ -81,7 +114,7 @@ class Knitting_Machine:
     @property
     def rack(self) -> int:
         """
-        :return: The current rack value of the machine
+        :return: The current rack value of the machine.
         """
         return self._rack
 
@@ -100,19 +133,58 @@ class Knitting_Machine:
         self._all_needle_rack = abs(new_rack - int(new_rack)) != 0.0
 
     def __len__(self):
+        """
+        :return: The needle bed width of the machine.
+        """
         return self.needle_count
 
-    def __getitem__(self, item: Needle) -> Needle:
-        if item.is_front:
-            return self.front_bed[item]
+    def get_needle(self, needle: Needle | tuple) -> Needle:
+        """
+        :param needle: A needle or a tuple to construct a needle: is_front, needle position, optional is_slider defaults to False.
+        :return: The needle on this knitting machine at the given needle location.
+        """
+        if isinstance(needle, tuple):
+            is_front = bool(needle[0])
+            position = int(needle[1])
+            if len(needle) == 2 or not bool(needle[2]):  # no slider declared or slider is false
+                needle = Needle(is_front, position)
+            else:
+                needle = Slider_Needle(is_front, position)
+        if needle.is_front:
+            return self.front_bed[needle]
         else:
-            return self.back_bed[item]
+            return self.back_bed[needle]
+
+    def get_carrier(self, carrier: int | Yarn_Carrier | Yarn_Carrier_Set | list[int]) -> Yarn_Carrier | list[Yarn_Carrier]:
+        """
+        :param carrier: The carrier defined by a given carrier, carrier_set, integer or list of integers to form a set.
+        :return: The carrier or list of carriers owned by the machine at the given specification.
+        """
+        return self.carrier_system[carrier]
+
+    def __getitem__(self, item: Needle | tuple |
+                                Yarn_Carrier | Yarn_Carrier_Set | list[int] |
+                                Machine_Knit_Loop) -> Needle | Yarn_Carrier | list[Yarn_Carrier] | None:
+        """
+
+        :param item: A needle, yarn carrier or carrier set to reference in the machine.
+        :return: The needle on the machine at the given needle position,
+            or if given  yarn carrier information return the corresponding carrier or carriers on the machine
+            or if given a loop, return the corresponding needle that holds this loop or None if the loop is not held on a needle.
+        """
+        if isinstance(item, Machine_Knit_Loop):
+            return self.get_needle_of_loop(item)
+        if isinstance(item, Needle) or isinstance(item, tuple):
+            return self.get_needle(item)
+        elif isinstance(item, Yarn_Carrier) or isinstance(item, Yarn_Carrier_Set):
+            return self.carrier_system[item]
+        raise KeyError(f"Could not access {item} from machine.")
 
     def update_rack(self, front_pos: int, back_pos: int) -> bool:
         """
-        Updates the current racking to align front and back
-        :param front_pos: front needle to align
-        :param back_pos: back needle to align
+        Updates the current racking to align front and back.
+        :param front_pos: front needle to align.
+        :param back_pos: back needle to align.
         :return: Return True if the rack was updated to a new value.
         """
         original = self.rack
@@ -254,7 +326,7 @@ class Knitting_Machine:
         parent_loops = needle.drop()
         child_loops = self.carrier_system.make_loops(carrier_set, needle, self.knit_graph, direction)
         self.carriage.move(direction, needle.position)
-        for parent in parent_loops:  # todo: ensure order is correct for both needle bed sides
+        for parent in parent_loops:
             for child in child_loops:
                 self.knit_graph.connect_loops(parent, child, needle.pull_direction)
         return parent_loops, child_loops
@@ -320,13 +392,13 @@ class Knitting_Machine:
         aligned_needle = self[self.get_aligned_needle(starting_needle, False)]
         carrier_set.position_carriers(self.carrier_system, starting_needle)
         self.carriage.transferring = False
-        parent_loops = self.xfer(starting_needle, to_slider=False, from_split=True)  # Note: Cannot split onto slider. Todo: Double check this rule.
+        parent_loops = self.xfer(starting_needle, to_slider=False, from_split=True)
         child_loops = self.carrier_system.make_loops(carrier_set, starting_needle, self.knit_graph, direction)
         if starting_needle.is_front:
             self.carriage.move(direction, starting_needle.position)
         else:
             self.carriage.move(direction, aligned_needle.position)
-        for parent in parent_loops:  # todo: ensure order is correct for both needle bed sides
+        for parent in parent_loops:
             for child in child_loops:
                 self.knit_graph.connect_loops(parent, child, starting_needle.pull_direction)
         return child_loops, parent_loops

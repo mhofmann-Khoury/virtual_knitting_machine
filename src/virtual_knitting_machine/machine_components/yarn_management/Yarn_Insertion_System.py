@@ -129,7 +129,7 @@ class Yarn_Insertion_System:
         carrier = self[carrier_id]
         if carrier.is_active:
             warnings.warn(In_Active_Carrier_Warning(carrier_id))
-        if not self.inserting_hook_available:
+        if not self.inserting_hook_available and self.hooked_carrier != carrier:
             raise Inserting_Hook_In_Use_Exception(carrier_id)
         self.hooked_carrier = carrier
         self._searching_for_position = True
@@ -222,5 +222,20 @@ class Yarn_Insertion_System:
             loops.append(loop)
         return loops
 
-    def __getitem__(self, item: int) -> Yarn_Carrier:
+    def __getitem__(self, item: int | Yarn_Carrier | Yarn_Carrier_Set | list[int]) -> Yarn_Carrier | list[Yarn_Carrier]:
+        try:
+            if isinstance(item, Yarn_Carrier):
+                return self[item.carrier_id]
+            elif isinstance(item, Yarn_Carrier_Set):
+                return self[item.carrier_ids]
+            elif isinstance(item, list):
+                if len(item) == 1:
+                    return self[item[0]]
+                else:
+                    return [self[i] for i in item]
+        except KeyError as e:
+            raise KeyError(f"Invalid carrier: {item}. Carriers range from 1 to {len(self.carriers)}")
+        assert isinstance(item, int)
+        if item < 1 or item > len(self.carriers):
+            raise KeyError(f"Invalid carrier index {item}")
         return self.carriers[item - 1]  # Carriers are given from values starting at 1 but indexed in the list starting at zero

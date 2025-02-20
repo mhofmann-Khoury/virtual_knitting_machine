@@ -59,7 +59,8 @@ class Machine_Knit_Yarn(Yarn):
 
     @property
     def last_loop(self) -> Machine_Knit_Loop | None:
-        assert isinstance(self._last_loop, Machine_Knit_Loop)
+        if self._last_loop is not None:
+            assert isinstance(self._last_loop, Machine_Knit_Loop)
         return self._last_loop
 
     def last_needle(self) -> Needle | None:

@@ -42,7 +42,7 @@ class Yarn_Carrier:
     @property
     def position(self) -> None | int:
         """
-        :return: The needle position that the carrier sits at or None if the carrier is not active
+        :return: The needle position that the carrier sits at or None if the carrier is not active.
         """
         return self._position
 
