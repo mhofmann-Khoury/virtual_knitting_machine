@@ -1,4 +1,6 @@
-"""A module containing Yarn Insertion System classes."""
+"""A module containing Yarn Insertion System classes for managing yarn carriers on knitting machines.
+This module provides the Yarn_Insertion_System class which manages the complete yarn carrier system including
+carrier states, insertion hook operations, position tracking, and loop creation operations."""
 from __future__ import annotations
 
 import warnings
@@ -15,9 +17,17 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop i
 
 
 class Yarn_Insertion_System:
-    """A class for managing the state of the Yarn-Insertion system of yarn carriers on the knitting machine."""
+    """A class for managing the complete state of the yarn insertion system including all yarn carriers on the knitting machine.
+    This system handles carrier positioning, activation states, insertion hook operations, and coordinates loop creation across multiple carriers.
+    It provides comprehensive management of yarn carrier operations including bring-in, hook operations, and float management."""
 
-    def __init__(self, knitting_machine: Knitting_Machine, carrier_count: int = 10):
+    def __init__(self, knitting_machine: Knitting_Machine, carrier_count: int = 10) -> None:
+        """Initialize the yarn insertion system with specified number of carriers.
+
+        Args:
+            knitting_machine (Knitting_Machine): The knitting machine this system belongs to.
+            carrier_count (int, optional): Number of yarn carriers to create. Defaults to 10.
+        """
         self.knitting_machine: Knitting_Machine = knitting_machine
         self.carriers: list[Yarn_Carrier] = [Yarn_Carrier(i) for i in range(1, carrier_count + 1)]
         self.hook_position: None | int = None
@@ -27,8 +37,10 @@ class Yarn_Insertion_System:
 
     @property
     def searching_for_position(self) -> bool:
-        """
-        :return: True if the inserting hook is active but at an undefined position. False otherwise.
+        """Check if the inserting hook is active but at an undefined position.
+
+        Returns:
+            bool: True if the inserting hook is active but at an undefined position, False otherwise.
         """
         if self.inserting_hook_available:
             return False
@@ -36,16 +48,19 @@ class Yarn_Insertion_System:
 
     @property
     def carrier_ids(self) -> list[int]:
-        """
-        :return: List of carrier ids in the carrier system.
+        """Get list of all carrier IDs in the carrier system.
+
+        Returns:
+            list[int]: List of carrier ids in the carrier system.
         """
         return [int(c) for c in self.carriers]
 
     def position_carrier(self, carrier_id: int, position: int | Needle) -> None:
-        """
-        Update the position of the carrier.
-        :param carrier_id: The carrier to update
-        :param position: the position of the carrier
+        """Update the position of a specific carrier.
+
+        Args:
+            carrier_id (int): The carrier to update.
+            position (int | Needle): The position of the carrier.
         """
         carrier = self[carrier_id]
         assert isinstance(carrier, Yarn_Carrier)
@@ -53,30 +68,40 @@ class Yarn_Insertion_System:
 
     @property
     def hook_size(self) -> int:
-        """
-        :return: The number of needles blocked to the right of the yarn inserting hook position
+        """Get the number of needles blocked to the right of the yarn inserting hook position.
+
+        Returns:
+            int: The number of needles blocked to the right of the yarn inserting hook position.
         """
         return int(self.knitting_machine.machine_specification.hook_size)
 
     @property
     def inserting_hook_available(self) -> bool:
-        """
-        :return: True if the yarn inserting hook can be used
+        """Check if the yarn inserting hook can be used.
+
+        Returns:
+            bool: True if the yarn inserting hook can be used, False if in use.
         """
         return self.hooked_carrier is None
 
     @property
     def active_carriers(self) -> set[Yarn_Carrier]:
-        """
-        :return: Set of carrier id of carriers that are currently active (off the grippers)
+        """Get set of carriers that are currently active (off the grippers).
+
+        Returns:
+            set[Yarn_Carrier]: Set of carriers that are currently active (off the grippers).
         """
         return {c for c in self.carriers if c.is_active}
 
     def conflicts_with_inserting_hook(self, needle: Needle, direction: Carriage_Pass_Direction) -> bool:
-        """
-        :param direction:
-        :param needle: the needle to check for compliance
-        :return: True if inserting hook is conflicting with needle
+        """Check if a needle position conflicts with the inserting hook position based on carriage direction.
+
+        Args:
+            needle (Needle): The needle to check for compliance.
+            direction (Carriage_Pass_Direction): The carriage direction for hook conflict calculation.
+
+        Returns:
+            bool: True if inserting hook is conflicting with needle, False otherwise.
         """
         if self.hook_position is not None:  # reserve positions to right of needle
             if direction is Carriage_Pass_Direction.Leftward:
@@ -88,33 +113,49 @@ class Yarn_Insertion_System:
             return False
 
     def missing_carriers(self, carrier_ids: list[int | Yarn_Carrier]) -> list[int]:
-        """
-        :param carrier_ids: the carrier set to check for the inactive carriers.
-        :return: list of carrier ids that are not active (i.e., on grippers).
+        """Get list of carrier IDs that are not currently active.
+
+        Args:
+            carrier_ids (list[int | Yarn_Carrier]): The carrier set to check for the inactive carriers.
+
+        Returns:
+            list[int]: List of carrier ids that are not active (i.e., on grippers).
         """
         return [cid for cid in carrier_ids if not cast(Yarn_Carrier, self[cid]).is_active]
 
     def is_active(self, carrier_ids: list[int | Yarn_Carrier]) -> bool:
-        """
-        :param carrier_ids:
-        :return: True if the carrier (all carriers in set) are active (not-on the gripper)
-            Note: If an empty list of carriers is given, this will return true because the empty set is active.
+        """Check if all carriers in the given set are active (not on the gripper).
+
+        Args:
+            carrier_ids (list[int | Yarn_Carrier]): List of carrier IDs to check.
+
+        Returns:
+            bool: True if all carriers in set are active (not-on the gripper), Note: If an empty list of carriers is given, this will return true because the empty set is active.
         """
         if len(carrier_ids) == 0:
             return True  # No ids given, so the null set is active
         return len(self.missing_carriers(carrier_ids)) == 0
 
     def yarn_is_loose(self, carrier_id: int | Yarn_Carrier) -> bool:
-        """
-        :param carrier_id:
-        :return: True if any yarn in yarn carrier set is loose (not on the inserting hook or tuck/knit on bed)
+        """Check if yarn in carrier is loose (not on the inserting hook or tuck/knit on bed).
+
+        Args:
+            carrier_id (int | Yarn_Carrier): The carrier to check for loose yarn.
+
+        Returns:
+            bool: True if any yarn in yarn carrier set is loose (not on the inserting hook or tuck/knit on bed), False otherwise.
         """
         return cast(self[carrier_id], Yarn_Carrier).yarn.last_needle() is None
 
     def bring_in(self, carrier_id: int | Yarn_Carrier) -> None:
-        """
-        Brings in a yarn carrier without insertion hook (tail to gripper). Yarn is considered loose until knit
-        :param carrier_id:
+        """Bring in a yarn carrier without insertion hook (tail to gripper), yarn is considered loose until knit.
+
+        Args:
+            carrier_id (int | Yarn_Carrier): Carrier ID to bring in.
+
+        Warns:
+            In_Active_Carrier_Warning: If carrier is already active.
+            In_Loose_Carrier_Warning: If carrier yarn is loose (not connected).
         """
         carrier = self[carrier_id]
         assert isinstance(carrier, Yarn_Carrier)
@@ -125,9 +166,16 @@ class Yarn_Insertion_System:
         carrier.bring_in()
 
     def inhook(self, carrier_id: int | Yarn_Carrier) -> None:
-        """
-        Brings a yarn in with insertion hook. Yarn is not loose
-        :param carrier_id: carriers to bring in by id
+        """Bring a yarn in with insertion hook, yarn is not loose after this operation.
+
+        Args:
+            carrier_id (int | Yarn_Carrier): Carriers to bring in by id.
+
+        Raises:
+            Inserting_Hook_In_Use_Exception: If insertion hook is already in use by another carrier.
+
+        Warns:
+            In_Active_Carrier_Warning: If carrier is already active.
         """
 
         carrier = self[carrier_id]
@@ -142,9 +190,7 @@ class Yarn_Insertion_System:
         self.hooked_carrier.inhook()
 
     def releasehook(self) -> None:
-        """
-        Releases the yarn inserting hook of what ever is on it.
-        """
+        """Release the yarn inserting hook from whatever carrier is currently using it."""
         if isinstance(self.hooked_carrier, Yarn_Carrier):
             self.hooked_carrier.releasehook()
         self.hooked_carrier = None
@@ -153,9 +199,16 @@ class Yarn_Insertion_System:
         self.hook_input_direction = None
 
     def out(self, carrier_id: int | Yarn_Carrier) -> None:
-        """
-        Moves carrier to gripper, removing it from action but does not cut it loose
-        :param carrier_id:
+        """Move carrier to gripper, removing it from action but does not cut it loose.
+
+        Args:
+            carrier_id (int | Yarn_Carrier): Carrier ID to move out.
+
+        Raises:
+            Hooked_Carrier_Exception: If carrier is currently connected to insertion hook.
+
+        Warns:
+            Out_Inactive_Carrier_Warning: If carrier is already inactive.
         """
         carrier = self[carrier_id]
         assert isinstance(carrier, Yarn_Carrier)
@@ -166,10 +219,17 @@ class Yarn_Insertion_System:
         carrier.out()
 
     def outhook(self, carrier_id: int | Yarn_Carrier) -> None:
-        """
-        Cuts carrier yarn, moves it to grippers with insertion hook.
-        The Carrier will no longer be active and is now loose
-        :param carrier_id:
+        """Cut carrier yarn and move it to grippers with insertion hook, the carrier will no longer be active and is now loose.
+
+        Args:
+            carrier_id (int | Yarn_Carrier): Carrier ID to cut and move out.
+
+        Raises:
+            Inserting_Hook_In_Use_Exception: If insertion hook is not available.
+            Hooked_Carrier_Exception: If carrier is already connected to insertion hook.
+
+        Warns:
+            Out_Inactive_Carrier_Warning: If carrier is already inactive.
         """
         carrier = self[carrier_id]
         assert isinstance(carrier, Yarn_Carrier)
@@ -182,9 +242,11 @@ class Yarn_Insertion_System:
         carrier.outhook()
 
     def active_floats(self) -> dict[Machine_Knit_Loop, Machine_Knit_Loop]:
-        """
-        :return: Dictionary of loops that are active keyed to active yarn-wise neighbors.
-         Each key-value pair represents a directed float where k comes before v on the yarns in the system.
+        """Get dictionary of all active floats from all carriers in the system.
+
+        Returns:
+            dict[Machine_Knit_Loop, Machine_Knit_Loop]: Dictionary of loops that are active keyed to active yarn-wise neighbors,
+            each key-value pair represents a directed float where k comes before v on the yarns in the system.
         """
         active_floats = {}
         for carrier in self.carriers:
@@ -192,11 +254,18 @@ class Yarn_Insertion_System:
         return active_floats
 
     def make_loops(self, carrier_ids: list[int | Yarn_Carrier] | Yarn_Carrier_Set, needle: Needle, direction: Carriage_Pass_Direction) -> list[Machine_Knit_Loop]:
-        """
-        :param direction:
-        :param carrier_ids: the carriers to make the loops with on this needle.
-        :param needle: The needle to make the loops on.
-        :return: The set of loops made on this machine.
+        """Create loops using specified carriers on a needle, handling insertion hook positioning and float management.
+
+        Args:
+            carrier_ids (list[int | Yarn_Carrier] | Yarn_Carrier_Set): The carriers to make the loops with on this needle.
+            needle (Needle): The needle to make the loops on.
+            direction (Carriage_Pass_Direction): The carriage direction for this operation.
+
+        Returns:
+            list[Machine_Knit_Loop]: The set of loops made on this machine.
+
+        Raises:
+            Use_Inactive_Carrier_Exception: If attempting to use an inactive carrier for loop creation.
         """
         needle = self.knitting_machine[needle]
         assert isinstance(needle, Needle)
@@ -212,7 +281,7 @@ class Yarn_Insertion_System:
             if not carrier.is_active:
                 raise Use_Inactive_Carrier_Exception(cid)
             float_source_needle = carrier.yarn.last_needle()
-            loop = carrier.yarn.make_loop_on_needle(knit_graph=self.knitting_machine.knit_graph, holding_needle=needle)
+            loop = carrier.yarn.make_loop_on_needle(holding_needle=needle, knit_graph=self.knitting_machine.knit_graph, max_float_length=self.knitting_machine.machine_specification.maximum_float)
             if float_source_needle is not None:
                 float_source_needle = self.knitting_machine[float_source_needle]
                 float_start = min(float_source_needle.position, needle.position)
@@ -232,6 +301,17 @@ class Yarn_Insertion_System:
         return loops
 
     def __getitem__(self, item: int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]) -> Yarn_Carrier | list[Yarn_Carrier]:
+        """Get carrier(s) by ID, carrier object, carrier set, or list of IDs/carriers.
+
+        Args:
+            item (int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]): The identifier(s) for the carrier(s) to retrieve.
+
+        Returns:
+            Yarn_Carrier | list[Yarn_Carrier]: Single carrier or list of carriers corresponding to the input.
+
+        Raises:
+            KeyError: If invalid carrier ID is provided or carrier index is out of range.
+        """
         try:
             if isinstance(item, Yarn_Carrier):
                 return self[item.carrier_id]

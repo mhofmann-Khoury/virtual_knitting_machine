@@ -82,7 +82,6 @@ exclude = [
 # These are packages your project needs to run in production
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"                        # Minimum Python version (allows 3.11.x, 3.12.x, etc.)
-networkx = ">=3.2.1" # Graphing library
 knit-graphs = ">=0.0.6" # Knit Graphs Library
 
 # =============================================================================
@@ -206,15 +205,6 @@ disallow_incomplete_defs = false   # Allow incomplete type annotations in tests
 check_untyped_defs = false         # Don't type-check untyped test functions
 warn_return_any = false            # Don't warn about returning 'Any' in tests
 warn_unused_ignores = false        # Don't warn about unused type ignores in tests
-
-# Specific overrides for third-party knitting libraries that may have type issues
-#[[tool.mypy.overrides]]
-#module = [
-#    "knit_graphs.*",   # Virtual knitting machine library
-#]
-#ignore_errors = true              # Completely ignore all mypy errors in these modules
-#ignore_missing_imports = true     # Ignore missing imports from these modules
-#follow_imports = "skip"           # Don't follow imports into these modules
 
 # =============================================================================
 # COVERAGE.PY CONFIGURATION FOR UNITTEST

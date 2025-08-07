@@ -1,4 +1,8 @@
-"""Module for managing the sheet needle construction for multi-sheet knitting."""
+"""Module for managing sheet needle construction for multi-sheet knitting operations.
+
+This module provides classes for managing needles in a layered gauging schema used in  multi-sheet knitting.
+It includes the Sheet_Needle class which extends the base Needle class to support gauge-based positioning, and the Slider_Sheet_Needle class for slider operations within sheets.
+"""
 from __future__ import annotations
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
@@ -6,11 +10,24 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop i
 
 
 class Sheet_Needle(Needle):
-    """
-        Used for managing needles at a layered gauging schema
+    """A needle class for managing needles in a layered gauging schema.
+
+    Sheet needles are used in multi-sheet knitting where multiple layers of knitting are created simultaneously.
+    This class extends the base Needle class to provide sheet-aware positioning and operations.
+
+    Attributes:
+        recorded_loops (list[Machine_Knit_Loop]): List of loops that have been recorded for this needle.
     """
 
-    def __init__(self, is_front: bool, sheet_pos: int, sheet: int, gauge: int):
+    def __init__(self, is_front: bool, sheet_pos: int, sheet: int, gauge: int) -> None:
+        """Initialize a sheet needle.
+
+        Args:
+            is_front (bool): True if this is a front bed needle, False for back bed.
+            sheet_pos (int): The position of the needle within the sheet.
+            sheet (int): The sheet number within the gauge.
+            gauge (int): The number of layers supported by the gauge.
+        """
         self._gauge: int = gauge
         self._sheet_pos: int = sheet_pos
         self._sheet: int = sheet
@@ -19,63 +36,81 @@ class Sheet_Needle(Needle):
 
     @property
     def gauge(self) -> int:
-        """
-        :return: The gauge currently knitting in
+        """Get the gauge currently being used for knitting.
+
+        Returns:
+            int: The gauge (number of layers) currently knitting in.
         """
         return self._gauge
 
     @property
     def sheet_pos(self) -> int:
-        """
-        :return: The position of the needle with a sheet.
+        """Get the position of the needle within its sheet.
+
+        Returns:
+            int: The position of the needle within the sheet.
         """
         return self._sheet_pos
 
     @property
     def sheet(self) -> int:
-        """
-        :return: the position of the sheet in the gauge
+        """Get the sheet number of this needle.
+
+        Returns:
+            int: The position of the sheet in the gauge.
         """
         return self._sheet
 
     @staticmethod
     def get_sheet_pos(actual_pos: int, gauge: int) -> int:
-        """
-        get the sheet position of a needle position at a given gauge.
-        :param actual_pos: the needle position on the bed.
-        :param gauge: the number of layers supported by the gauge.
-        :return: the position in the layer of a given needle position at a specific layering gauge.
+        """Get the sheet position from an actual needle position at a given gauge.
+
+        Args:
+            actual_pos (int): The needle position on the bed.
+            gauge (int): The number of layers supported by the gauge.
+
+        Returns:
+            int: The position in the sheet of a given needle position at a specific gauge.
         """
         return int(actual_pos / gauge)
 
     @staticmethod
     def get_sheet(actual_pos: int, sheet_pos: int, gauge: int) -> int:
-        """
-        The sheet of a needle position, sheet position at a given gauge.
-        :param actual_pos: The needle position on the bed.
-        :param sheet_pos: the position in the layer.
-        :param gauge: the number of layers supported by the gauge.
-        :return: the layer of the needle given the gauging.
+        """Get the sheet number from needle position and sheet position at a given gauge.
+
+        Args:
+            actual_pos (int): The needle position on the bed.
+            sheet_pos (int): The position in the sheet.
+            gauge (int): The number of sheets supported by the gauge.
+
+        Returns:
+            int: The sheet of the needle given the gauging.
         """
         return actual_pos - (sheet_pos * gauge)
 
     @staticmethod
     def get_actual_pos(sheet_pos: int, sheet: int, gauge: int) -> int:
-        """
-        Get the actual needle position given the components of a sheet needle.
-        :param sheet: the layer being used.
-        :param sheet_pos: the position in the layer.
-        :param gauge: the number of layers supported by the gauge.
-        :return: the position of the needle on the bed.
+        """Get the actual needle position from sheet needle components.
+
+        Args:
+            sheet_pos (int): The position in the sheet.
+            sheet (int): The sheet being used.
+            gauge (int): The number of sheets supported by the gauge.
+
+        Returns:
+            int: The position of the needle on the bed.
         """
         return sheet + sheet_pos * gauge
 
     def offset_in_sheet(self, offset: int, slider: bool = False) -> Sheet_Needle:
-        """
-        a needle offset while staying within the sheet.
-        :param offset: number of layer positions to move.
-        :param slider: true, if returning a slider needle.
-        :return: the needle offset by the given value in the layer (not actual needle positions)
+        """Get a needle offset within the same sheet.
+
+        Args:
+            offset (int): Number of sheet positions to move.
+            slider (bool, optional): True if returning a slider needle. Defaults to False.
+
+        Returns:
+            Sheet_Needle: The needle offset by the given value in the sheet (not actual needle positions).
         """
         if slider:
             return Slider_Sheet_Needle(is_front=self.is_front, sheet_pos=self.sheet_pos + offset, sheet=self.sheet, gauge=self.gauge)
@@ -83,14 +118,18 @@ class Sheet_Needle(Needle):
             return Sheet_Needle(is_front=self.is_front, sheet_pos=self.sheet_pos + offset, sheet=self.sheet, gauge=self.gauge)
 
     def main_needle(self) -> Sheet_Needle:
-        """
-        :return: The non-slider needle at this needle positions
+        """Get the non-slider needle at this needle position.
+
+        Returns:
+            Sheet_Needle: The non-slider needle at this needle position.
         """
         return Sheet_Needle(is_front=self.is_front, sheet_pos=self.sheet_pos, sheet=self.sheet, gauge=self.gauge)
 
     def gauge_neighbors(self) -> list[Sheet_Needle]:
-        """
-        :return: List of needles that neighbor this loop in other gauges
+        """Get list of needles that neighbor this needle in other sheets of the same gauge.
+
+        Returns:
+            list[Sheet_Needle]: List of needles that neighbor this loop in other gauges.
         """
         neighbors = []
         for i in range(0, self.gauge):
@@ -99,6 +138,14 @@ class Sheet_Needle(Needle):
         return neighbors
 
     def __add__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Add to this sheet needle's position.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to add.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the sum position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -107,6 +154,14 @@ class Sheet_Needle(Needle):
         return self.__class__(self.is_front, self.sheet_pos + position, self.sheet, self.gauge)
 
     def __radd__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Right-hand add operation for sheet needle.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to add.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the sum position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -115,6 +170,14 @@ class Sheet_Needle(Needle):
         return self.__class__(self.is_front, position + self.sheet_pos, self.sheet, self.gauge)
 
     def __sub__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Subtract from this sheet needle's position.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to subtract.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the difference position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -123,6 +186,14 @@ class Sheet_Needle(Needle):
         return self.__class__(self.is_front, self.sheet_pos - position, self.sheet, self.gauge)
 
     def __rsub__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Right-hand subtract operation for sheet needle.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to subtract from.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the difference position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -131,6 +202,14 @@ class Sheet_Needle(Needle):
         return self.__class__(self.is_front, position - self.sheet_pos, self.sheet, self.gauge)
 
     def __mul__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Multiply this sheet needle's position.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to multiply by.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the product position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -139,6 +218,14 @@ class Sheet_Needle(Needle):
         return self.__class__(self.is_front, self.sheet_pos * position, self.sheet, self.gauge)
 
     def __rmul__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Right-hand multiply operation for sheet needle.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to multiply.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the product position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -147,6 +234,14 @@ class Sheet_Needle(Needle):
         return self.__class__(self.is_front, position * self.sheet_pos, self.sheet, self.gauge)
 
     def __truediv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Divide this sheet needle's position.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to divide by.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the quotient position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -155,6 +250,14 @@ class Sheet_Needle(Needle):
         return self.__class__(self.is_front, int(self.sheet_pos / position), self.sheet, self.gauge)
 
     def __rtruediv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Right-hand divide operation for sheet needle.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to divide.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the quotient position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -163,6 +266,14 @@ class Sheet_Needle(Needle):
         return self.__class__(self.is_front, int(position / self.sheet_pos), self.sheet, self.gauge)
 
     def __floordiv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Floor divide this sheet needle's position.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to floor divide by.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the floor division result position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -171,6 +282,14 @@ class Sheet_Needle(Needle):
         return self.__class__(self.is_front, self.sheet_pos // position, self.sheet, self.gauge)
 
     def __rfloordiv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Right-hand floor divide operation for sheet needle.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to floor divide.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the floor division result position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -179,6 +298,14 @@ class Sheet_Needle(Needle):
         return self.__class__(self.is_front, position // position, self.sheet, self.gauge)
 
     def __mod__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Get modulo of this sheet needle's position.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to get modulo with.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the modulo result position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -187,6 +314,14 @@ class Sheet_Needle(Needle):
         return self.__class__(self.is_front, self.sheet_pos % position, self.sheet, self.gauge)
 
     def __rmod__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+        """Right-hand modulo operation for sheet needle.
+
+        Args:
+            other (Sheet_Needle | Needle | int): The needle or integer to get modulo of.
+
+        Returns:
+            Sheet_Needle: New sheet needle with the modulo result position.
+        """
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
@@ -196,21 +331,34 @@ class Sheet_Needle(Needle):
 
 
 class Slider_Sheet_Needle(Sheet_Needle, Slider_Needle):
-    """
-        Used for slider needles in gauging schema
+    """A slider needle class for use in gauging schema.
+
+    This class combines the functionality of Sheet_Needle and Slider_Needle to provide
+    slider needle capabilities within a multi-sheet knitting environment.
     """
 
-    def __init__(self, is_front: bool, sheet_pos: int, sheet: int, gauge: int):
+    def __init__(self, is_front: bool, sheet_pos: int, sheet: int, gauge: int) -> None:
+        """Initialize a slider sheet needle.
+
+        Args:
+            is_front (bool): True if this is a front bed needle, False for back bed.
+            sheet_pos (int): The position of the needle within the sheet.
+            sheet (int): The sheet number within the gauge.
+            gauge (int): The number of layers supported by the gauge.
+        """
         super().__init__(is_front, sheet_pos, sheet, gauge)
 
 
 def get_sheet_needle(needle: Needle, gauge: int, slider: bool = False) -> Sheet_Needle:
-    """
-    Get a sheet needle from a given needle
-    :param needle: the original needle
-    :param gauge: the gauge of the sheet
-    :param slider: true if returning a slider
-    :return: Sheet Needle given the gauging schema from a standard needle
+    """Convert a standard needle to a sheet needle with the given gauge.
+
+    Args:
+        needle (Needle): The original needle to convert.
+        gauge (int): The gauge of the sheet.
+        slider (bool, optional): True if returning a slider needle. Defaults to False.
+
+    Returns:
+        Sheet_Needle: Sheet needle created from the standard needle given the gauging schema.
     """
     sheet_pos = Sheet_Needle.get_sheet_pos(needle.position, gauge)
     sheet = Sheet_Needle.get_sheet(needle.position, sheet_pos, gauge)
@@ -218,101 +366,3 @@ def get_sheet_needle(needle: Needle, gauge: int, slider: bool = False) -> Sheet_
         return Slider_Sheet_Needle(needle.is_front, sheet_pos, sheet, gauge)
     else:
         return Sheet_Needle(needle.is_front, sheet_pos, sheet, gauge)
-
-#
-# class Sheet_Identifier:
-#     """
-#     Used to convert needles given a defined sheet
-#     ...
-#
-#     Attributes
-#     ----------
-#
-#     """
-#
-#     def __init__(self, sheet: int, gauge: int):
-#         assert gauge > 0, f"Knit Pass Error: Cannot make sheets for gauge {gauge}"
-#         assert 0 <= sheet < gauge, f"Cannot identify sheet {sheet} at gauge {gauge}"
-#         self._sheet: int = sheet
-#         self._gauge: int = gauge
-#
-#     @property
-#     def sheet(self) -> int:
-#         """
-#         :return: The position of the sheet in the gauge
-#         """
-#         return self._sheet
-#
-#     @property
-#     def gauge(self) -> int:
-#         """
-#         :return: The number of active sheets
-#         """
-#         return self._gauge
-#
-#     def get_needle(self, needle: Needle) -> Sheet_Needle:
-#         """
-#         :param needle: Needle to access from sheet. Maybe a sheet needle which will be retargeted to this sheet
-#         :return: the sheet needle at the given needle index and bed
-#         """
-#         pos = needle.position
-#         if isinstance(needle, Sheet_Needle):
-#             pos = needle.sheet_pos
-#         if isinstance(needle, Slider_Needle):
-#             return Slider_Sheet_Needle(needle.is_front, pos, self.sheet, self.gauge)
-#         else:
-#             return Sheet_Needle(needle.is_front, pos, self.sheet, self.gauge)
-#
-#     def needle(self, is_front: bool, position: int) -> Sheet_Needle:
-#         """
-#         Gets a needle within the sheet with specified position
-#         :param is_front: True if needle is on front bed
-#         :param position: position within the sheet
-#         :return: the specified sheet needle
-#         """
-#         return Sheet_Needle(is_front, position, self.sheet, self.gauge)
-#
-#     def __str__(self):
-#         return f"s{self.sheet}:g{self.gauge}"
-#
-#     def __repr__(self):
-#         return str(self)
-#
-#     def __int__(self):
-#         return self.sheet
-#
-#     def __le__(self, other):
-#         return self.sheet <= int(other)
-#
-#     def __lt__(self, other):
-#         return self.sheet < int(other)
-#
-#     def __eq__(self, other):
-#         if isinstance(other, Sheet_Identifier):
-#             return self.sheet == other.sheet and self.gauge == other.gauge
-#         else:
-#             return self.sheet == int(other)
-#
-#     def __gt__(self, other):
-#         return self.sheet > int(other)
-#
-#     def __ge__(self, other):
-#         return self.sheet >= int(other)
-#
-#     def __add__(self, other):
-#         return self.sheet + int(other)
-#
-#     def __sub__(self, other):
-#         return self.sheet - int(other)
-#
-#     def __neg__(self):
-#         return self.sheet * -1
-#
-#     def __divmod__(self, other):
-#         return self.sheet % int(other)
-#
-#     def __mul__(self, other):
-#         return self.sheet * int(other)
-#
-#     def __pow__(self, power, modulo=None):
-#         return self.sheet ^ int(power)
