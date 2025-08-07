@@ -16,6 +16,7 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop i
 
 class Yarn_Insertion_System:
     """A class for managing the state of the Yarn-Insertion system of yarn carriers on the knitting machine."""
+
     def __init__(self, knitting_machine: Knitting_Machine, carrier_count: int = 10):
         self.knitting_machine: Knitting_Machine = knitting_machine
         self.carriers: list[Yarn_Carrier] = [Yarn_Carrier(i) for i in range(1, carrier_count + 1)]
@@ -157,7 +158,7 @@ class Yarn_Insertion_System:
         :param carrier_id:
         """
         carrier = self[carrier_id]
-        assert  isinstance(carrier, Yarn_Carrier)
+        assert isinstance(carrier, Yarn_Carrier)
         if not carrier.is_active:
             warnings.warn(Out_Inactive_Carrier_Warning(carrier_id))
         if carrier.is_hooked:
