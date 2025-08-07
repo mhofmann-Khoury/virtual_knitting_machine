@@ -10,10 +10,10 @@ class Knitting_Machine_Type(Enum):
     def __str__(self) -> str:
         return self.name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(str(self))
 
 
@@ -27,10 +27,10 @@ class Knitting_Position(Enum):
     def __str__(self) -> str:
         return self.name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(str(self))
 
 
@@ -43,3 +43,6 @@ class Knitting_Machine_Specification:
     carrier_count: int = 10
     needle_count: int = 540
     maximum_rack: int = 4
+    maximum_float: int = 20  # Todo: Use this dynamically for long float warnings
+    maximum_loop_hold: int = 4  # Todo: Use this dynamically for loop hold errors
+    hook_size: int = 5

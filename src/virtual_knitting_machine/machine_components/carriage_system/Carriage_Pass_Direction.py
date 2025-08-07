@@ -1,4 +1,5 @@
 """Enumerator of possible pass directions"""
+from __future__ import annotations
 import functools
 from enum import Enum
 from typing import Iterable
@@ -15,7 +16,7 @@ class Carriage_Pass_Direction(Enum):
     Leftward = "-"
     Rightward = "+"
 
-    def opposite(self):
+    def opposite(self) -> Carriage_Pass_Direction:
         """
         :return: the opposite pass direction of this
         """
@@ -24,13 +25,13 @@ class Carriage_Pass_Direction(Enum):
         else:
             return Carriage_Pass_Direction.Leftward
 
-    def __neg__(self):
+    def __neg__(self) -> Carriage_Pass_Direction:
         return self.opposite()
 
-    def __invert__(self):
+    def __invert__(self) -> Carriage_Pass_Direction:
         return self.opposite()
 
-    def next_needle_position(self, needle_pos: int):
+    def next_needle_position(self, needle_pos: int) -> int:
         """
         Gets the next needle in a given direction
         :param needle_pos: the needle that we are looking for the next neighbor of
@@ -41,7 +42,7 @@ class Carriage_Pass_Direction(Enum):
         else:
             return needle_pos + 1
 
-    def prior_needle_position(self, needle_pos: int):
+    def prior_needle_position(self, needle_pos: int) -> int:
         """
         Gets the prior needle in a given direction
         :param needle_pos: the needle that we are looking for the prior neighbor of
@@ -63,7 +64,7 @@ class Carriage_Pass_Direction(Enum):
             0 needles are in equal position at given racking,
             or -1 first_needle is right of second needle (leftward order).
         """
-        return -1 * first_needle.at_racking_comparison(second_needle, rack, all_needle_rack)
+        return int(-1 * first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))
 
     @staticmethod
     def leftward_needles_comparison(first_needle: Needle, second_needle: Needle, rack: int = 0, all_needle_rack: bool = False) -> int:
@@ -76,7 +77,7 @@ class Carriage_Pass_Direction(Enum):
             0 needles are in equal position at given racking,
             or 1 first_needle is right of second needle (leftward order).
         """
-        return first_needle.at_racking_comparison(second_needle, rack, all_needle_rack)
+        return int(first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))
 
     def needle_direction_comparison(self, first_needle: Needle, second_needle: Needle, rack: int = 0, all_needle_rack: bool = False) -> int:
         """
@@ -104,7 +105,7 @@ class Carriage_Pass_Direction(Enum):
         return self.needle_direction_comparison(first_needle, second_needle, rack, all_needle_rack) > 0
 
     @staticmethod
-    def get_direction(dir_str):
+    def get_direction(dir_str: str) -> Carriage_Pass_Direction:
         """
         Returns a Pass direction enum given a valid string.
         :param dir_str: String to convert to direction
@@ -128,8 +129,8 @@ class Carriage_Pass_Direction(Enum):
                                  reverse=not ascending)
         return position_sorted
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.value

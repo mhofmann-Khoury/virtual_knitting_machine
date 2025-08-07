@@ -1,5 +1,7 @@
 """Module containing the Machine Knit Loop Class"""
+from __future__ import annotations
 from knit_graphs.Loop import Loop
+from knit_graphs.Yarn import Yarn
 
 from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import Slider_Loop_Exception, Xfer_Dropped_Loop_Exception
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
@@ -9,7 +11,7 @@ class Machine_Knit_Loop(Loop):
     """
     An extension of the loop structure to capture information about the machine knitting process that created it.
     """
-    def __init__(self, loop_id: int, yarn, source_needle: Needle):
+    def __init__(self, loop_id: int, yarn: Yarn, source_needle: Needle):
         super().__init__(loop_id, yarn)
         self.needle_history: list[Needle | None] = [source_needle]
         if self.source_needle.is_slider:
@@ -54,7 +56,7 @@ class Machine_Knit_Loop(Loop):
         """
         return self.needle_history[0]
 
-    def transfer_loop(self, target_needle: Needle):
+    def transfer_loop(self, target_needle: Needle) -> None:
         """
         Add target needle to the end of needle history for loop
         :param target_needle: the needle the loop is transferred to.
@@ -63,7 +65,7 @@ class Machine_Knit_Loop(Loop):
             raise Xfer_Dropped_Loop_Exception(target_needle)
         self.needle_history.append(target_needle)
 
-    def drop(self):
+    def drop(self) -> None:
         """
             Marks the loop as dropped by adding None to end of needle history.
         """

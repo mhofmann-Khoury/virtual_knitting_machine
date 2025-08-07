@@ -5,7 +5,7 @@ from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Excep
 
 class Max_Rack_Exception(Knitting_Machine_Exception):
 
-    def __init__(self, racking: float, max_rack: float):
-        self.max_rack = max_rack
-        self.racking = racking
+    def __init__(self, racking: float, max_rack: float) -> None:
+        self.max_rack: float = max_rack
+        self.racking: float = racking
         super().__init__(f"Cannot perform racking of {racking}. Max rack allowed is {max_rack}")

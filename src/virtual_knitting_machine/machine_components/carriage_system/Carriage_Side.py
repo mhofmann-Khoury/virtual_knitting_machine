@@ -1,4 +1,5 @@
 """Module containing the Carriage Side Enum"""
+from __future__ import annotations
 from enum import Enum
 
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
@@ -9,13 +10,13 @@ class Carriage_Side(Enum):
     Left_Side = "Left_Side"
     Right_Side = "Right_Side"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.value
 
-    def opposite(self):
+    def opposite(self) -> Carriage_Side:
         """
         :return: the opposite pass direction of this
         """
@@ -42,8 +43,8 @@ class Carriage_Side(Enum):
         else:
             return Carriage_Pass_Direction.Rightward
 
-    def __neg__(self):
+    def __neg__(self) -> Carriage_Side:
         return self.opposite()
 
-    def __invert__(self):
+    def __invert__(self) -> Carriage_Side:
         return self.opposite()

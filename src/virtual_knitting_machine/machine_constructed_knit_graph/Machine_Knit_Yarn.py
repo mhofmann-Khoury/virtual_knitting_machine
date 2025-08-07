@@ -1,24 +1,27 @@
 """Module containing the Machine Knit Yarn Class"""
+from __future__ import annotations
 import warnings
 
+from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn, Yarn_Properties
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Use_Cut_Yarn_Exception
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Long_Float_Warning
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 
 class Machine_Knit_Yarn(Yarn):
-    MAX_FLOAT_LENGTH = 20
+    MAX_FLOAT_LENGTH: int = 20
 
-    def __init__(self, carrier, properties: Yarn_Properties | None, instance: int = 0):
+    def __init__(self, carrier: Yarn_Carrier, properties: Yarn_Properties | None, instance: int = 0):
         if properties is None:
             properties = Yarn_Properties()
         properties.name = f"{instance}_Yarn on c{carrier.carrier_id}"
         super().__init__(properties)
         self._instance: int = instance
-        self._carrier = carrier
+        self._carrier: Yarn_Carrier = carrier
         self.active_loops: dict[Machine_Knit_Loop: Needle] = {}
 
     @property
@@ -43,13 +46,13 @@ class Machine_Knit_Yarn(Yarn):
         return self.carrier is None
 
     @property
-    def carrier(self):
+    def carrier(self) -> Yarn_Carrier:
         """
         :return: Carrier assigned to yarn or None if yarn has been dropped from carrier
         """
         return self._carrier
 
-    def cut_yarn(self):
+    def cut_yarn(self) -> Machine_Knit_Yarn:
         """
         Cut yarns are no longer active
         :return: New Yarn of the same type after cut this yarn
@@ -85,7 +88,7 @@ class Machine_Knit_Yarn(Yarn):
                 floats[l] = n
         return floats
 
-    def make_loop_on_needle(self, holding_needle: Needle, knit_graph=None) -> Machine_Knit_Loop:
+    def make_loop_on_needle(self, holding_needle: Needle, knit_graph: Knit_Graph | None = None) -> Machine_Knit_Loop:
         """
         Adds the loop at the end of the yarn.
         :param holding_needle: The needle to make the loop on and hold it.
@@ -94,7 +97,7 @@ class Machine_Knit_Yarn(Yarn):
         if self.is_cut:
             raise Use_Cut_Yarn_Exception(self.carrier.carrier_id)
         last_needle = self.last_needle()
-        if last_needle is not None and abs(holding_needle.position - last_needle.position) > self.MAX_FLOAT_LENGTH:
+        if last_needle is not None and abs(holding_needle.position - last_needle.position) > self.MAX_FLOAT_LENGTH:  # Todo: Dynamically set this by the machine specifications
             warnings.warn(Long_Float_Warning(self.carrier.carrier_id, last_needle, holding_needle))
         loop = Machine_Knit_Loop(self._next_loop_id(knit_graph), self, holding_needle)
         self.add_loop_to_end(knit_graph, loop)

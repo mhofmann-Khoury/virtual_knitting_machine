@@ -1,4 +1,5 @@
 """Module for managing the sheet needle construction for multi-sheet knitting."""
+from __future__ import annotations
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
@@ -69,7 +70,7 @@ class Sheet_Needle(Needle):
         """
         return sheet + sheet_pos * gauge
 
-    def offset_in_sheet(self, offset: int, slider: bool = False):
+    def offset_in_sheet(self, offset: int, slider: bool = False) -> Sheet_Needle:
         """
         a needle offset while staying within the sheet.
         :param offset: number of layer positions to move.
@@ -81,13 +82,13 @@ class Sheet_Needle(Needle):
         else:
             return Sheet_Needle(is_front=self.is_front, sheet_pos=self.sheet_pos + offset, sheet=self.sheet, gauge=self.gauge)
 
-    def main_needle(self):
+    def main_needle(self) -> Sheet_Needle:
         """
         :return: The non-slider needle at this needle positions
         """
         return Sheet_Needle(is_front=self.is_front, sheet_pos=self.sheet_pos, sheet=self.sheet, gauge=self.gauge)
 
-    def gauge_neighbors(self) -> list:
+    def gauge_neighbors(self) -> list[Sheet_Needle]:
         """
         :return: List of needles that neighbor this loop in other gauges
         """
@@ -97,117 +98,101 @@ class Sheet_Needle(Needle):
                 neighbors.append(Sheet_Needle(self.is_front, self.sheet_pos, i, self.gauge))
         return neighbors
 
-    def __add__(self, other):
+    def __add__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, self.sheet_pos + position, self.sheet, self.gauge)
+        return self.__class__(self.is_front, self.sheet_pos + position, self.sheet, self.gauge)
 
-    def __radd__(self, other):
+    def __radd__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, position + self.sheet_pos, self.sheet, self.gauge)
+        return self.__class__(self.is_front, position + self.sheet_pos, self.sheet, self.gauge)
 
-    def __sub__(self, other):
+    def __sub__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, self.sheet_pos - position, self.sheet, self.gauge)
+        return self.__class__(self.is_front, self.sheet_pos - position, self.sheet, self.gauge)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, position - self.sheet_pos, self.sheet, self.gauge)
+        return self.__class__(self.is_front, position - self.sheet_pos, self.sheet, self.gauge)
 
-    def __mul__(self, other):
+    def __mul__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, self.sheet_pos * position, self.sheet, self.gauge)
+        return self.__class__(self.is_front, self.sheet_pos * position, self.sheet, self.gauge)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, position * self.sheet_pos, self.sheet, self.gauge)
+        return self.__class__(self.is_front, position * self.sheet_pos, self.sheet, self.gauge)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, self.sheet_pos / position, self.sheet, self.gauge)
+        return self.__class__(self.is_front, int(self.sheet_pos / position), self.sheet, self.gauge)
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, position / self.sheet_pos, self.sheet, self.gauge)
+        return self.__class__(self.is_front, int(position / self.sheet_pos), self.sheet, self.gauge)
 
-    def __floordiv__(self, other):
+    def __floordiv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, self.sheet_pos // position, self.sheet, self.gauge)
+        return self.__class__(self.is_front, self.sheet_pos // position, self.sheet, self.gauge)
 
-    def __rfloordiv__(self, other):
+    def __rfloordiv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, position // position, self.sheet, self.gauge)
+        return self.__class__(self.is_front, position // position, self.sheet, self.gauge)
 
-    def __mod__(self, other):
+    def __mod__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, self.sheet_pos % position, self.sheet, self.gauge)
+        return self.__class__(self.is_front, self.sheet_pos % position, self.sheet, self.gauge)
 
-    def __rmod__(self, other):
+    def __rmod__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
         position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
-        return Sheet_Needle(self.is_front, position % self.sheet_pos, self.sheet, self.gauge)
-
-    def __pow__(self, power, modulo=None):
-        position = power
-        if isinstance(power, Sheet_Needle):
-            position = power.sheet_pos
-        elif isinstance(power, Needle):
-            position = power.position
-        return Sheet_Needle(self.is_front, self.sheet_pos ** position, self.sheet, self.gauge)
-
-    def __rpow__(self, power, modulo=None):
-        position = power
-        if isinstance(power, Sheet_Needle):
-            position = power.sheet_pos
-        elif isinstance(power, Needle):
-            position = power.position
-        return Sheet_Needle(self.is_front, position ** self.sheet_pos, self.sheet, self.gauge)
+        return self.__class__(self.is_front, position % self.sheet_pos, self.sheet, self.gauge)
 
 
 class Slider_Sheet_Needle(Sheet_Needle, Slider_Needle):
@@ -217,118 +202,6 @@ class Slider_Sheet_Needle(Sheet_Needle, Slider_Needle):
 
     def __init__(self, is_front: bool, sheet_pos: int, sheet: int, gauge: int):
         super().__init__(is_front, sheet_pos, sheet, gauge)
-
-    def __add__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, self.sheet_pos + position, self.sheet, self.gauge)
-
-    def __radd__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, position + self.sheet_pos, self.sheet, self.gauge)
-
-    def __sub__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, self.sheet_pos - position, self.sheet, self.gauge)
-
-    def __rsub__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, position - self.sheet_pos, self.sheet, self.gauge)
-
-    def __mul__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, self.sheet_pos * position, self.sheet, self.gauge)
-
-    def __rmul__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, position * self.sheet_pos, self.sheet, self.gauge)
-
-    def __truediv__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, self.sheet_pos / position, self.sheet, self.gauge)
-
-    def __rtruediv__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, position / self.sheet_pos, self.sheet, self.gauge)
-
-    def __floordiv__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, self.sheet_pos // position, self.sheet, self.gauge)
-
-    def __rfloordiv__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, position // position, self.sheet, self.gauge)
-
-    def __mod__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, self.sheet_pos % position, self.sheet, self.gauge)
-
-    def __rmod__(self, other):
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return Slider_Sheet_Needle(self.is_front, position % self.sheet_pos, self.sheet, self.gauge)
-
-    def __pow__(self, power, modulo=None):
-        position = power
-        if isinstance(power, Sheet_Needle):
-            position = power.sheet_pos
-        elif isinstance(power, Needle):
-            position = power.position
-        return Slider_Sheet_Needle(self.is_front, self.sheet_pos ** position, self.sheet, self.gauge)
-
-    def __rpow__(self, power, modulo=None):
-        position = power
-        if isinstance(power, Sheet_Needle):
-            position = power.sheet_pos
-        elif isinstance(power, Needle):
-            position = power.position
-        return Slider_Sheet_Needle(self.is_front, position ** self.sheet_pos, self.sheet, self.gauge)
 
 
 def get_sheet_needle(needle: Needle, gauge: int, slider: bool = False) -> Sheet_Needle:
@@ -346,100 +219,100 @@ def get_sheet_needle(needle: Needle, gauge: int, slider: bool = False) -> Sheet_
     else:
         return Sheet_Needle(needle.is_front, sheet_pos, sheet, gauge)
 
-
-class Sheet_Identifier:
-    """
-    Used to convert needles given a defined sheet
-    ...
-
-    Attributes
-    ----------
-
-    """
-
-    def __init__(self, sheet: int, gauge: int):
-        assert gauge > 0, f"Knit Pass Error: Cannot make sheets for gauge {gauge}"
-        assert 0 <= sheet < gauge, f"Cannot identify sheet {sheet} at gauge {gauge}"
-        self._sheet: int = sheet
-        self._gauge: int = gauge
-
-    @property
-    def sheet(self) -> int:
-        """
-        :return: The position of the sheet in the gauge
-        """
-        return self._sheet
-
-    @property
-    def gauge(self) -> int:
-        """
-        :return: The number of active sheets
-        """
-        return self._gauge
-
-    def get_needle(self, needle: Needle) -> Sheet_Needle:
-        """
-        :param needle: Needle to access from sheet. Maybe a sheet needle which will be retargeted to this sheet
-        :return: the sheet needle at the given needle index and bed
-        """
-        pos = needle.position
-        if isinstance(needle, Sheet_Needle):
-            pos = needle.sheet_pos
-        if isinstance(needle, Slider_Needle):
-            return Slider_Sheet_Needle(needle.is_front, pos, self.sheet, self.gauge)
-        else:
-            return Sheet_Needle(needle.is_front, pos, self.sheet, self.gauge)
-
-    def needle(self, is_front: bool, position: int) -> Sheet_Needle:
-        """
-        Gets a needle within the sheet with specified position
-        :param is_front: True if needle is on front bed
-        :param position: position within the sheet
-        :return: the specified sheet needle
-        """
-        return Sheet_Needle(is_front, position, self.sheet, self.gauge)
-
-    def __str__(self):
-        return f"s{self.sheet}:g{self.gauge}"
-
-    def __repr__(self):
-        return str(self)
-
-    def __int__(self):
-        return self.sheet
-
-    def __le__(self, other):
-        return self.sheet <= int(other)
-
-    def __lt__(self, other):
-        return self.sheet < int(other)
-
-    def __eq__(self, other):
-        if isinstance(other, Sheet_Identifier):
-            return self.sheet == other.sheet and self.gauge == other.gauge
-        else:
-            return self.sheet == int(other)
-
-    def __gt__(self, other):
-        return self.sheet > int(other)
-
-    def __ge__(self, other):
-        return self.sheet >= int(other)
-
-    def __add__(self, other):
-        return self.sheet + int(other)
-
-    def __sub__(self, other):
-        return self.sheet - int(other)
-
-    def __neg__(self):
-        return self.sheet * -1
-
-    def __divmod__(self, other):
-        return self.sheet % int(other)
-
-    def __mul__(self, other):
-        return self.sheet * int(other)
-
-    def __pow__(self, power, modulo=None):
-        return self.sheet ^ int(power)
+#
+# class Sheet_Identifier:
+#     """
+#     Used to convert needles given a defined sheet
+#     ...
+#
+#     Attributes
+#     ----------
+#
+#     """
+#
+#     def __init__(self, sheet: int, gauge: int):
+#         assert gauge > 0, f"Knit Pass Error: Cannot make sheets for gauge {gauge}"
+#         assert 0 <= sheet < gauge, f"Cannot identify sheet {sheet} at gauge {gauge}"
+#         self._sheet: int = sheet
+#         self._gauge: int = gauge
+#
+#     @property
+#     def sheet(self) -> int:
+#         """
+#         :return: The position of the sheet in the gauge
+#         """
+#         return self._sheet
+#
+#     @property
+#     def gauge(self) -> int:
+#         """
+#         :return: The number of active sheets
+#         """
+#         return self._gauge
+#
+#     def get_needle(self, needle: Needle) -> Sheet_Needle:
+#         """
+#         :param needle: Needle to access from sheet. Maybe a sheet needle which will be retargeted to this sheet
+#         :return: the sheet needle at the given needle index and bed
+#         """
+#         pos = needle.position
+#         if isinstance(needle, Sheet_Needle):
+#             pos = needle.sheet_pos
+#         if isinstance(needle, Slider_Needle):
+#             return Slider_Sheet_Needle(needle.is_front, pos, self.sheet, self.gauge)
+#         else:
+#             return Sheet_Needle(needle.is_front, pos, self.sheet, self.gauge)
+#
+#     def needle(self, is_front: bool, position: int) -> Sheet_Needle:
+#         """
+#         Gets a needle within the sheet with specified position
+#         :param is_front: True if needle is on front bed
+#         :param position: position within the sheet
+#         :return: the specified sheet needle
+#         """
+#         return Sheet_Needle(is_front, position, self.sheet, self.gauge)
+#
+#     def __str__(self):
+#         return f"s{self.sheet}:g{self.gauge}"
+#
+#     def __repr__(self):
+#         return str(self)
+#
+#     def __int__(self):
+#         return self.sheet
+#
+#     def __le__(self, other):
+#         return self.sheet <= int(other)
+#
+#     def __lt__(self, other):
+#         return self.sheet < int(other)
+#
+#     def __eq__(self, other):
+#         if isinstance(other, Sheet_Identifier):
+#             return self.sheet == other.sheet and self.gauge == other.gauge
+#         else:
+#             return self.sheet == int(other)
+#
+#     def __gt__(self, other):
+#         return self.sheet > int(other)
+#
+#     def __ge__(self, other):
+#         return self.sheet >= int(other)
+#
+#     def __add__(self, other):
+#         return self.sheet + int(other)
+#
+#     def __sub__(self, other):
+#         return self.sheet - int(other)
+#
+#     def __neg__(self):
+#         return self.sheet * -1
+#
+#     def __divmod__(self, other):
+#         return self.sheet % int(other)
+#
+#     def __mul__(self, other):
+#         return self.sheet * int(other)
+#
+#     def __pow__(self, power, modulo=None):
+#         return self.sheet ^ int(power)

@@ -1,9 +1,11 @@
 """A Module containing the Needle class and related functions."""
+from __future__ import annotations
 import warnings
 
 from knit_graphs.Pull_Direction import Pull_Direction
 
 from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import Needle_Holds_Too_Many_Loops
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 
 class Needle:
@@ -11,7 +13,7 @@ class Needle:
     A Simple class structure for keeping track of needle locations
     """
 
-    MAX_LOOPS = 4
+    MAX_LOOPS: int = 4  # Todo: Remove this and set dynamically by knitting machine specification
 
     def __init__(self, is_front: bool, position: int):
         """
@@ -21,7 +23,7 @@ class Needle:
         """
         self._is_front: bool = is_front
         self._position: int = int(position)
-        self.held_loops: list = []
+        self.held_loops: list[Machine_Knit_Loop] = []
 
     @property
     def pull_direction(self) -> Pull_Direction:
@@ -54,7 +56,7 @@ class Needle:
         """
         return len(self.held_loops) > 0
 
-    def active_floats(self) -> dict:
+    def active_floats(self) -> dict[Machine_Knit_Loop, Machine_Knit_Loop]:
         """
         :return: Active floats connecting to loops on this needle.
          Dictionary of loops that are active keyed to active yarn-wise neighbors.
@@ -70,7 +72,7 @@ class Needle:
                 active_floats[prior_loop] = loop
         return active_floats
 
-    def float_overlaps_needle(self, u, v) -> bool:
+    def float_overlaps_needle(self, u: Machine_Knit_Loop, v: Machine_Knit_Loop) -> bool:
         """
         :param u: Machine_Knit_Loop at start of float.
         :param v: Machine_Knit_Loop at end of float.
@@ -80,19 +82,19 @@ class Needle:
             return False
         left_position = min(u.holding_needle.position, v.holding_needle.position)
         right_position = max(u.holding_needle.position, v.holding_needle.position)
-        return left_position <= self.position <= right_position
+        return bool(left_position <= self.position <= right_position)
 
-    def add_loop(self, loop):
+    def add_loop(self, loop: Machine_Knit_Loop) -> None:
         """
         puts the loop in the set of currently held loops.
         :param loop: loop to add onto needle
         """
-        if len(self.held_loops) >= Needle.MAX_LOOPS:
-            warnings.warn(Needle_Holds_Too_Many_Loops(self))
+        if len(self.held_loops) >= Needle.MAX_LOOPS: # Todo get this dynamically from machine state specification
+            warnings.warn(Needle_Holds_Too_Many_Loops(self, Needle.MAX_LOOPS))
         self.held_loops.append(loop)
         loop.yarn.active_loops[loop] = self
 
-    def add_loops(self, loops: list):
+    def add_loops(self, loops: list[Machine_Knit_Loop]) -> None:
         """
         Add loops to the held set
         :param loops: list of loops to place onto needle
@@ -100,7 +102,7 @@ class Needle:
         for l in loops:
             self.add_loop(l)
 
-    def transfer_loops(self, target_needle) -> list:
+    def transfer_loops(self, target_needle: Needle) -> list[Machine_Knit_Loop]:
         """
         Transfer loops to target needle.
         :param target_needle: Needle to transfer loops to.
@@ -113,7 +115,7 @@ class Needle:
         target_needle.add_loops(xfer_loops)
         return xfer_loops
 
-    def drop(self) -> list:
+    def drop(self) -> list[Machine_Knit_Loop]:
         """
         releases all held loops by resetting the loop-set
         """
@@ -131,14 +133,14 @@ class Needle:
         """
         return not self.is_front
 
-    def opposite(self):
+    def opposite(self) -> Needle:
         """
         Return the needle on the opposite bed
         :return: the needle on the opposite bed at the same position
         """
         return Needle(is_front=not self.is_front, position=self.position)
 
-    def offset(self, offset: int):
+    def offset(self, offset: int) -> Needle:
         """
         Return a needle by the offset value
         :param offset: the amount to offset the needle from
@@ -157,27 +159,27 @@ class Needle:
         else:
             return self.position + rack
 
-    def main_needle(self):
+    def main_needle(self) -> Needle:
         """
         :return: The non-slider needle at this needle positions
         """
         return Needle(is_front=self.is_front, position=self.position)
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.is_front:
             return f"f{self.position}"
         else:
             return f"b{self.position}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         if self.is_back:
             return -1 * self.position
         return self.position
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: Needle | int | float) -> bool:
         if isinstance(other, Needle):
             if self.position < other.position:  # self is left of other
                 return True
@@ -190,15 +192,15 @@ class Needle:
         elif isinstance(other, int) or isinstance(other, float):
             return self.position < other
         else:
-            raise AttributeError
+            raise TypeError(f"Expected comparison to Needle or number but got {other}")
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.position
 
-    def __index__(self):
+    def __index__(self) -> int:
         return int(self)
 
-    def at_racking_comparison(self, other, rack: int = 0, all_needle_racking: bool = False) -> int:
+    def at_racking_comparison(self, other: Needle, rack: int = 0, all_needle_racking: bool = False) -> int:
         """
         A comparison value between self and another needle at a given racking.
         :param all_needle_racking: If true, account for front back alignment in all needle knitting.
@@ -206,7 +208,6 @@ class Needle:
         :param rack: Racking value to compare between.
         :return: 1 if self > other, 0 if equal, -1 if self < other.
         """
-        assert isinstance(other, Needle)
         self_pos = self.racked_position_on_front(rack)
         other_pos = other.racked_position_on_front(rack)
         if self_pos < other_pos:
@@ -222,7 +223,7 @@ class Needle:
                 return 1
 
     @staticmethod
-    def needle_at_racking_cmp(n1, n2, racking: int = 0, all_needle_racking: bool = False) -> int:
+    def needle_at_racking_cmp(n1: Needle, n2: Needle, racking: int = 0, all_needle_racking: bool = False) -> int:
         """
         A comparison value between self and another needle at a given racking.
         :param all_needle_racking: If true, account for front back alignment in all needle knitting.
@@ -231,107 +232,93 @@ class Needle:
         :param racking: Racking value to compare between.
         :return: 1 if self > other, 0 if equal, -1 if self < other.
         """
-        assert isinstance(n1, Needle)
         return n1.at_racking_comparison(n2, racking, all_needle_racking)
 
-    def __add__(self, other):
+    def __add__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, self.position + position)
+        return self.__class__(self.is_front, int(self.position + position))
 
-    def __radd__(self, other):
+    def __radd__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, position + self.position)
+        return self.__class__(self.is_front, int(self.position + position))
 
-    def __sub__(self, other):
+    def __sub__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, self.position - position)
+        return self.__class__(self.is_front, int(self.position - position))
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, position - self.position)
+        return self.__class__(self.is_front, int(position - self.position))
 
-    def __mul__(self, other):
+    def __mul__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, self.position * position)
+        return self.__class__(self.is_front, int(self.position * position))
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, position * self.position)
+        return self.__class__(self.is_front, int(position * self.position))
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, self.position / position)
+        return self.__class__(self.is_front, int(self.position / position))
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, position / self.position)
+        return self.__class__(self.is_front, int(position / self.position))
 
-    def __floordiv__(self, other):
+    def __floordiv__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, self.position // position)
+        return self.__class__(self.is_front, int(self.position // position))
 
-    def __rfloordiv__(self, other):
+    def __rfloordiv__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, position // position)
+        return self.__class__(self.is_front, int(position // position))
 
-    def __mod__(self, other):
+    def __mod__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, self.position % position)
+        return self.__class__(self.is_front, int(self.position % position))
 
-    def __rmod__(self, other):
+    def __rmod__(self, other: Needle | int) -> Needle:
         position = other
         if isinstance(other, Needle):
             position = other.position
-        return Needle(self.is_front, position % self.position)
+        return self.__class__(self.is_front, int(position % self.position))
 
-    def __pow__(self, power, modulo=None):
-        position = power
-        if isinstance(power, Needle):
-            position = power.position
-        return Needle(self.is_front, self.position ** position)
-
-    def __rpow__(self, power, modulo=None):
-        position = power
-        if isinstance(power, Needle):
-            position = power.position
-        return Needle(self.is_front, position ** self.position)
-
-    def __lshift__(self, other):
+    def __lshift__(self, other: Needle | int) -> Needle:
         return self - other
 
-    def __rshift__(self, other):
+    def __rshift__(self, other: Needle | int) -> Needle:
         return self + other
 
-    def __rlshift__(self, other):
+    def __rlshift__(self, other: Needle | int) -> Needle:
         return other - self
 
-    def __rrshift__(self, other):
+    def __rrshift__(self, other: Needle | int) -> Needle:
         return other + self
 
-    def __eq__(self, other):
-        assert isinstance(other, Needle), f"Cannot compare needle equality to other types: {type(other)}"
+    def __eq__(self, other: Needle) -> bool:
         return self.is_front == other.is_front and self.is_slider == other.is_slider and self.position == other.position
 
     @property

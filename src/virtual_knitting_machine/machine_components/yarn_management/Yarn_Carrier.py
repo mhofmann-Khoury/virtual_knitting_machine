@@ -1,4 +1,5 @@
 """Yarn_Carrier representation"""
+from __future__ import annotations
 import warnings
 
 from knit_graphs.Yarn import Yarn_Properties
@@ -14,7 +15,7 @@ class Yarn_Carrier:
         Carrier on a knitting machine
     """
 
-    def __init__(self, carrier_id: int, yarn: None | Machine_Knit_Yarn = None, yarn_properties: Yarn_Properties | None = None):
+    def __init__(self, carrier_id: int, yarn: None | Machine_Knit_Yarn = None, yarn_properties: Yarn_Properties | None = None) -> None:
         self._carrier_id: int = carrier_id
         self._is_active: bool = False
         self._is_hooked: bool = False
@@ -34,7 +35,7 @@ class Yarn_Carrier:
         return self._yarn
 
     @yarn.setter
-    def yarn(self, yarn_properties: Yarn_Properties):
+    def yarn(self, yarn_properties: Yarn_Properties) -> None:
         if self.is_active:
             raise Change_Active_Yarn_Exception(self.carrier_id)
         self._yarn: Machine_Knit_Yarn = Machine_Knit_Yarn(self, yarn_properties)
@@ -47,7 +48,7 @@ class Yarn_Carrier:
         return self._position
 
     @position.setter
-    def position(self, new_position: None | Needle | int):
+    def position(self, new_position: None | Needle | int) -> None:
         if new_position is None:
             self._position = None
         else:
@@ -61,7 +62,7 @@ class Yarn_Carrier:
         return self._is_active
 
     @is_active.setter
-    def is_active(self, active_state: bool):
+    def is_active(self, active_state: bool) -> None:
         if active_state is True:
             self._is_active = True
         else:
@@ -77,10 +78,10 @@ class Yarn_Carrier:
         return self._is_hooked
 
     @is_hooked.setter
-    def is_hooked(self, hook_state: bool):
+    def is_hooked(self, hook_state: bool) -> None:
         self._is_hooked = hook_state
 
-    def bring_in(self):
+    def bring_in(self) -> None:
         """
             Record in operation
         """
@@ -88,20 +89,20 @@ class Yarn_Carrier:
             warnings.warn(In_Active_Carrier_Warning(self.carrier_id))  # Warn user but do no in action
         self.is_active = True
 
-    def inhook(self):
+    def inhook(self) -> None:
         """
             Record inhook operation
         """
         self.bring_in()
         self.is_hooked = True
 
-    def releasehook(self):
+    def releasehook(self) -> None:
         """
             Record release hook operation
         """
         self.is_hooked = False
 
-    def out(self):
+    def out(self) -> None:
         """
             Record out operation
         """
@@ -109,7 +110,7 @@ class Yarn_Carrier:
             warnings.warn(Out_Inactive_Carrier_Warning(self.carrier_id))  # Warn use but do not do out action
         self.is_active = False
 
-    def outhook(self):
+    def outhook(self) -> None:
         """
         Record outhook operation. Raise exception if already on yarn inserting hook
         """
@@ -125,20 +126,20 @@ class Yarn_Carrier:
         """
         return self._carrier_id
 
-    def __lt__(self, other):
-        return self.carrier_id < other.carrier_id
+    def __lt__(self, other: int | Yarn_Carrier) -> bool:
+        return int(self) < int(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return self.carrier_id
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.yarn.yarn_id == str(self._carrier_id):
             return str(self.carrier_id)
         else:
             return f"{self.carrier_id}:{self.yarn}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.carrier_id
