@@ -481,7 +481,7 @@ class Knitting_Machine:
                 self.carriage.move_to(starting_needle.position)
             else:
                 self.carriage.move_to(aligned_needle.position)
-        return  xfer_loops
+        return xfer_loops
 
     def split(self, carrier_set: Yarn_Carrier_Set, starting_needle: Needle, direction: Carriage_Pass_Direction) -> tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]:
         """Pull a loop formed in direction by the yarns in carriers through the loops on needle, transferring the old loops to opposite-bed needle in the process.
