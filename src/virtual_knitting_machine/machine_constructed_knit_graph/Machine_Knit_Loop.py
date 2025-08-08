@@ -2,11 +2,16 @@
 This module extends the base Loop class to capture machine-specific information including
  needle history, transfer operations, and machine state tracking for loops created by virtual knitting machines."""
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from knit_graphs.Loop import Loop
 from knit_graphs.Yarn import Yarn
 
 from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import Slider_Loop_Exception, Xfer_Dropped_Loop_Exception
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+
+if TYPE_CHECKING:
+    from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 
 class Machine_Knit_Loop(Loop):
@@ -98,3 +103,8 @@ class Machine_Knit_Loop(Loop):
     def drop(self) -> None:
         """Mark the loop as dropped by adding None to end of needle history."""
         self.needle_history.append(None)
+
+    def reverse_drop(self) -> None:
+        """Undoes the recording of the last drop action. Used for transfers to "drop" from one needle while transferring to another."""
+        if self.dropped:
+            self.needle_history.pop(-1)

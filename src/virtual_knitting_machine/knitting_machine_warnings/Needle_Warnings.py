@@ -1,7 +1,12 @@
 """A module containing warnings related to needle operations and states on knitting machines.
 This module provides warning classes for various needle-related issues including loop capacity violations, transfer operations on empty needles, and knitting operations on needles without loops."""
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import Knitting_Machine_Warning
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+
+if TYPE_CHECKING:
+    from virtual_knitting_machine.machine_components.needles.Needle import Needle
+
 
 
 class Needle_Warning(Knitting_Machine_Warning):

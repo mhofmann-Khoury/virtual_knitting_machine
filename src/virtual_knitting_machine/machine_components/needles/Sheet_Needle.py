@@ -102,28 +102,28 @@ class Sheet_Needle(Needle):
         """
         return sheet + sheet_pos * gauge
 
-    def offset_in_sheet(self, offset: int, slider: bool = False) -> Sheet_Needle:
+    def offset_in_sheet(self, offset: int) -> Sheet_Needle:
         """Get a needle offset within the same sheet.
 
         Args:
             offset (int): Number of sheet positions to move.
-            slider (bool, optional): True if returning a slider needle. Defaults to False.
 
         Returns:
             Sheet_Needle: The needle offset by the given value in the sheet (not actual needle positions).
         """
-        if slider:
-            return Slider_Sheet_Needle(is_front=self.is_front, sheet_pos=self.sheet_pos + offset, sheet=self.sheet, gauge=self.gauge)
-        else:
-            return Sheet_Needle(is_front=self.is_front, sheet_pos=self.sheet_pos + offset, sheet=self.sheet, gauge=self.gauge)
+        return self + offset
 
     def main_needle(self) -> Sheet_Needle:
         """Get the non-slider needle at this needle position.
 
         Returns:
             Sheet_Needle: The non-slider needle at this needle position.
+            If this is not a slider, this instance is returned.
         """
-        return Sheet_Needle(is_front=self.is_front, sheet_pos=self.sheet_pos, sheet=self.sheet, gauge=self.gauge)
+        if not self.is_slider:
+            return self
+        else:
+            return Sheet_Needle(is_front=self.is_front, sheet_pos=self.sheet_pos, sheet=self.sheet, gauge=self.gauge)
 
     def gauge_neighbors(self) -> list[Sheet_Needle]:
         """Get list of needles that neighbor this needle in other sheets of the same gauge.
@@ -200,134 +200,6 @@ class Sheet_Needle(Needle):
         elif isinstance(other, Needle):
             position = other.position
         return self.__class__(self.is_front, position - self.sheet_pos, self.sheet, self.gauge)
-
-    def __mul__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
-        """Multiply this sheet needle's position.
-
-        Args:
-            other (Sheet_Needle | Needle | int): The needle or integer to multiply by.
-
-        Returns:
-            Sheet_Needle: New sheet needle with the product position.
-        """
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, self.sheet_pos * position, self.sheet, self.gauge)
-
-    def __rmul__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
-        """Right-hand multiply operation for sheet needle.
-
-        Args:
-            other (Sheet_Needle | Needle | int): The needle or integer to multiply.
-
-        Returns:
-            Sheet_Needle: New sheet needle with the product position.
-        """
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, position * self.sheet_pos, self.sheet, self.gauge)
-
-    def __truediv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
-        """Divide this sheet needle's position.
-
-        Args:
-            other (Sheet_Needle | Needle | int): The needle or integer to divide by.
-
-        Returns:
-            Sheet_Needle: New sheet needle with the quotient position.
-        """
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(self.sheet_pos / position), self.sheet, self.gauge)
-
-    def __rtruediv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
-        """Right-hand divide operation for sheet needle.
-
-        Args:
-            other (Sheet_Needle | Needle | int): The needle or integer to divide.
-
-        Returns:
-            Sheet_Needle: New sheet needle with the quotient position.
-        """
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(position / self.sheet_pos), self.sheet, self.gauge)
-
-    def __floordiv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
-        """Floor divide this sheet needle's position.
-
-        Args:
-            other (Sheet_Needle | Needle | int): The needle or integer to floor divide by.
-
-        Returns:
-            Sheet_Needle: New sheet needle with the floor division result position.
-        """
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, self.sheet_pos // position, self.sheet, self.gauge)
-
-    def __rfloordiv__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
-        """Right-hand floor divide operation for sheet needle.
-
-        Args:
-            other (Sheet_Needle | Needle | int): The needle or integer to floor divide.
-
-        Returns:
-            Sheet_Needle: New sheet needle with the floor division result position.
-        """
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, position // position, self.sheet, self.gauge)
-
-    def __mod__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
-        """Get modulo of this sheet needle's position.
-
-        Args:
-            other (Sheet_Needle | Needle | int): The needle or integer to get modulo with.
-
-        Returns:
-            Sheet_Needle: New sheet needle with the modulo result position.
-        """
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, self.sheet_pos % position, self.sheet, self.gauge)
-
-    def __rmod__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
-        """Right-hand modulo operation for sheet needle.
-
-        Args:
-            other (Sheet_Needle | Needle | int): The needle or integer to get modulo of.
-
-        Returns:
-            Sheet_Needle: New sheet needle with the modulo result position.
-        """
-        position = other
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, position % self.sheet_pos, self.sheet, self.gauge)
 
 
 class Slider_Sheet_Needle(Sheet_Needle, Slider_Needle):

@@ -2,13 +2,17 @@
 This module provides the Yarn_Carrier class which represents a single yarn carrier that can hold yarn, track position, and manage active/hooked states for knitting operations."""
 from __future__ import annotations
 import warnings
+from typing import TYPE_CHECKING
 
 from knit_graphs.Yarn import Yarn_Properties
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Change_Active_Yarn_Exception, Hooked_Carrier_Exception
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import In_Active_Carrier_Warning, Out_Inactive_Carrier_Warning
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import Machine_Knit_Yarn
+
+if TYPE_CHECKING:
+    from virtual_knitting_machine.machine_components.needles.Needle import Needle
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 
 
 class Yarn_Carrier:
@@ -181,6 +185,22 @@ class Yarn_Carrier:
             bool: True if this carrier's ID is less than the other.
         """
         return int(self) < int(other)
+
+    def __eq__(self, other: int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]) -> bool:
+        """
+        Equality comparison of a carrier to another carrier or object representing a carrier.
+        Args:
+            other (int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]): The carrier or object representing a carrier.
+
+        Returns:
+            bool: True if this carrier is equal to the other. Carrier sets are equal if they only contain this carrier.
+        """
+        if isinstance(other, Yarn_Carrier) or isinstance(other, int):
+            return self.carrier_id == int(other)
+        else:  # Yarn_Carrier_Set or list of carriers
+            if len(other) != 1:
+                return False
+            return self == other[0]
 
     def __hash__(self) -> int:
         """Return hash value based on carrier ID.

@@ -3,12 +3,14 @@ This module provides the Yarn_Carrier_Set class which represents a collection of
 It manages multiple carriers as a single unit for positioning and operations."""
 from __future__ import annotations
 import warnings
-from typing import Iterator
+from typing import Iterator, TYPE_CHECKING
 
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Duplicate_Carriers_In_Set
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
+
+if TYPE_CHECKING:
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
 
 
 class Yarn_Carrier_Set:
@@ -137,7 +139,7 @@ class Yarn_Carrier_Set:
             return self.carrier_ids[0] == int(other)
         elif len(self) != len(other):
             return False
-        return any(c != int(other_c) for c, other_c in zip(self, other))
+        return not any(c != int(other_c) for c, other_c in zip(self, other))
 
     def __iter__(self) -> Iterator[int]:
         """Iterate over the carrier IDs in this set.
@@ -147,8 +149,8 @@ class Yarn_Carrier_Set:
         """
         return iter(self.carrier_ids)
 
-    def __getitem__(self, item: int | slice | Yarn_Carrier) -> int | list[int]:
-        """Get carrier ID(s) by index, slice, or carrier object.
+    def __getitem__(self, item: int | slice) -> int | list[int]:
+        """Get carrier ID(s) by index or slice.
 
         Args:
             item (int | slice | Yarn_Carrier): Index, slice, or carrier to get ID for.
@@ -156,8 +158,6 @@ class Yarn_Carrier_Set:
         Returns:
             int | list[int]: Carrier ID or list of carrier IDs.
         """
-        if isinstance(item, Yarn_Carrier):
-            item = int(item)
         return self.carrier_ids[item]
 
     def __len__(self) -> int:

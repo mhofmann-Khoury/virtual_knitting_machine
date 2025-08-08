@@ -3,11 +3,14 @@ This module provides functionality for tracking carriage position, validating mo
 from __future__ import annotations
 
 import warnings
+from typing import TYPE_CHECKING
 
-from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import Carriage_Off_Edge_Warning
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import Carriage_Side
+
+if TYPE_CHECKING:
+    from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 
 
 class Carriage:
@@ -15,24 +18,23 @@ class Carriage:
     The carriage is responsible for moving across the needle bed and performing knitting operations.
     This class manages position validation, movement direction tracking, and transfer operation states."""
 
-    def __init__(self, knitting_machine: Knitting_Machine, right_needle_position: int, left_needle_position: int = 0,
-                 last_carriage_direction: Carriage_Pass_Direction = Carriage_Pass_Direction.Leftward) -> None:
+    def __init__(self, knitting_machine: Knitting_Machine, right_needle_position: int, left_needle_position: int = 0) -> None:
         """Initialize a new carriage with specified position range and starting direction.
 
         Args:
             knitting_machine (Knitting_Machine): The knitting machine this carriage belongs to.
             right_needle_position (int): The rightmost needle position the carriage can reach.
             left_needle_position (int, optional): The leftmost needle position the carriage can reach. Defaults to 0.
-            last_carriage_direction (Carriage_Pass_Direction, optional): The initial direction of the carriage. Defaults to Carriage_Pass_Direction.Leftward.
 
-        Raises:
-            AssertionError: If left_needle_position is not less than right_needle_position.
         """
         self.knitting_machine: Knitting_Machine = knitting_machine
-        assert left_needle_position < right_needle_position, f"Carriage must have range of motion."
+        if left_needle_position > right_needle_position:  # Swaps positions if they are not in the right order.
+            hold_r = right_needle_position
+            right_needle_position = left_needle_position
+            left_needle_position = hold_r
         self._left_needle_position: int = left_needle_position
         self._right_needle_position: int = right_needle_position
-        self._last_direction: Carriage_Pass_Direction = last_carriage_direction
+        self._last_direction: Carriage_Pass_Direction = Carriage_Pass_Direction.Leftward
         self._current_needle_position: int = self._left_needle_position
         self._transferring: bool = False
         self._position_prior_to_transfers: int = self.current_needle_position

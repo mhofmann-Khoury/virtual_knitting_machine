@@ -4,11 +4,9 @@ This module provides the core Needle class which represents individual needles o
 Needles can be on the front or back bed and can hold loops for knitting operations. The module includes functionality for loop management, needle positioning, and various knitting operations.
 """
 from __future__ import annotations
-import warnings
 
 from knit_graphs.Pull_Direction import Pull_Direction
 
-from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import Needle_Holds_Too_Many_Loops
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 
@@ -21,6 +19,7 @@ class Needle:
     Attributes:
         held_loops (list[Machine_Knit_Loop]): List of loops currently held by this needle.
     """
+
     def __init__(self, is_front: bool, position: int) -> None:
         """Initialize a new needle.
 
@@ -105,36 +104,28 @@ class Needle:
         right_position = max(u.holding_needle.position, v.holding_needle.position)
         return bool(left_position <= self.position <= right_position)
 
-    def add_loop(self, loop: Machine_Knit_Loop, max_loops: int | None = None) -> None:
+    def add_loop(self, loop: Machine_Knit_Loop) -> None:
         """Add a loop to the set of currently held loops.
 
         Args:
-            max_loops: Optional value for the maximum number of loops to be held on this needle.
             loop (Machine_Knit_Loop): Loop to add onto needle.
-
-        Warns:
-            Needle_Holds_Too_Many_Loops: If adding this loop would exceed maximum loop count.
         """
-        if max_loops is not None and len(self.held_loops) >= max_loops:
-            warnings.warn(Needle_Holds_Too_Many_Loops(self, max_loops))
         self.held_loops.append(loop)
         loop.yarn.active_loops[loop] = self
 
-    def add_loops(self, loops: list[Machine_Knit_Loop], max_loops: int | None = None) -> None:
+    def add_loops(self, loops: list[Machine_Knit_Loop]) -> None:
         """Add multiple loops to the held set.
 
         Args:
-            max_loops (int | None): Optional value for the maximum number of loops to be held on this needle.
             loops (list[Machine_Knit_Loop]): List of loops to place onto needle.
         """
         for l in loops:
-            self.add_loop(l, max_loops)
+            self.add_loop(l)
 
-    def transfer_loops(self, target_needle: Needle, max_loops: int | None = None) -> list[Machine_Knit_Loop]:
+    def transfer_loops(self, target_needle: Needle) -> list[Machine_Knit_Loop]:
         """Transfer all loops from this needle to a target needle.
 
         Args:
-            max_loops (int | None): Optional value for the maximum number of loops to be held on this needle.
             target_needle (Needle): Needle to transfer loops to.
 
         Returns:
@@ -144,7 +135,7 @@ class Needle:
         for loop in xfer_loops:
             loop.transfer_loop(target_needle)
         self.held_loops = []
-        target_needle.add_loops(xfer_loops, max_loops)
+        target_needle.add_loops(xfer_loops)
         return xfer_loops
 
     def drop(self) -> list[Machine_Knit_Loop]:
@@ -175,7 +166,7 @@ class Needle:
         Returns:
             Needle: The needle on the opposite bed at the same position.
         """
-        return Needle(is_front=not self.is_front, position=self.position)
+        return self.__class__(is_front=not self.is_front, position=self.position)
 
     def offset(self, offset: int) -> Needle:
         """Get a needle offset by the specified amount on the same bed.
@@ -186,7 +177,7 @@ class Needle:
         Returns:
             Needle: The needle offset spaces away on the same bed.
         """
-        return Needle(is_front=self.is_front, position=self.position + offset)
+        return self + offset
 
     def racked_position_on_front(self, rack: int) -> int:
         """Get the position of the needle on the front bed at a given racking.
@@ -207,7 +198,10 @@ class Needle:
 
         Returns:
             Needle: The non-slider needle at this needle position.
+            If this is not a slider needle, this instance is returned.
         """
+        if not self.is_slider:
+            return self
         return Needle(is_front=self.is_front, position=self.position)
 
     def __str__(self) -> str:
@@ -246,24 +240,20 @@ class Needle:
             other (Needle | int | float): The other needle or number to compare with.
 
         Returns:
-            bool: True if this needle is less than the other.
+            bool: True if this needle's position is less than the other value.
+            If the needles are at the same location but in opposite positions (back vs. front), the front needle is considered less than the back.
+            This orders needles as front-to-back in a leftward carriage pass.
 
         Raises:
             TypeError: If other is not a Needle or number.
         """
-        if isinstance(other, Needle):
-            if self.position < other.position:  # self is left of other
-                return True
-            elif other.position < self.position:  # other is left of self
-                return False
-            elif self.is_front and not other.is_front:  # self.position == other.position, front followed by back
-                return True
-            else:  # same positions, back followed by front or same side
-                return False
-        elif isinstance(other, int) or isinstance(other, float):
-            return self.position < other
+        if isinstance(other, Needle) and self.is_front and not other.is_front:
+            return True  # Equal position needles are ordered front then back in a leftward direction.
         else:
-            raise TypeError(f"Expected comparison to Needle or number but got {other}")
+            try:
+                return self.position < int(other)
+            except ValueError:
+                raise TypeError(f"Expected comparison to Needle or number but got {other}")
 
     def __int__(self) -> int:
         """Return integer representation of the needle position.
@@ -292,6 +282,9 @@ class Needle:
 
         Returns:
             int: 1 if self > other, 0 if equal, -1 if self < other.
+
+        Notes:
+            At an all needle racking, the front needle is always < the back needle, regardless of direction.
         """
         self_pos = self.racked_position_on_front(rack)
         other_pos = other.racked_position_on_front(rack)
@@ -320,6 +313,9 @@ class Needle:
 
         Returns:
             int: 1 if n1 > n2, 0 if equal, -1 if n1 < n2.
+
+        Notes:
+            At an all needle racking, the front needle is always < the back needle, regardless of direction.
         """
         return n1.at_racking_comparison(n2, racking, all_needle_racking)
 
@@ -378,118 +374,6 @@ class Needle:
         if isinstance(other, Needle):
             position = other.position
         return self.__class__(self.is_front, int(position - self.position))
-
-    def __mul__(self, other: Needle | int) -> Needle:
-        """Multiply this needle's position by another needle's position or an integer.
-
-        Args:
-            other (Needle | int): The needle or integer to multiply by.
-
-        Returns:
-            Needle: New needle with the product position on the same bed.
-        """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(self.position * position))
-
-    def __rmul__(self, other: Needle | int) -> Needle:
-        """Right-hand multiply operation.
-
-        Args:
-            other (Needle | int): The needle or integer to multiply.
-
-        Returns:
-            Needle: New needle with the product position on the same bed.
-        """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(position * self.position))
-
-    def __truediv__(self, other: Needle | int) -> Needle:
-        """Divide this needle's position by another needle's position or an integer.
-
-        Args:
-            other (Needle | int): The needle or integer to divide by.
-
-        Returns:
-            Needle: New needle with the quotient position on the same bed.
-        """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(self.position / position))
-
-    def __rtruediv__(self, other: Needle | int) -> Needle:
-        """Right-hand divide operation.
-
-        Args:
-            other (Needle | int): The needle or integer to divide.
-
-        Returns:
-            Needle: New needle with the quotient position on the same bed.
-        """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(position / self.position))
-
-    def __floordiv__(self, other: Needle | int) -> Needle:
-        """Floor divide this needle's position by another needle's position or an integer.
-
-        Args:
-            other (Needle | int): The needle or integer to floor divide by.
-
-        Returns:
-            Needle: New needle with the floor division result position on the same bed.
-        """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(self.position // position))
-
-    def __rfloordiv__(self, other: Needle | int) -> Needle:
-        """Right-hand floor divide operation.
-
-        Args:
-            other (Needle | int): The needle or integer to floor divide.
-
-        Returns:
-            Needle: New needle with the floor division result position on the same bed.
-        """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(position // position))
-
-    def __mod__(self, other: Needle | int) -> Needle:
-        """Get modulo of this needle's position with another needle's position or an integer.
-
-        Args:
-            other (Needle | int): The needle or integer to get modulo with.
-
-        Returns:
-            Needle: New needle with the modulo result position on the same bed.
-        """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(self.position % position))
-
-    def __rmod__(self, other: Needle | int) -> Needle:
-        """Right-hand modulo operation.
-
-        Args:
-            other (Needle | int): The needle or integer to get modulo of.
-
-        Returns:
-            Needle: New needle with the modulo result position on the same bed.
-        """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(position % self.position))
 
     def __lshift__(self, other: Needle | int) -> Needle:
         """Left shift operation (equivalent to subtraction).

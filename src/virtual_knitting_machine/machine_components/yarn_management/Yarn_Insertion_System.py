@@ -4,9 +4,8 @@ carrier states, insertion hook operations, position tracking, and loop creation 
 from __future__ import annotations
 
 import warnings
-from typing import cast
+from typing import cast, TYPE_CHECKING
 
-from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Inserting_Hook_In_Use_Exception, Hooked_Carrier_Exception, Use_Inactive_Carrier_Exception
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import In_Active_Carrier_Warning, In_Loose_Carrier_Warning, Out_Inactive_Carrier_Warning
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
@@ -14,6 +13,9 @@ from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+
+if TYPE_CHECKING:
+    from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 
 
 class Yarn_Insertion_System:
@@ -105,10 +107,10 @@ class Yarn_Insertion_System:
         """
         if self.hook_position is not None:  # reserve positions to right of needle
             if direction is Carriage_Pass_Direction.Leftward:
-                inserting_hook_range = range(self.hook_position + 1, self.hook_position + self.hook_size)
+                hook_start, hook_end = self.hook_position + 1, self.hook_position + self.hook_size
             else:
-                inserting_hook_range = range(self.hook_position - 1, self.hook_position - self.hook_size)
-            return needle.position in inserting_hook_range
+                hook_start, hook_end = self.hook_position - self.hook_size, self.hook_position - 1
+            return bool(hook_start <= needle.position < hook_end)
         else:  # no conflicts if hook is not active
             return False
 

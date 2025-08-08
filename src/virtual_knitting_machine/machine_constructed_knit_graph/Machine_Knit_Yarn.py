@@ -3,6 +3,7 @@ This module extends the base Yarn class to include machine-specific functionalit
  carrier management, float tracking, loop creation, and machine state coordination for yarn operations on virtual knitting machines."""
 from __future__ import annotations
 import warnings
+from typing import TYPE_CHECKING
 
 from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn, Yarn_Properties
@@ -10,8 +11,10 @@ from knit_graphs.Yarn import Yarn, Yarn_Properties
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Use_Cut_Yarn_Exception
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Long_Float_Warning
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+
+if TYPE_CHECKING:
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 
 
 class Machine_Knit_Yarn(Yarn):

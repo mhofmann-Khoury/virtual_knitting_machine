@@ -82,8 +82,14 @@ class Carriage_Pass_Direction(Enum):
             all_needle_rack (bool, optional): True if allowing all_needle knitting on ordering. Defaults to False.
 
         Returns:
-            int: 1 if first_needle is left of second needle (rightward order), 0 if needles are in equal position at given racking, or -1 if first_needle is right of second needle (leftward order).
+            int: -1 if first_needle > second_needle, 0 if equal, and 1 if first_needle < second_needle.
+            Front to Back comparison at all needle knitting in the same position is not effected by carriage direction.
+
+        Notes:
+            At an all needle racking, the front needle is always < the back needle, regardless of direction.
         """
+        if all_needle_rack and first_needle.position == second_needle.position:
+            return int(first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))  # No inversion, because front is always less than back at the same position in all needle knitting.
         return int(-1 * first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))
 
     @staticmethod
@@ -97,9 +103,10 @@ class Carriage_Pass_Direction(Enum):
             all_needle_rack (bool, optional): True if allowing all_needle knitting on ordering. Defaults to False.
 
         Returns:
-            int: -1 if first_needle is to the left of second needle (rightward order),
-            0 if needles are in equal position at given racking,
-            or 1 if first_needle is right of second needle (leftward order).
+            int: -1 if first_needle < second_needle, 0 if equal, 1 if first_needle > second_needle.
+
+        Notes:
+            At an all needle racking, the front needle is always < the back needle, regardless of direction.
         """
         return int(first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))
 
