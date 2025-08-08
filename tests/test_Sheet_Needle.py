@@ -16,6 +16,7 @@ class TestSheetNeedle(unittest.TestCase):
         # Create sheet needles with gauge 4
         self.sheet_needle = Sheet_Needle(is_front=True, sheet_pos=5, sheet=2, gauge=4)
         self.back_sheet_needle = Sheet_Needle(is_front=False, sheet_pos=3, sheet=1, gauge=4)
+        self.slider_sheet = Slider_Sheet_Needle(is_front=True, sheet_pos=3, sheet=1, gauge=4)
 
     def test_initialization(self):
         """Test sheet needle initialization."""
@@ -167,15 +168,7 @@ class TestSheetNeedle(unittest.TestCase):
         self.assertEqual(str(self.sheet_needle), "f22")  # actual position 22
         self.assertEqual(str(self.back_sheet_needle), "b13")  # actual position 13
 
-
-class TestSliderSheetNeedle(unittest.TestCase):
-    """Test cases for the Slider_Sheet_Needle class."""
-
-    def setUp(self):
-        """Set up test fixtures before each test method."""
-        self.slider_sheet = Slider_Sheet_Needle(is_front=True, sheet_pos=3, sheet=1, gauge=4)
-
-    def test_initialization(self):
+    def test_slider_initialization(self):
         """Test slider sheet needle initialization."""
         self.assertTrue(self.slider_sheet.is_front)
         self.assertEqual(self.slider_sheet.sheet_pos, 3)
@@ -193,7 +186,7 @@ class TestSliderSheetNeedle(unittest.TestCase):
         """Test is_slider property returns True."""
         self.assertTrue(self.slider_sheet.is_slider)
 
-    def test_string_representation(self):
+    def test_slider_string_representation(self):
         """Test string representation shows slider format."""
         # Should use slider format with actual position
         self.assertEqual(str(self.slider_sheet), "fs13")
@@ -202,11 +195,11 @@ class TestSliderSheetNeedle(unittest.TestCase):
         """Test that sheet-specific operations work correctly."""
         # Test offset in sheet
         offset = self.slider_sheet.offset_in_sheet(2)
-        self.assertIsInstance(offset, Sheet_Needle)  # Returns regular Sheet_Needle
-        self.assertFalse(offset.is_slider)
+        self.assertIsInstance(offset, Slider_Sheet_Needle)  # Returns Slider_Sheet_Needle
+        self.assertTrue(offset.is_slider)
         self.assertEqual(offset.sheet_pos, 5)
 
-    def test_gauge_neighbors(self):
+    def test_slider_gauge_neighbors(self):
         """Test gauge_neighbors returns regular Sheet_Needles."""
         neighbors = self.slider_sheet.gauge_neighbors()
 
