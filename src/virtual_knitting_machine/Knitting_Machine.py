@@ -364,6 +364,8 @@ class Knitting_Machine(_Base_Knitting_Machine):
         needle = self[needle]
         assert isinstance(needle, Needle)
         new_loops: list[Machine_Knit_Loop] = self.carrier_system.make_loops(carrier_set, needle, direction)
+        if needle.is_front:
+            self.front_bed.add_loops(needle, new_loops, drop_prior_loops=False)
         return new_loops
 
     def knit(self, carrier_set: Yarn_Carrier_Set, needle: Needle, direction: Carriage_Pass_Direction) -> tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]:
@@ -392,18 +394,18 @@ class Knitting_Machine(_Base_Knitting_Machine):
 
         # position the carrier set to align with the knitting needle
         carrier_set.position_carriers(self.carrier_system, needle)
-        # Make child loops by this specification
-        child_loops = self.carrier_system.make_loops(carrier_set, needle, direction)
         # Set the carriage for this operation
         self.carriage.transferring = False
         self.carriage.move(direction, needle.position)
         # Drop and save the current loops, then add the child loops onto this needle.
         if needle.is_front:
-            parent_loops = self.front_bed.drop(needle)
-            self.front_bed.add_loops(needle, child_loops, drop_prior_loops=False)  # drop should have occurred in prior line
+            bed = self.front_bed
         else:
-            parent_loops = self.back_bed.drop(needle)
-            self.back_bed.add_loops(needle, child_loops, drop_prior_loops=False)  # drop should have occurred in prior line
+            bed = self.back_bed
+        parent_loops = bed.drop(needle)
+        # Make child loops by this specification
+        child_loops = self.carrier_system.make_loops(carrier_set, needle, direction)
+        bed.add_loops(needle, child_loops, drop_prior_loops=False)  # drop should have occurred in prior line
 
         # Create stitches in the knitgraph.
         for parent in parent_loops:

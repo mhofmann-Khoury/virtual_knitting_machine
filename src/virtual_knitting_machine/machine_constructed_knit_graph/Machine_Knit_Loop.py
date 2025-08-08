@@ -38,7 +38,6 @@ class Machine_Knit_Loop(Loop):
         self.needle_history: list[Needle | None] = [source_needle]
         if self.source_needle.is_slider:
             raise Slider_Loop_Exception(self.holding_needle)
-        self.source_needle.add_loop(self)
 
     @property
     def holding_needle(self) -> Needle | None:
