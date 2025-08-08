@@ -147,7 +147,7 @@ class Yarn_Insertion_System:
         Returns:
             bool: True if any yarn in yarn carrier set is loose (not on the inserting hook or tuck/knit on bed), False otherwise.
         """
-        return cast(self[carrier_id], Yarn_Carrier).yarn.last_needle() is None
+        return cast(Yarn_Carrier, self[carrier_id]).yarn.last_needle() is None
 
     def bring_in(self, carrier_id: int | Yarn_Carrier) -> None:
         """Bring in a yarn carrier without insertion hook (tail to gripper), yarn is considered loose until knit.

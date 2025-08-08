@@ -21,6 +21,11 @@ class TestYarnInsertionSystem(unittest.TestCase):
         self.machine = Knitting_Machine(Knitting_Machine_Specification(hook_size=5, maximum_float=20, carrier_count=5))
         self.system = self.machine.carrier_system
 
+    def test_carrier_no_last_needle(self):
+        self.system.inhook(1)
+        self.assertIsNone(self.system[1].yarn.last_needle())
+        self.assertTrue(self.system.yarn_is_loose(1))
+
     def test_initialization_default_carrier_count(self):
         """Test initialization with default carrier count."""
         system = Yarn_Insertion_System(self.machine)
