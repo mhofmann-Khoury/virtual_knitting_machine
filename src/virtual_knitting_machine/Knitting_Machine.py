@@ -366,6 +366,8 @@ class Knitting_Machine(_Base_Knitting_Machine):
         new_loops: list[Machine_Knit_Loop] = self.carrier_system.make_loops(carrier_set, needle, direction)
         if needle.is_front:
             self.front_bed.add_loops(needle, new_loops, drop_prior_loops=False)
+        else:
+            self.back_bed.add_loops(needle, new_loops, drop_prior_loops=False)
         return new_loops
 
     def knit(self, carrier_set: Yarn_Carrier_Set, needle: Needle, direction: Carriage_Pass_Direction) -> tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]:
