@@ -15,8 +15,10 @@ if TYPE_CHECKING:
 
 class Carriage:
     """A class for tracking the carriage's position and managing possible movements on a knitting machine.
+
     The carriage is responsible for moving across the needle bed and performing knitting operations.
-    This class manages position validation, movement direction tracking, and transfer operation states."""
+    This class manages position validation, movement direction tracking, and transfer operation states.
+    """
 
     def __init__(self, knitting_machine: Knitting_Machine, right_needle_position: int, left_needle_position: int = 0) -> None:
         """Initialize a new carriage with specified position range and starting direction.
@@ -26,6 +28,8 @@ class Carriage:
             right_needle_position (int): The rightmost needle position the carriage can reach.
             left_needle_position (int, optional): The leftmost needle position the carriage can reach. Defaults to 0.
 
+        Raises:
+            AssertionError: If left_needle_position is not less than right_needle_position.
         """
         self.knitting_machine: Knitting_Machine = knitting_machine
         if left_needle_position > right_needle_position:  # Swaps positions if they are not in the right order.

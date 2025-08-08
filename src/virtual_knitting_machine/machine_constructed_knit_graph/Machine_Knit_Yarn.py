@@ -1,6 +1,8 @@
 """Module containing the Machine_Knit_Yarn class for representing yarn in machine knitting operations.
+
 This module extends the base Yarn class to include machine-specific functionality including
- carrier management, float tracking, loop creation, and machine state coordination for yarn operations on virtual knitting machines."""
+carrier management, float tracking, loop creation, and machine state coordination for yarn operations on virtual knitting machines.
+"""
 from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING
@@ -18,8 +20,11 @@ if TYPE_CHECKING:
 
 
 class Machine_Knit_Yarn(Yarn):
-    """An extension of the base Yarn class to capture machine knitting specific information including carrier assignment, active loop tracking, float management, and machine state coordination.
-    This class manages yarn operations during machine knitting including loop creation, float validation, and carrier state tracking with configurable maximum float lengths.
+    """An extension of the base Yarn class to capture machine knitting specific information.
+
+    This includes carrier assignment, active loop tracking, float management, and machine state coordination.
+    This class manages yarn operations during machine knitting including loop creation, float validation,
+    and carrier state tracking with configurable maximum float lengths.
 
     Attributes:
         active_loops (dict[Machine_Knit_Loop, Needle]): Dictionary mapping active loops to their holding needles.
@@ -98,10 +103,11 @@ class Machine_Knit_Yarn(Yarn):
         return self._last_loop
 
     def last_needle(self) -> Needle | None:
-        """Get the needle that holds the loop closest to the end of the yarn or None if the yarn has been dropped entirely.
+        """Get the needle that holds the loop closest to the end of the yarn.
 
         Returns:
-            Needle | None: The needle that holds the loop closest to the end of the yarn or None if the yarn has been dropped entirely.
+            Needle | None: The needle that holds the loop closest to the end of the yarn,
+                or None if the yarn has been dropped entirely.
         """
         if self.last_loop is None:
             return None
@@ -111,8 +117,8 @@ class Machine_Knit_Yarn(Yarn):
         """Get dictionary of loops that are active keyed to active yarn-wise neighbors.
 
         Returns:
-            dict[Machine_Knit_Loop, Machine_Knit_Loop]: Dictionary of loops that are active keyed to active yarn-wise neighbors,
-            each key-value pair represents a directed float where key comes before value on the yarn.
+            dict[Machine_Knit_Loop, Machine_Knit_Loop]: Dictionary of loops that are active keyed to active yarn-wise neighbors.
+                Each key-value pair represents a directed float where key comes before value on the yarn.
         """
         floats = {}
         for l in self.active_loops:
@@ -128,8 +134,10 @@ class Machine_Knit_Yarn(Yarn):
 
         Args:
             holding_needle (Needle): The needle to make the loop on and hold it.
-            knit_graph (Knit_Graph | None, optional): An optional knit graph used to calculate last loop ID in knitgraph. Defaults to None.
-            max_float_length (int | None, optional): The maximum allowed distance between needles holding a loop, if None no float length validation is performed. Defaults to None.
+            knit_graph (Knit_Graph | None, optional): An optional knit graph used to calculate last loop ID in knitgraph.
+                Defaults to None.
+            max_float_length (int | None, optional): The maximum allowed distance between needles holding a loop.
+                If None no float length validation is performed. Defaults to None.
 
         Returns:
             Machine_Knit_Loop: The newly created machine knit loop.
@@ -138,7 +146,8 @@ class Machine_Knit_Yarn(Yarn):
             Use_Cut_Yarn_Exception: If attempting to use a cut yarn that is no longer on a carrier.
 
         Warns:
-            Long_Float_Warning: If max_float_length is specified and the distance between this needle and the last needle exceeds the maximum.
+            Long_Float_Warning: If max_float_length is specified and the distance between this needle
+                and the last needle exceeds the maximum.
         """
         if self.is_cut:
             raise Use_Cut_Yarn_Exception(self.carrier.carrier_id)

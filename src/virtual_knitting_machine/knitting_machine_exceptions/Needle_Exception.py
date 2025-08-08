@@ -1,6 +1,6 @@
 """Module containing common machine knitting exceptions that involve needles and needle operations.
 This module provides exception classes for various needle-related critical errors including
- slider operations, loop transfers, alignment issues, and needle state violations that prevent successful knitting operations."""
+slider operations, loop transfers, alignment issues, and needle state violations that prevent successful knitting operations."""
 from __future__ import annotations
 from typing import TYPE_CHECKING
 

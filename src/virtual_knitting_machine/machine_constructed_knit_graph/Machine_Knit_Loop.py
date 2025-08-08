@@ -1,6 +1,8 @@
 """Module containing the Machine_Knit_Loop class for representing loops created during machine knitting operations.
+
 This module extends the base Loop class to capture machine-specific information including
- needle history, transfer operations, and machine state tracking for loops created by virtual knitting machines."""
+needle history, transfer operations, and machine state tracking for loops created by virtual knitting machines.
+"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -16,8 +18,10 @@ if TYPE_CHECKING:
 
 class Machine_Knit_Loop(Loop):
     """An extension of the base Loop structure to capture information about the machine knitting process that created it.
+
     This class tracks the complete needle history of a loop including creation, transfers, and drop operations,
-    providing detailed machine state information for each loop throughout its lifecycle on the knitting machine."""
+    providing detailed machine state information for each loop throughout its lifecycle on the knitting machine.
+    """
 
     def __init__(self, loop_id: int, yarn: Yarn, source_needle: Needle) -> None:
         """Initialize a machine knit loop with yarn and source needle information.
@@ -105,6 +109,6 @@ class Machine_Knit_Loop(Loop):
         self.needle_history.append(None)
 
     def reverse_drop(self) -> None:
-        """Undoes the recording of the last drop action. Used for transfers to "drop" from one needle while transferring to another."""
+        """Removes dropped status from this loop. Used for transferring needles without recording a dropped action."""
         if self.dropped:
             self.needle_history.pop(-1)

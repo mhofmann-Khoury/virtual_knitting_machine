@@ -1,7 +1,8 @@
 """A module containing the Needle class and related functions for virtual knitting machine operations.
 
 This module provides the core Needle class which represents individual needles on a knitting machine.
-Needles can be on the front or back bed and can hold loops for knitting operations. The module includes functionality for loop management, needle positioning, and various knitting operations.
+Needles can be on the front or back bed and can hold loops for knitting operations. The module includes
+functionality for loop management, needle positioning, and various knitting operations.
 """
 from __future__ import annotations
 
@@ -14,7 +15,8 @@ class Needle:
     """A class for managing individual needles on a knitting machine.
 
     This class represents a needle on either the front or back bed of a knitting machine.
-    Each needle can hold multiple loops and provides methods for knitting operations,loop transfers, and position calculations.
+    Each needle can hold multiple loops and provides methods for knitting operations,
+    loop transfers, and position calculations.
 
     Attributes:
         held_loops (list[Machine_Knit_Loop]): List of loops currently held by this needle.
@@ -36,7 +38,8 @@ class Needle:
         """Get the direction this needle pulls loops during knit operations.
 
         Returns:
-            Pull_Direction: BtF (Back to Front) for front needles, FtB (Front to Back) for back needles.
+            Pull_Direction:
+                BtF (Back to Front) for front needles, FtB (Front to Back) for back needles.
         """
         if self.is_front:
             return Pull_Direction.BtF
@@ -74,9 +77,9 @@ class Needle:
         """Get active floats connecting to loops on this needle.
 
         Returns:
-            dict[Machine_Knit_Loop, Machine_Knit_Loop]: Dictionary of loops that are active
-                keyed to active yarn-wise neighbors. Each key-value pair represents a
-                directed float where key comes before value on the yarns in the system.
+            dict[Machine_Knit_Loop, Machine_Knit_Loop]:
+                Dictionary of loops that are active keyed to active yarn-wise neighbors.
+                Each key-value pair represents a directed float where key comes before value on the yarns in the system.
         """
         active_floats = {}
         for loop in self.held_loops:
@@ -186,7 +189,8 @@ class Needle:
             rack (int): The racking value.
 
         Returns:
-            int: The front needle position given a racking (no change for front bed needles).
+            int:
+                The front needle position given a racking (no change for front bed needles).
         """
         if self.is_front:
             return self.position
@@ -197,8 +201,9 @@ class Needle:
         """Get the non-slider needle at this needle position.
 
         Returns:
-            Needle: The non-slider needle at this needle position.
-            If this is not a slider needle, this instance is returned.
+            Needle:
+                The non-slider needle at this needle position.
+                If this is not a slider needle, this instance is returned.
         """
         if not self.is_slider:
             return self
@@ -240,9 +245,11 @@ class Needle:
             other (Needle | int | float): The other needle or number to compare with.
 
         Returns:
-            bool: True if this needle's position is less than the other value.
-            If the needles are at the same location but in opposite positions (back vs. front), the front needle is considered less than the back.
-            This orders needles as front-to-back in a leftward carriage pass.
+            bool:
+                True if this needle's position is less than the other value.
+                If the needles are at the same location but in opposite positions (back vs. front),
+                the front needle is considered less than the back.
+                This orders needles as front-to-back in a leftward carriage pass.
 
         Raises:
             TypeError: If other is not a Needle or number.
@@ -277,13 +284,13 @@ class Needle:
         Args:
             other (Needle): The other needle to compare positions with.
             rack (int, optional): Racking value to compare between. Defaults to 0.
-            all_needle_racking (bool, optional): If true, account for front back alignment
-                in all needle knitting. Defaults to False.
+            all_needle_racking (bool, optional):
+                If true, account for front back alignment in all needle knitting. Defaults to False.
 
         Returns:
             int: 1 if self > other, 0 if equal, -1 if self < other.
 
-        Notes:
+        Note:
             At an all needle racking, the front needle is always < the back needle, regardless of direction.
         """
         self_pos = self.racked_position_on_front(rack)
@@ -308,13 +315,13 @@ class Needle:
             n1 (Needle): First needle in comparison.
             n2 (Needle): Second needle in comparison.
             racking (int, optional): Racking value to compare between. Defaults to 0.
-            all_needle_racking (bool, optional): If true, account for front back alignment
-                in all needle knitting. Defaults to False.
+            all_needle_racking (bool, optional):
+                If true, account for front back alignment in all needle knitting. Defaults to False.
 
         Returns:
             int: 1 if n1 > n2, 0 if equal, -1 if n1 < n2.
 
-        Notes:
+        Note:
             At an all needle racking, the front needle is always < the back needle, regardless of direction.
         """
         return n1.at_racking_comparison(n2, racking, all_needle_racking)

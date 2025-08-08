@@ -1,5 +1,8 @@
 """Module containing the Carriage_Side enumeration for knitting machine carriage positioning.
-This module defines the two sides of a knitting machine that the carriage can be positioned on and provides utility methods for determining appropriate movement directions from each side."""
+
+This module defines the two sides of a knitting machine that the carriage can be positioned on
+and provides utility methods for determining appropriate movement directions from each side.
+"""
 from __future__ import annotations
 from enum import Enum
 
@@ -8,7 +11,10 @@ from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_D
 
 class Carriage_Side(Enum):
     """Enumeration containing the two sides the machine carriage can be positioned on.
-    This enum provides methods for determining opposite sides and appropriate movement directions for continuing or reversing carriage movement from each side position."""
+
+    This enum provides methods for determining opposite sides and appropriate movement directions
+    for continuing or reversing carriage movement from each side position.
+    """
     Left_Side = "Left_Side"
     Right_Side = "Right_Side"
 

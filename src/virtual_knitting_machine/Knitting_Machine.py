@@ -1,6 +1,8 @@
 """Module containing the Knitting_Machine class for virtual knitting machine representation and operations.
+
 This module provides the main Knitting_Machine class which serves as the central coordinator for all
- knitting operations, managing needle beds, carriage movement, yarn carriers, and knit graph construction."""
+knitting operations, managing needle beds, carriage movement, yarn carriers, and knit graph construction.
+"""
 from __future__ import annotations
 
 import warnings
@@ -27,16 +29,21 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn i
 
 
 class Knitting_Machine(_Base_Knitting_Machine):
-    """A virtual representation of a V-Bed WholeGarment knitting machine that provides comprehensive functionality for
-     simulating knitting operations including
-    needle management, carriage control, yarn carrier operations, racking, and knit graph construction with support for all standard knitting operations like knit, tuck, transfer, split, and miss."""
+    """A virtual representation of a V-Bed WholeGarment knitting machine.
+
+    This class provides comprehensive functionality for simulating knitting operations including
+    needle management, carriage control, yarn carrier operations, racking, and knit graph construction
+    with support for all standard knitting operations like knit, tuck, transfer, split, and miss.
+    """
 
     def __init__(self, machine_specification: Knitting_Machine_Specification = Knitting_Machine_Specification(), knit_graph: Knit_Graph | None = None) -> None:
         """Initialize a virtual knitting machine with specified configuration.
 
         Args:
-            machine_specification (Knitting_Machine_Specification, optional): Configuration parameters for the machine. Defaults to Knitting_Machine_Specification().
-            knit_graph (Knit_Graph | None, optional): Existing knit graph to use, creates new one if None. Defaults to None.
+            machine_specification (Knitting_Machine_Specification, optional):
+                Configuration parameters for the machine. Defaults to Knitting_Machine_Specification().
+            knit_graph (Knit_Graph | None, optional):
+                Existing knit graph to use, creates new one if None. Defaults to None.
         """
         super().__init__(machine_specification, knit_graph)
         self.front_bed: Needle_Bed = Needle_Bed(is_front=True, knitting_machine=self)
@@ -50,14 +57,16 @@ class Knitting_Machine(_Base_Knitting_Machine):
         """Create a crude copy of this machine state with all relevant yarns inhooked and loops formed on required locations.
 
         Args:
-            starting_state (Knitting_Machine | None, optional): A machine state to copy into, otherwise creates a new machine state with the same machine specification as this machine.
-            Defaults to None.
+            starting_state (Knitting_Machine | None, optional):
+                A machine state to copy into, otherwise creates a new machine state with the same machine specification as this machine.
+                Defaults to None.
 
         Returns:
             Knitting_Machine: A copy of the current machine state.
 
         Note:
-            This copy does not guarantee continuity of the knitgraph structure or history, it only ensures loops and carriers are correctly positioned to mimic the current state.
+            This copy does not guarantee continuity of the knitgraph structure or history,
+            it only ensures loops and carriers are correctly positioned to mimic the current state.
         """
         if starting_state is None:
             copy_machine_state = Knitting_Machine(machine_specification=self.machine_specification)
@@ -146,7 +155,8 @@ class Knitting_Machine(_Base_Knitting_Machine):
         """Get the needle on this knitting machine at the given needle location.
 
         Args:
-            needle (Needle | tuple[bool, int] | tuple[bool, int, bool]): A needle or a tuple to construct a needle: is_front, needle position, optional is_slider defaults to False.
+            needle (Needle | tuple[bool, int] | tuple[bool, int, bool]):
+                A needle or a tuple to construct a needle: is_front, needle position, optional is_slider defaults to False.
 
         Returns:
             Needle: The needle on this knitting machine at the given needle location.
@@ -167,10 +177,12 @@ class Knitting_Machine(_Base_Knitting_Machine):
         """Get the carrier or list of carriers owned by the machine at the given specification.
 
         Args:
-            carrier (int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]): The carrier defined by a given carrier, carrier_set, integer or list of integers to form a set.
+            carrier (int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]):
+                The carrier defined by a given carrier, carrier_set, integer or list of integers to form a set.
 
         Returns:
-            Yarn_Carrier | list[Yarn_Carrier]: The carrier or list of carriers owned by the machine at the given specification.
+            Yarn_Carrier | list[Yarn_Carrier]:
+                The carrier or list of carriers owned by the machine at the given specification.
         """
         return self.carrier_system[carrier]
 
@@ -180,13 +192,14 @@ class Knitting_Machine(_Base_Knitting_Machine):
         """Access needles, carriers, or find needles holding loops on the machine.
 
         Args:
-            item (Needle | tuple[bool, int, bool] | tuple[bool, int] | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier] | Machine_Knit_Loop): A needle, yarn carrier, carrier set,
-            or loop to reference in the machine.
+            item (Needle | tuple[bool, int, bool] | tuple[bool, int] | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier] | Machine_Knit_Loop):
+                A needle, yarn carrier, carrier set, or loop to reference in the machine.
 
         Returns:
-            Needle | Yarn_Carrier | list[Yarn_Carrier] | None: The needle on the machine at the given needle position,
-            or if given yarn carrier information return the corresponding carrier or carriers on the machine,
-            or if given a loop return the corresponding needle that holds this loop or None if the loop is not held on a needle.
+            Needle | Yarn_Carrier | list[Yarn_Carrier] | None:
+                The needle on the machine at the given needle position,
+                or if given yarn carrier information return the corresponding carrier or carriers on the machine,
+                or if given a loop return the corresponding needle that holds this loop or None if the loop is not held on a needle.
 
         Raises:
             KeyError: If the item cannot be accessed from the machine.
@@ -267,7 +280,9 @@ class Knitting_Machine(_Base_Knitting_Machine):
             target_needle (Needle): Needle to transfer loops to.
 
         Returns:
-            int | None: Racking value needed to make transfer between start and target needle, None if no racking can be made because needles are on the same bed.
+            int | None:
+                Racking value needed to make transfer between start and target needle,
+                None if no racking can be made because needles are on the same bed.
         """
         if start_needle.is_front == target_needle.is_front:
             return None
@@ -293,7 +308,8 @@ class Knitting_Machine(_Base_Knitting_Machine):
         """Check if no loops are on any slider needle and knitting can be executed.
 
         Returns:
-            bool: True if no loops are on a slider needle and knitting can be executed, False otherwise.
+            bool:
+                True if no loops are on a slider needle and knitting can be executed, False otherwise.
         """
         return bool(self.front_bed.sliders_are_clear() and self.back_bed.sliders_are_clear())
 
@@ -351,7 +367,9 @@ class Knitting_Machine(_Base_Knitting_Machine):
         return new_loops
 
     def knit(self, carrier_set: Yarn_Carrier_Set, needle: Needle, direction: Carriage_Pass_Direction) -> tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]:
-        """Form new loops from the carrier set by pulling them through all loops on the given needle, drop the existing loops and hold the new loops on the needle.
+        """Form new loops from the carrier set by pulling them through all loops on the given needle.
+
+        Drop the existing loops and hold the new loops on the needle.
 
         Args:
             carrier_set (Yarn_Carrier_Set): Set of yarns to make loops with.
@@ -359,8 +377,9 @@ class Knitting_Machine(_Base_Knitting_Machine):
             direction (Carriage_Pass_Direction): The direction to knit in.
 
         Returns:
-            tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]: Tuple containing list of loops stitched through and dropped off needle by knitting process,
-             and list of loops formed in the knitting process.
+            tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]:
+                Tuple containing list of loops stitched through and dropped off needle by knitting process,
+                and list of loops formed in the knitting process.
 
         Warns:
             Knit_on_Empty_Needle_Warning: If attempting to knit on a needle with no loops.
@@ -401,8 +420,9 @@ class Knitting_Machine(_Base_Knitting_Machine):
         Returns:
             list[Machine_Knit_Loop]: The list of loops dropped.
 
-        Notes:
-            The direction of drop operations is not recorded, just like transfer operations. This enables easy tracking of relative movements that involve carriers.
+        Note:
+            The direction of drop operations is not recorded, just like transfer operations.
+            This enables easy tracking of relative movements that involve carriers.
         """
         needle = self[needle]
         assert isinstance(needle, Needle)
@@ -416,7 +436,8 @@ class Knitting_Machine(_Base_Knitting_Machine):
         Args:
             starting_needle (Needle): Needle to move loops from.
             to_slider (bool, optional): If True, loops are moved to a slider. Defaults to False.
-            from_split (bool, optional): If True, this transfer is part of a split and does not move the carriage. Defaults to False.
+            from_split (bool, optional):
+                If True, this transfer is part of a split and does not move the carriage. Defaults to False.
 
         Returns:
             list[Machine_Knit_Loop]: The list of loops that are transferred.
@@ -466,20 +487,24 @@ class Knitting_Machine(_Base_Knitting_Machine):
         return xfer_loops
 
     def split(self, carrier_set: Yarn_Carrier_Set, starting_needle: Needle, direction: Carriage_Pass_Direction) -> tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]:
-        """Pull a loop formed in direction by the yarns in carriers through the loops on needle, transferring the old loops to opposite-bed needle in the process.
+        """Pull a loop formed in direction by the yarns in carriers through the loops on needle.
+
+        Transfer the old loops to opposite-bed needle in the process.
+
         Args:
             carrier_set (Yarn_Carrier_Set): Set of yarns to make loops with.
             starting_needle (Needle): The needle to transfer old loops from and to form new loops on.
             direction (Carriage_Pass_Direction): The carriage direction for the split operation.
 
         Returns:
-            tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]: Tuple containing the list of loops created by the split and the list of loops transferred.
+            tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]:
+                Tuple containing the list of loops created by the split and the list of loops transferred.
 
         Note:
             From the Knitout Documentation:
             Splitting with an empty carrier set will transfer.
-            This transfers loops on starting needle to aligned needle at this racking then forms new loops pulled through the transferred loops and holds them on the starting needle.
-
+            This transfers loops on starting needle to aligned needle at this racking
+            then forms new loops pulled through the transferred loops and holds them on the starting needle.
         """
         parent_loops = self.xfer(starting_needle, to_slider=False, from_split=True)
         child_loops = self.tuck(carrier_set, starting_needle, direction)  # tuck new loops onto the needle after completing the transfer
@@ -594,6 +619,7 @@ class Knitting_Machine(_Base_Knitting_Machine):
         """Get list of all slider needles holding loops with front bed sliders given first.
 
         Returns:
-            list[Slider_Needle]: List of all slider needles holding loops with front bed sliders given first.
+            list[Slider_Needle]:
+                List of all slider needles holding loops with front bed sliders given first.
         """
         return [*self.front_slider_loops(), *self.back_slider_loops()]

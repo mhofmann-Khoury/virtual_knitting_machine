@@ -1,6 +1,8 @@
 """Enumerator module for possible carriage pass directions on knitting machines.
+
 This module defines the two directions a carriage can move across the needle bed and provides utility functions for
-needle positioning, comparison, and sorting operations relative to carriage movement direction."""
+needle positioning, comparison, and sorting operations relative to carriage movement direction.
+"""
 from __future__ import annotations
 import functools
 from enum import Enum
@@ -11,8 +13,10 @@ from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 class Carriage_Pass_Direction(Enum):
     """An enumerator for the two directions the carriage can pass on the knitting machine.
+
     Needles are oriented on the machine left to right in ascending order: Left -> 0 1 2 ... N <- Right.
-    This enum provides methods for needle comparison, positioning, and sorting operations relative to carriage movement direction."""
+    This enum provides methods for needle comparison, positioning, and sorting operations relative to carriage movement direction.
+    """
     Leftward = "-"
     Rightward = "+"
 
@@ -82,11 +86,7 @@ class Carriage_Pass_Direction(Enum):
             all_needle_rack (bool, optional): True if allowing all_needle knitting on ordering. Defaults to False.
 
         Returns:
-            int: -1 if first_needle > second_needle, 0 if equal, and 1 if first_needle < second_needle.
-            Front to Back comparison at all needle knitting in the same position is not effected by carriage direction.
-
-        Notes:
-            At an all needle racking, the front needle is always < the back needle, regardless of direction.
+            int: 1 if first_needle is left of second needle (rightward order), 0 if needles are in equal position at given racking, or -1 if first_needle is right of second needle (leftward order).
         """
         if all_needle_rack and first_needle.position == second_needle.position:
             return int(first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))  # No inversion, because front is always less than back at the same position in all needle knitting.
@@ -103,10 +103,8 @@ class Carriage_Pass_Direction(Enum):
             all_needle_rack (bool, optional): True if allowing all_needle knitting on ordering. Defaults to False.
 
         Returns:
-            int: -1 if first_needle < second_needle, 0 if equal, 1 if first_needle > second_needle.
-
-        Notes:
-            At an all needle racking, the front needle is always < the back needle, regardless of direction.
+            int: -1 if first_needle is to the left of second needle (rightward order),
+            0 if needles are in equal position at given racking, or 1 if first_needle is right of second needle (leftward order).
         """
         return int(first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))
 
