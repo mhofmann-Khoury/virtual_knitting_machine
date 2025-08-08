@@ -88,8 +88,6 @@ class Carriage_Pass_Direction(Enum):
         Returns:
             int: 1 if first_needle is left of second needle (rightward order), 0 if needles are in equal position at given racking, or -1 if first_needle is right of second needle (leftward order).
         """
-        if all_needle_rack and first_needle.position == second_needle.position:
-            return int(first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))  # No inversion, because front is always less than back at the same position in all needle knitting.
         return int(-1 * first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))
 
     @staticmethod

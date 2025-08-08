@@ -127,6 +127,17 @@ class TestCarriagePassDirection(unittest.TestCase):
         result = self.rightward.needle_direction_comparison(needle_right, needle_left)
         self.assertEqual(result, -1)
 
+    def test_all_needle_direction_comparison_rightward(self):
+        needle_left = Needle(is_front=False, position=0)
+        needle_right = Needle(is_front=True, position=0)
+        result = self.rightward.needle_direction_comparison(needle_left, needle_right, rack=-1, all_needle_rack=True)
+        self.assertEqual(result, 1)
+
+        needle_left = needle_right
+        needle_right = Needle(is_front=False, position=1)
+        result = self.rightward.needle_direction_comparison(needle_left, needle_right, rack=-1, all_needle_rack=True)
+        self.assertEqual(result, 1)
+
     def test_needle_direction_comparison_leftward(self):
         """Test needle direction comparison for leftward direction."""
         needle_left = Needle(is_front=True, position=3)
@@ -168,7 +179,7 @@ class TestCarriagePassDirection(unittest.TestCase):
 
         # With all needle racking, front should come before back at same position
         result = self.rightward.needle_direction_comparison(front_needle, back_needle, all_needle_rack=True)
-        self.assertEqual(result, -1)  # Front comes first
+        self.assertEqual(result, 1)  # Front comes first
         result = self.leftward.needle_direction_comparison(front_needle, back_needle, all_needle_rack=True)
         self.assertEqual(result, -1)  # Front comes first
 
