@@ -140,9 +140,7 @@ jobs:
     - name: Publish to PyPI
       run: |
         poetry publish
-      # Uploads your package to main PyPI (https://pypi.org)
-      # After this step, your package will be available worldwide:
-      # pip install knit-script
+
 
     # -------------------------------------------------------------------------
     # STEP 11: Save build artifacts
@@ -184,15 +182,10 @@ jobs:
                 print(f"   pip install {package_name}")
                 print(f"")
                 print(f"🧪 Test the installation:")
-                print(f"   python -c 'from knit_script import knit_script_to_knitout; print(\"✅ Import successful!\")'")
+                print(f"   python -c 'from virtual_knitting_machine import Knitting_Machine; print(\"✅ Import successful!\")'")
                 print(f"")
                 print(f"🔗 PyPI Page:")
                 print(f"   https://pypi.org/project/{package_name}/")
-                print(f"")
-                print(f"📚 Documentation:")
-                print(f"   https://mhofmann-khoury.github.io/knit_script/")
-                print(f"")
-                print(f"⏱️  Note: It may take a few minutes for the package to be available on PyPI")
 
             else:
                 print("No wheel file found in dist/")
@@ -247,7 +240,7 @@ jobs:
     - name: Generate API documentation
       run: |
         cd docs
-        poetry run sphinx-apidoc -o source ../src/knit_script --force --separate --no-toc
+        poetry run sphinx-apidoc -o source ../src/virtual_knitting_machine --force --separate --no-toc
 
     - name: Build documentation
       run: |
@@ -331,13 +324,3 @@ jobs:
 # 4. Write comprehensive release notes
 # 5. Mark as pre-release if it's not stable
 # 6. Publish release
-#
-# AFTER RELEASE:
-# 1. ✅ Verify package appears on PyPI
-# 2. ✅ Test installation: pip install knit-script
-# 3. ✅ Check documentation deployed correctly
-# 4. ✅ Test basic functionality
-# 5. ✅ Announce release to community
-# 6. ✅ Update any dependent projects
-#
-# =============================================================================

@@ -123,8 +123,6 @@ jobs:
       run: |
         poetry publish -r testpypi
       # Uploads your package to Test PyPI (https://test.pypi.org)
-      # After this step, your package will be available for testing:
-      # pip install --index-url https://test.pypi.org/simple/ knit-script
 
     # -------------------------------------------------------------------------
     # STEP 10: Save build artifacts
@@ -165,7 +163,7 @@ jobs:
                 print(f"Install command:")
                 print(f"pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ {package_name}=={version}")
                 print(f"After installation, test with:")
-                print(f"python -c 'from knit_script import knit_script_to_knitout; print(\"Import successful!\")'")
+                print(f"python -c 'from virtual_knitting_machine import Knitting_Machine; print(\"Import successful!\")'")
             else:
                 print("No wheel file found in dist/")
 
@@ -219,7 +217,7 @@ jobs:
       run: |
         cd docs
         # Generate API documentation
-        poetry run sphinx-apidoc -o source ../src/knit_script --force --separate --no-toc
+        poetry run sphinx-apidoc -o source ../src/virtual_knitting_machine --force --separate --no-toc
 
         # Build the documentation
         poetry run sphinx-build -b html source build -W || \
@@ -278,12 +276,5 @@ jobs:
 #
 # METHOD 3 - Manual trigger:
 # 1. Go to Actions tab → "Test Release to PyPI" → "Run workflow"
-#
-# AFTER WORKFLOW COMPLETES:
-# 1. Check Test PyPI: https://test.pypi.org/project/knit-script/
-# 2. Test installation:
-#    pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ knit-script
-# 3. Download and test the documentation artifacts
-# 4. If everything works, proceed with real PyPI release using production workflow
 #
 # =============================================================================
