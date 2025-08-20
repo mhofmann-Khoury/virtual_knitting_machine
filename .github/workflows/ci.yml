@@ -96,12 +96,13 @@ jobs:
       - name: "📦 Install Poetry (Windows)"
         if: runner.os == 'Windows'
         run: |
-          refreshenv
           (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
-          $env:PATH = "$env:APPDATA\Python\Scripts;$env:PATH"
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
-          poetry config virtualenvs.prefer-active-python true
+          $poetryPath = "$env:APPDATA\Python\Scripts"
+          echo "$poetryPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $env:PATH = "$poetryPath;$env:PATH"
+          & "$poetryPath\poetry.exe" config virtualenvs.create true
+          & "$poetryPath\poetry.exe" config virtualenvs.in-project true
+          & "$poetryPath\poetry.exe" config virtualenvs.prefer-active-python true
         shell: powershell
 
       - name: "🔍 Verify Poetry installation"
