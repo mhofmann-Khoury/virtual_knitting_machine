@@ -2,12 +2,17 @@
 import unittest
 import warnings
 
-from knit_graphs.Yarn import Yarn_Properties
-
-from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Change_Active_Yarn_Exception, Hooked_Carrier_Exception
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import In_Active_Carrier_Warning, Out_Inactive_Carrier_Warning
+from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
+    Hooked_Carrier_Exception,
+)
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
+    In_Active_Carrier_Warning,
+    Out_Inactive_Carrier_Warning,
+)
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
+    Yarn_Carrier,
+)
 
 
 class TestYarnCarrier(unittest.TestCase):
@@ -30,14 +35,6 @@ class TestYarnCarrier(unittest.TestCase):
     def test_yarn_property_getter(self):
         """Test yarn property getter."""
         self.assertEqual(self.carrier.yarn, self.carrier._yarn)
-
-    def test_yarn_property_setter_active_carrier_raises_exception(self):
-        """Test yarn property setter raises exception when carrier is active."""
-        self.carrier.is_active = True
-
-        yarn_props = Yarn_Properties()
-        with self.assertRaises(Change_Active_Yarn_Exception):
-            self.carrier.yarn = yarn_props
 
     def test_position_property_getter(self):
         """Test position property getter."""
@@ -312,13 +309,3 @@ class TestYarnCarrier(unittest.TestCase):
             self.assertEqual(len(warning_list), 1)
             warning_instance = warning_list[0].message
             self.assertEqual(warning_instance.carrier_id, self.carrier_id)
-
-    def test_exception_messages_contain_carrier_id(self):
-        """Test that exception messages contain the carrier ID."""
-        self.carrier.is_active = True
-
-        try:
-            self.carrier.yarn = Yarn_Properties()
-            self.fail("Expected Change_Active_Yarn_Exception")
-        except Change_Active_Yarn_Exception as e:
-            self.assertEqual(e.carrier_id, self.carrier_id)

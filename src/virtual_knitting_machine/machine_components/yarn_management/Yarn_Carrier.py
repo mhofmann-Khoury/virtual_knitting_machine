@@ -5,10 +5,10 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING
 
+from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn_Properties
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
-    Change_Active_Yarn_Exception,
     Hooked_Carrier_Exception,
 )
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
@@ -30,13 +30,9 @@ class Yarn_Carrier:
     """A class representing an individual yarn carrier on a knitting machine.
     Yarn carriers hold yarn and can be moved to different positions on the machine, activated for knitting operations, and connected to insertion hooks for yarn manipulation.
     Each carrier tracks its state including position, active status, and hook connection.
-
-    Attributes:
-        yarn (Machine_Knit_Yarn): The machine knit yarn that can be accessed by this carrier.
-
     """
 
-    def __init__(self, carrier_id: int, yarn: None | Machine_Knit_Yarn = None, yarn_properties: Yarn_Properties | None = None) -> None:
+    def __init__(self, carrier_id: int, yarn: None | Machine_Knit_Yarn = None, yarn_properties: Yarn_Properties | None = None, knit_graph: Knit_Graph | None = None) -> None:
         """Initialize a yarn carrier with specified ID and optional yarn configuration.
 
         Args:
@@ -49,11 +45,10 @@ class Yarn_Carrier:
         self._is_hooked: bool = False
         self._position: None | int = None
         if yarn is not None:
-            self._yarn = yarn
-        elif yarn_properties is None:
-            self.yarn = Yarn_Properties()
+            self._yarn: Machine_Knit_Yarn = yarn
+            self._yarn.knit_graph = knit_graph
         else:
-            self.yarn = yarn_properties
+            self._yarn: Machine_Knit_Yarn = Machine_Knit_Yarn(self, yarn_properties, knit_graph=knit_graph)
 
     @property
     def yarn(self) -> Machine_Knit_Yarn:
@@ -63,20 +58,6 @@ class Yarn_Carrier:
             Machine_Knit_Yarn: The yarn held on this carrier.
         """
         return self._yarn
-
-    @yarn.setter
-    def yarn(self, yarn_properties: Yarn_Properties) -> None:
-        """Set new yarn properties for this carrier, creating a new Machine_Knit_Yarn instance.
-
-        Args:
-            yarn_properties (Yarn_Properties): Properties for the new yarn to be created.
-
-        Raises:
-            Change_Active_Yarn_Exception: If attempting to change yarn while carrier is active.
-        """
-        if self.is_active:
-            raise Change_Active_Yarn_Exception(self.carrier_id)
-        self._yarn: Machine_Knit_Yarn = Machine_Knit_Yarn(self, yarn_properties)
 
     @property
     def position(self) -> None | int:

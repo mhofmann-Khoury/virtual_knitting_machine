@@ -82,7 +82,8 @@ exclude = [
 # These are packages your project needs to run in production
 [tool.poetry.dependencies]
 python = ">=3.11,<3.14"                        # Minimum Python version (allows 3.11.x, 3.12.x, etc.)
-knit-graphs = ">=0.0.8" # Knit Graphs Library
+knit-graphs = "0.0.8"
+
 [tool.poetry.group.dev.dependencies]
 importlib-resources = ">=6.5.2"
 

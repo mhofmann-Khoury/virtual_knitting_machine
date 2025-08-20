@@ -52,7 +52,7 @@ class Yarn_Insertion_System:
             carrier_count (int, optional): Number of yarn carriers to create. Defaults to 10.
         """
         self.knitting_machine: Knitting_Machine = knitting_machine
-        self.carriers: list[Yarn_Carrier] = [Yarn_Carrier(i) for i in range(1, carrier_count + 1)]
+        self.carriers: list[Yarn_Carrier] = [Yarn_Carrier(i, knit_graph=self.knitting_machine.knit_graph) for i in range(1, carrier_count + 1)]
         self._hook_position: None | int = None
         self._hook_input_direction: None | Carriage_Pass_Direction = None
         self._searching_for_position: bool = False
@@ -313,7 +313,7 @@ class Yarn_Insertion_System:
             if not carrier.is_active:
                 raise Use_Inactive_Carrier_Exception(cid)
             float_source_needle = carrier.yarn.last_needle()
-            loop = carrier.yarn.make_loop_on_needle(holding_needle=needle, knit_graph=self.knitting_machine.knit_graph, max_float_length=self.knitting_machine.machine_specification.maximum_float)
+            loop = carrier.yarn.make_loop_on_needle(holding_needle=needle, max_float_length=self.knitting_machine.machine_specification.maximum_float)
             if float_source_needle is not None:
                 float_source_needle = self.knitting_machine[float_source_needle]
                 float_start = min(float_source_needle.position, needle.position)

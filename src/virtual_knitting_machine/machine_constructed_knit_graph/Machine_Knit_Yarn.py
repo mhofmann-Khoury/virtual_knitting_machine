@@ -39,7 +39,7 @@ class Machine_Knit_Yarn(Yarn):
         active_loops (dict[Machine_Knit_Loop, Needle]): Dictionary mapping active loops to their holding needles.
     """
 
-    def __init__(self, carrier: Yarn_Carrier, properties: Yarn_Properties | None, instance: int = 0) -> None:
+    def __init__(self, carrier: Yarn_Carrier, properties: Yarn_Properties | None, knit_graph: None | Knit_Graph, instance: int = 0) -> None:
         """Initialize a machine knit yarn with carrier and properties.
 
         Args:
@@ -49,7 +49,7 @@ class Machine_Knit_Yarn(Yarn):
         """
         if properties is None:
             properties = Yarn_Properties()
-        super().__init__(properties)
+        super().__init__(properties, knit_graph=knit_graph)
         self._instance: int = instance
         self._carrier: Yarn_Carrier = carrier
         self.active_loops: dict[Machine_Knit_Loop: Needle] = {}
@@ -97,7 +97,7 @@ class Machine_Knit_Yarn(Yarn):
             Machine_Knit_Yarn: New yarn of the same type after cutting this yarn.
         """
         self._carrier = None
-        return Machine_Knit_Yarn(self.carrier, self.properties, instance=self._instance + 1)
+        return Machine_Knit_Yarn(self.carrier, self.properties, knit_graph=self.knit_graph, instance=self._instance + 1)
 
     @property
     def last_loop(self) -> Machine_Knit_Loop | None:
@@ -137,13 +137,11 @@ class Machine_Knit_Yarn(Yarn):
                 floats[l] = n
         return floats
 
-    def make_loop_on_needle(self, holding_needle: Needle, knit_graph: Knit_Graph | None = None, max_float_length: int | None = None) -> Machine_Knit_Loop:
+    def make_loop_on_needle(self, holding_needle: Needle, max_float_length: int | None = None) -> Machine_Knit_Loop:
         """Add a new loop at the end of the yarn on the specified needle with configurable float length validation.
 
         Args:
             holding_needle (Needle): The needle to make the loop on and hold it.
-            knit_graph (Knit_Graph | None, optional): An optional knit graph used to calculate last loop ID in knitgraph.
-                Defaults to None.
             max_float_length (int | None, optional): The maximum allowed distance between needles holding a loop.
                 If None no float length validation is performed. Defaults to None.
 
@@ -162,8 +160,8 @@ class Machine_Knit_Yarn(Yarn):
         last_needle = self.last_needle()
         if max_float_length is not None and last_needle is not None and abs(holding_needle.position - last_needle.position) > max_float_length:
             warnings.warn(Long_Float_Warning(self.carrier.carrier_id, last_needle, holding_needle, max_float_length))
-        loop = Machine_Knit_Loop(self._next_loop_id(knit_graph), self, holding_needle)
-        self.add_loop_to_end(knit_graph, loop)
+        loop = Machine_Knit_Loop(self._next_loop_id(), self, holding_needle)
+        self.add_loop_to_end(loop)
         return loop
 
     def __str__(self) -> str:
