@@ -38,7 +38,7 @@ virtual-knitting-machine
    :caption: API Reference
    :hidden:
 
-   modules.rst
+   api/virtual_knitting_machine
 
 .. toctree::
    :maxdepth: 1
@@ -48,7 +48,3 @@ virtual-knitting-machine
    dependencies
    related_projects
    acknowledgments
-
-**API Documentation**
-
-* :doc:`virtual_knitting_machine` - Complete API reference

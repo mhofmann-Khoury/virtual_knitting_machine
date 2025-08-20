@@ -3,11 +3,18 @@ import unittest
 import warnings
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Duplicate_Carriers_In_Set
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
+    Duplicate_Carriers_In_Set,
+)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
+    Yarn_Carrier,
+)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import (
+    Yarn_Carrier_Set,
+)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import (
+    Yarn_Insertion_System,
+)
 
 
 class TestYarnCarrierSet(unittest.TestCase):
@@ -115,7 +122,7 @@ class TestYarnCarrierSet(unittest.TestCase):
         """Test get_carriers method when system returns multiple carriers."""
         carrier_set = Yarn_Carrier_Set([1, 2, 3])
 
-        mock_carriers = [i for i in range(1,4)]
+        mock_carriers = [i for i in range(1, 4)]
 
         carriers = carrier_set.get_carriers(self.carrier_system)
 
