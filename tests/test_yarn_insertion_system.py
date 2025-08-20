@@ -186,7 +186,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
 
     def test_inhook_hook_in_use_different_carrier_raises_exception(self):
         """Test inhook when hook is in use by different carrier raises exception."""
-        self.system.hooked_carrier = self.system.carriers[1]  # Carrier 2 is hooked
+        self.system._hooked_carrier = self.system.carriers[1]  # Carrier 2 is hooked
 
         with self.assertRaises(Inserting_Hook_In_Use_Exception):
             self.system.inhook(1)  # Try to hook carrier 1
@@ -194,7 +194,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
     def test_inhook_same_carrier_already_hooked(self):
         """Test inhook when same carrier is already hooked."""
         carrier = self.system.carriers[0]
-        self.system.hooked_carrier = carrier
+        self.system._hooked_carrier = carrier
 
         self.system.inhook(1)
 
