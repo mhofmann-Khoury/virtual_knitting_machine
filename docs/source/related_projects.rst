@@ -23,7 +23,7 @@ Core Knitting Libraries
    A general purpose machine knitting langauge
 
    - **Purpose**: Fully programmatic support to control knitting machines.
-   - **Repository**: `virtual-knitting-machine on PyPI <https://pypi.org/project/knit-script/>`_
+   - **Repository**: `knit-script on PyPI <https://pypi.org/project/knit-script/>`_
 
 **knitout-interpreter** |knitout_interp_version|
    Knitout processing and execution framework.
@@ -31,7 +31,7 @@ Core Knitting Libraries
    - **Purpose**: Processes and validates knitout instruction files
    - **Key Features**: Instruction parsing, carriage pass organization, error detection
    - **Integration**: Processes KnitScript's generated knitout output
-   - **Repository**: `knitout-interpreter on PyPI <https://pypi.org/project/knitout-interpreter/>`_
+   - **Repository**: `knitout-interpreter on PyPI <https://pypi.org/project/knitout-interpreter/>`
 
 Optimization and Analysis Tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

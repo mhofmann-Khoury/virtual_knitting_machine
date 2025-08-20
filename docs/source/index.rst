@@ -21,10 +21,7 @@ virtual-knitting-machine
    :target: https://github.com/pre-commit/pre-commit
    :alt: Pre-commit
 
-'A data structure representing the state and operations of a virtual V-Bed with sliders whole garment knitting machine based on the whole garment knitting machines made by Shima Seiki.'
-
-🧶 Overview
------------
+A data structure representing the state and operations of a virtual V-Bed with sliders whole garment knitting machine based on the whole garment knitting machines made by Shima Seiki.'
 
 .. toctree::
    :maxdepth: 2
