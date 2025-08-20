@@ -2,11 +2,18 @@
 
 from knit_graphs.Knit_Graph import Knit_Graph
 
-from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
+from virtual_knitting_machine.Knitting_Machine_Specification import (
+    Knitting_Machine_Specification,
+)
 
 
 class _Base_Knitting_Machine:
-    """Base class for the Knitting Machine. Used to resolve circular import errors."""
+    """Base class for the Knitting Machine. Used to resolve circular import errors.
+
+    Attributes:
+        machine_specification (Knitting_Machine_Specification): The specification to build this machine from..
+        knit_graph (Knit_Graph): The knit graph that has been formed on the machine.
+    """
 
     def __init__(self, machine_specification: Knitting_Machine_Specification = Knitting_Machine_Specification(), knit_graph: Knit_Graph | None = None):
         """Initializes the base of a knitting machine with the given machine specification.

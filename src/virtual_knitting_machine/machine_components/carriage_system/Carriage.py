@@ -5,9 +5,15 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING
 
-from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import Carriage_Off_Edge_Warning
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import Carriage_Side
+from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import (
+    Carriage_Off_Edge_Warning,
+)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
+    Carriage_Pass_Direction,
+)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import (
+    Carriage_Side,
+)
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
@@ -18,6 +24,10 @@ class Carriage:
 
     The carriage is responsible for moving across the needle bed and performing knitting operations.
     This class manages position validation, movement direction tracking, and transfer operation states.
+
+    Attributes:
+        knitting_machine (Knitting_Machine): The Knitting machine this carriage belongs to.
+
     """
 
     def __init__(self, knitting_machine: Knitting_Machine, right_needle_position: int, left_needle_position: int = 0) -> None:

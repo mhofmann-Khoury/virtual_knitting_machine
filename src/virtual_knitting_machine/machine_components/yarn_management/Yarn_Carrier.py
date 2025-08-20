@@ -1,24 +1,40 @@
 """Yarn_Carrier representation module for managing individual yarn carriers on knitting machines.
 This module provides the Yarn_Carrier class which represents a single yarn carrier that can hold yarn, track position, and manage active/hooked states for knitting operations."""
 from __future__ import annotations
+
 import warnings
 from typing import TYPE_CHECKING
 
 from knit_graphs.Yarn import Yarn_Properties
 
-from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Change_Active_Yarn_Exception, Hooked_Carrier_Exception
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import In_Active_Carrier_Warning, Out_Inactive_Carrier_Warning
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import Machine_Knit_Yarn
+from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
+    Change_Active_Yarn_Exception,
+    Hooked_Carrier_Exception,
+)
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
+    In_Active_Carrier_Warning,
+    Out_Inactive_Carrier_Warning,
+)
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import (
+    Machine_Knit_Yarn,
+)
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.needles.Needle import Needle
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import (
+        Yarn_Carrier_Set,
+    )
 
 
 class Yarn_Carrier:
     """A class representing an individual yarn carrier on a knitting machine.
     Yarn carriers hold yarn and can be moved to different positions on the machine, activated for knitting operations, and connected to insertion hooks for yarn manipulation.
-    Each carrier tracks its state including position, active status, and hook connection."""
+    Each carrier tracks its state including position, active status, and hook connection.
+
+    Attributes:
+        yarn (Machine_Knit_Yarn): The machine knit yarn that can be accessed by this carrier.
+
+    """
 
     def __init__(self, carrier_id: int, yarn: None | Machine_Knit_Yarn = None, yarn_properties: Yarn_Properties | None = None) -> None:
         """Initialize a yarn carrier with specified ID and optional yarn configuration.

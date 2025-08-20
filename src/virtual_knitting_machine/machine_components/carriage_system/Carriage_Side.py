@@ -4,9 +4,12 @@ This module defines the two sides of a knitting machine that the carriage can be
 and provides utility methods for determining appropriate movement directions from each side.
 """
 from __future__ import annotations
+
 from enum import Enum
 
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
+    Carriage_Pass_Direction,
+)
 
 
 class Carriage_Side(Enum):
@@ -15,8 +18,8 @@ class Carriage_Side(Enum):
     This enum provides methods for determining opposite sides and appropriate movement directions
     for continuing or reversing carriage movement from each side position.
     """
-    Left_Side = "Left_Side"
-    Right_Side = "Right_Side"
+    Left_Side = "Left_Side" # The left-side of the needle beds at index 0.
+    Right_Side = "Right_Side" # The right-side of the needle beds at the needle-bed width.
 
     def __str__(self) -> str:
         """Return string representation of the carriage side.

@@ -9,23 +9,45 @@ import warnings
 from collections import defaultdict
 from typing import cast
 
-from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.artin_wale_braids.Crossing_Direction import Crossing_Direction
+from knit_graphs.Knit_Graph import Knit_Graph
 
-from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
 from virtual_knitting_machine._knitting_machine_base import _Base_Knitting_Machine
-from virtual_knitting_machine.knitting_machine_exceptions.racking_errors import Max_Rack_Exception
-from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import Knit_on_Empty_Needle_Warning
+from virtual_knitting_machine.knitting_machine_exceptions.racking_errors import (
+    Max_Rack_Exception,
+)
+from virtual_knitting_machine.Knitting_Machine_Specification import (
+    Knitting_Machine_Specification,
+)
+from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import (
+    Knit_on_Empty_Needle_Warning,
+)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage import (
+    Carriage,
+)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
+    Carriage_Pass_Direction,
+)
 from virtual_knitting_machine.machine_components.Needle_Bed import Needle_Bed
-from virtual_knitting_machine.machine_components.carriage_system.Carriage import Carriage
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import Machine_Knit_Yarn
+from virtual_knitting_machine.machine_components.needles.Slider_Needle import (
+    Slider_Needle,
+)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
+    Yarn_Carrier,
+)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import (
+    Yarn_Carrier_Set,
+)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import (
+    Yarn_Insertion_System,
+)
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
+    Machine_Knit_Loop,
+)
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import (
+    Machine_Knit_Yarn,
+)
 
 
 class Knitting_Machine(_Base_Knitting_Machine):
@@ -46,10 +68,10 @@ class Knitting_Machine(_Base_Knitting_Machine):
                 Existing knit graph to use, creates new one if None. Defaults to None.
         """
         super().__init__(machine_specification, knit_graph)
-        self.front_bed: Needle_Bed = Needle_Bed(is_front=True, knitting_machine=self)
-        self.back_bed: Needle_Bed = Needle_Bed(is_front=False, knitting_machine=self)
+        self._front_bed: Needle_Bed = Needle_Bed(is_front=True, knitting_machine=self)
+        self._back_bed: Needle_Bed = Needle_Bed(is_front=False, knitting_machine=self)
         self._carrier_system: Yarn_Insertion_System = Yarn_Insertion_System(self, self.machine_specification.carrier_count)
-        self.carriage: Carriage = Carriage(self, self.needle_count - 1)
+        self._carriage: Carriage = Carriage(self, self.needle_count - 1)
         self._rack: int = 0
         self._all_needle_rack: bool = False
 
@@ -98,6 +120,30 @@ class Knitting_Machine(_Base_Knitting_Machine):
             Yarn_Insertion_System: The carrier system used by the knitting machine.
         """
         return self._carrier_system
+
+    @property
+    def carriage(self) -> Carriage:
+        """
+        Returns:
+            Carriage: The carriage that activates needle operations on this machine.
+        """
+        return self._carriage
+
+    @property
+    def front_bed(self) -> Needle_Bed:
+        """
+        Returns:
+            Needle_Bed: The front bed of needles and slider needles in this machine.
+        """
+        return self._front_bed
+
+    @property
+    def back_bed(self) -> Needle_Bed:
+        """
+        Returns:
+            Needle_Bed: The back bed of needles and slider needles in this machine.
+        """
+        return self._back_bed
 
     def get_needle_of_loop(self, loop: Machine_Knit_Loop) -> None | Needle:
         """Get the needle holding the loop or None if it is not held.

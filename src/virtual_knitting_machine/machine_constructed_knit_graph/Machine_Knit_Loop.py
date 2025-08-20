@@ -10,7 +10,10 @@ from typing import TYPE_CHECKING
 from knit_graphs.Loop import Loop
 from knit_graphs.Yarn import Yarn
 
-from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import Slider_Loop_Exception, Xfer_Dropped_Loop_Exception
+from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import (
+    Slider_Loop_Exception,
+    Xfer_Dropped_Loop_Exception,
+)
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.needles.Needle import Needle
@@ -21,6 +24,9 @@ class Machine_Knit_Loop(Loop):
 
     This class tracks the complete needle history of a loop including creation, transfers, and drop operations,
     providing detailed machine state information for each loop throughout its lifecycle on the knitting machine.
+
+    Attributes:
+        needle_history (list[Needle | None]): The list of needles in the order that they held loops. The last element will be None if the loop is dropped from a needle.
     """
 
     def __init__(self, loop_id: int, yarn: Yarn, source_needle: Needle) -> None:

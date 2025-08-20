@@ -4,6 +4,7 @@ This module defines the two directions a carriage can move across the needle bed
 needle positioning, comparison, and sorting operations relative to carriage movement direction.
 """
 from __future__ import annotations
+
 import functools
 from enum import Enum
 from typing import Iterable
@@ -17,8 +18,8 @@ class Carriage_Pass_Direction(Enum):
     Needles are oriented on the machine left to right in ascending order: Left -> 0 1 2 ... N <- Right.
     This enum provides methods for needle comparison, positioning, and sorting operations relative to carriage movement direction.
     """
-    Leftward = "-"
-    Rightward = "+"
+    Leftward = "-" # Represents a Leftward decreasing movement of the carriage pass.
+    Rightward = "+" # Represents a Rightward increasing movement of the carriage pass.
 
     def opposite(self) -> Carriage_Pass_Direction:
         """Get the opposite pass direction of this direction.

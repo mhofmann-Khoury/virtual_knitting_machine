@@ -45,10 +45,10 @@ class Knitting_Position(Enum):
     This enumeration defines where knitting operations are positioned on the machine bed,
     affecting how the machine interprets needle positions and carriage movements.
     """
-    Left = "Left"
-    Right = "Right"
-    Center = "Center"
-    Keep = "Keep"
+    Left = "Left"  # Notes that the pattern will be positioned starting on te left most needle of the machine.
+    Right = "Right"  # Notes that the pattern will be positioned ending on the rightmost needle of the machine.
+    Center = "Center"  # Centers the pattern on the needle beds.
+    Keep = "Keep"  # Notes that the pattern will be knit on exactly the needles specified.
 
     def __str__(self) -> str:
         """Return string representation of the knitting position.

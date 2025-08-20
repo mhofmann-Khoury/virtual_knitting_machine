@@ -4,19 +4,28 @@ This module extends the base Yarn class to include machine-specific functionalit
 carrier management, float tracking, loop creation, and machine state coordination for yarn operations on virtual knitting machines.
 """
 from __future__ import annotations
+
 import warnings
 from typing import TYPE_CHECKING
 
 from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn, Yarn_Properties
 
-from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Use_Cut_Yarn_Exception
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Long_Float_Warning
+from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
+    Use_Cut_Yarn_Exception,
+)
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
+    Long_Float_Warning,
+)
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
+    Machine_Knit_Loop,
+)
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
+        Yarn_Carrier,
+    )
 
 
 class Machine_Knit_Yarn(Yarn):
@@ -40,7 +49,6 @@ class Machine_Knit_Yarn(Yarn):
         """
         if properties is None:
             properties = Yarn_Properties()
-        properties.name = f"{instance}_Yarn on c{carrier.carrier_id}"
         super().__init__(properties)
         self._instance: int = instance
         self._carrier: Yarn_Carrier = carrier
@@ -157,3 +165,17 @@ class Machine_Knit_Yarn(Yarn):
         loop = Machine_Knit_Loop(self._next_loop_id(knit_graph), self, holding_needle)
         self.add_loop_to_end(knit_graph, loop)
         return loop
+
+    def __str__(self) -> str:
+        """
+        Returns:
+            str: The string specifying the instance and carrier of this yarn.
+        """
+        return f"{self._instance}_Yarn on c{self.carrier.carrier_id}"
+
+    def __repr__(self) -> str:
+        """
+        Returns:
+            str: The string specifying the instance and carrier of this yarn.
+        """
+        return str(self)
