@@ -6,7 +6,9 @@ from unittest.mock import Mock
 from knit_graphs.Pull_Direction import Pull_Direction
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
+    Machine_Knit_Loop,
+)
 
 
 class TestNeedle(unittest.TestCase):

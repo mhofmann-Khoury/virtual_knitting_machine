@@ -3,12 +3,15 @@ This module provides comprehensive warning classes for various yarn carrier issu
 state mismatches, duplicate definitions, hook operation errors, and float length violations during machine knitting operations."""
 from typing import TYPE_CHECKING, Any
 
-from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import Knitting_Machine_Warning
-
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
+    Knitting_Machine_Warning,
+)
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
+        Yarn_Carrier,
+    )
 
 
 class Yarn_Carrier_Warning(Knitting_Machine_Warning):

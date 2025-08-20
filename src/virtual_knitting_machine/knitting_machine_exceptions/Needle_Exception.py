@@ -2,9 +2,12 @@
 This module provides exception classes for various needle-related critical errors including
 slider operations, loop transfers, alignment issues, and needle state violations that prevent successful knitting operations."""
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
-from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import Knitting_Machine_Exception
+from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import (
+    Knitting_Machine_Exception,
+)
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.needles.Needle import Needle

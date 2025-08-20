@@ -4,14 +4,28 @@ import unittest
 from knit_graphs.Knit_Graph import Knit_Graph
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
-from virtual_knitting_machine.knitting_machine_exceptions.racking_errors import Max_Rack_Exception
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.knitting_machine_exceptions.racking_errors import (
+    Max_Rack_Exception,
+)
+from virtual_knitting_machine.Knitting_Machine_Specification import (
+    Knitting_Machine_Specification,
+)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
+    Carriage_Pass_Direction,
+)
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+from virtual_knitting_machine.machine_components.needles.Slider_Needle import (
+    Slider_Needle,
+)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
+    Yarn_Carrier,
+)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import (
+    Yarn_Carrier_Set,
+)
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
+    Machine_Knit_Loop,
+)
 
 
 class TestKnittingMachine(unittest.TestCase):

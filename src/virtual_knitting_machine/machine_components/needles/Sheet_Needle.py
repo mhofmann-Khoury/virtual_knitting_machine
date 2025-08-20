@@ -4,9 +4,14 @@ This module provides classes for managing needles in a layered gauging schema us
 It includes the Sheet_Needle class which extends the base Needle class to support gauge-based positioning, and the Slider_Sheet_Needle class for slider operations within sheets.
 """
 from __future__ import annotations
+
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+from virtual_knitting_machine.machine_components.needles.Slider_Needle import (
+    Slider_Needle,
+)
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
+    Machine_Knit_Loop,
+)
 
 
 class Sheet_Needle(Needle):

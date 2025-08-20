@@ -1,7 +1,9 @@
 """Comprehensive unit tests for the Carriage_Pass_Direction enum."""
 import unittest
 
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
+    Carriage_Pass_Direction,
+)
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 

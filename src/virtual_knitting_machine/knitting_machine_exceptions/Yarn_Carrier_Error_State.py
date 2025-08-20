@@ -3,10 +3,14 @@ This module provides comprehensive exception classes for various yarn carrier is
 hook conflicts, inactive carrier usage, yarn cutting errors, and carrier system modifications that would cause critical operational failures."""
 from typing import TYPE_CHECKING, Any
 
-from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import Knitting_Machine_Exception
+from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import (
+    Knitting_Machine_Exception,
+)
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
+        Yarn_Carrier,
+    )
 
 
 class Yarn_Carrier_Exception(Knitting_Machine_Exception):

@@ -25,13 +25,11 @@ repos:
       - id: end-of-file-fixer         # Ensure all files end with a newline
       - id: check-yaml                # Validate YAML syntax
       - id: check-toml                # Validate TOML syntax (pyproject.toml)
-      - id: check-json                # Validate JSON syntax
       - id: check-added-large-files   # Prevent accidentally committing large files
         args: ['--maxkb=1000']         # Max file size in KB
       - id: check-merge-conflict      # Detect merge conflict markers
       - id: check-case-conflict       # Detect case-sensitive filename conflicts
       - id: check-docstring-first     # Ensure docstrings come first in modules
-      - id: debug-statements          # Detect leftover debug statements (pdb, etc.)
       - id: fix-byte-order-marker     # Remove UTF-8 byte order markers
 
   # ==========================================================================

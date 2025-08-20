@@ -3,11 +3,18 @@ import unittest
 import warnings
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-
-from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import Carriage_Off_Edge_Warning
-from virtual_knitting_machine.machine_components.carriage_system.Carriage import Carriage
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import Carriage_Side
+from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import (
+    Carriage_Off_Edge_Warning,
+)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage import (
+    Carriage,
+)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
+    Carriage_Pass_Direction,
+)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import (
+    Carriage_Side,
+)
 
 
 class TestCarriage(unittest.TestCase):

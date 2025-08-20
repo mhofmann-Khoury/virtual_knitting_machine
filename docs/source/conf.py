@@ -3,12 +3,12 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-from importlib.metadata import version, PackageNotFoundError
-
 import os
 import sys
+
+# -- Project information -----------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+from importlib.metadata import PackageNotFoundError, version
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath('..'))

@@ -1,8 +1,12 @@
 """A module containing warnings related to carriage movements and positioning on knitting machines.
 This module provides warning classes for carriage position violations such as attempting to move the carriage beyond the machine's physical needle bed boundaries."""
 
-from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import Knitting_Machine_Warning
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import Carriage_Side
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
+    Knitting_Machine_Warning,
+)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import (
+    Carriage_Side,
+)
 
 
 class Carriage_Off_Edge_Warning(Knitting_Machine_Warning):

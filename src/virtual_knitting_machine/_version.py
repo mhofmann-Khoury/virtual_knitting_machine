@@ -5,8 +5,7 @@ This module provides version information by reading from the installed package
 metadata, ensuring a single source of truth with pyproject.toml.
 """
 
-from importlib.metadata import version, PackageNotFoundError
-
+from importlib.metadata import PackageNotFoundError, version
 
 try:
     # Get version from installed package metadata

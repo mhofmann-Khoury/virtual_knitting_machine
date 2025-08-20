@@ -1,8 +1,10 @@
 """Comprehensive unit tests for the Slider_Needle class."""
 import unittest
 
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Slider_Needle import (
+    Slider_Needle,
+)
 
 
 class TestSliderNeedle(unittest.TestCase):

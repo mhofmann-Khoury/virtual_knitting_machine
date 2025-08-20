@@ -1,9 +1,15 @@
 """Module containing the Sheet_Identifier class for identifying sheets at a given gauge."""
 
 from __future__ import annotations
+
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.needles.Sheet_Needle import Sheet_Needle, Slider_Sheet_Needle
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
+from virtual_knitting_machine.machine_components.needles.Sheet_Needle import (
+    Sheet_Needle,
+    Slider_Sheet_Needle,
+)
+from virtual_knitting_machine.machine_components.needles.Slider_Needle import (
+    Slider_Needle,
+)
 
 
 class Sheet_Identifier:
@@ -22,8 +28,7 @@ class Sheet_Identifier:
         """
 
         Returns:
-            int:
-                The position of the sheet in the gauge.
+            int: The position of the sheet in the gauge.
         """
         return self._sheet
 
@@ -32,8 +37,7 @@ class Sheet_Identifier:
         """
 
         Returns:
-            int:
-                The number of active sheets.
+            int: The number of active sheets.
         """
         return self._gauge
 

@@ -2,13 +2,19 @@
 This module provides the Needle_Bed class which represents one bed of needles (front or back) on a knitting machine,
 managing both regular needles and slider needles with their associated loops and operations."""
 import warnings
-from typing import Iterator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator
 
 from virtual_knitting_machine._knitting_machine_base import _Base_Knitting_Machine
-from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import Needle_Holds_Too_Many_Loops
+from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import (
+    Needle_Holds_Too_Many_Loops,
+)
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+from virtual_knitting_machine.machine_components.needles.Slider_Needle import (
+    Slider_Needle,
+)
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
+    Machine_Knit_Loop,
+)
 
 if TYPE_CHECKING:
     from virtual_knitting_machine import Knitting_Machine

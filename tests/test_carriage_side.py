@@ -1,8 +1,12 @@
 """Comprehensive unit tests for the Carriage_Side enum."""
 import unittest
 
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import Carriage_Side
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
+    Carriage_Pass_Direction,
+)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import (
+    Carriage_Side,
+)
 
 
 class TestCarriageSide(unittest.TestCase):

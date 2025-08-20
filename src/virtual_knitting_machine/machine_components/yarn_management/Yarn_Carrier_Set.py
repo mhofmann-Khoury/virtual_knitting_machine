@@ -2,15 +2,22 @@
 This module provides the Yarn_Carrier_Set class which represents a collection of yarn carriers that can be operated together in knitting operations.
 It manages multiple carriers as a single unit for positioning and operations."""
 from __future__ import annotations
-import warnings
-from typing import Iterator, TYPE_CHECKING
 
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Duplicate_Carriers_In_Set
+import warnings
+from typing import TYPE_CHECKING, Iterator
+
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
+    Duplicate_Carriers_In_Set,
+)
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
+    Yarn_Carrier,
+)
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import (
+        Yarn_Insertion_System,
+    )
 
 
 class Yarn_Carrier_Set:
