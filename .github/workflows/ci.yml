@@ -116,7 +116,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('pyproject.toml') }}
 
       # Add explicit Python path configuration for Windows
       - name: "🛠️ Configure Poetry Python path (Windows)"
@@ -124,7 +124,15 @@ jobs:
         run: |
           $pythonPath = (Get-Command python).Source
           Write-Output "Python executable path: $pythonPath"
+          # Remove any existing virtual environment to avoid version conflicts
+          if (Test-Path ".venv") {
+            Remove-Item -Recurse -Force .venv
+            Write-Output "Removed existing .venv directory"
+          }
+          # Clear Poetry's cache and env list
+          poetry env remove --all 2>$null || Write-Output "No existing environments to remove"
           poetry env use $pythonPath
+          poetry env info
         shell: powershell
 
       - name: "📋 Install dependencies"
