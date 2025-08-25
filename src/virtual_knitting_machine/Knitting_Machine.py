@@ -480,6 +480,89 @@ class Knitting_Machine(_Base_Knitting_Machine):
         self.carriage.move_to(needle.position)
         return cast(list[Machine_Knit_Loop], needle.drop())
 
+    def _add_xfer_crossing(self, left_loop: Machine_Knit_Loop, right_loop: Machine_Knit_Loop, crossing_direction: Crossing_Direction) -> None:
+        """
+        Add a crossing to the knit_graph's braid graph based on a transfer of the left loop (over or under) the right loop.
+        If this crossing would undo a prior crossing, the prior crossing edge is removed.
+
+        Args:
+            left_loop: The loop involved in the crossing that starts on the left of the crossing.
+            right_loop: The loop involved in the crossing that starts on the right of the crossing.
+            crossing_direction: The direction of the crossing.
+        """
+        if self.knit_graph.braid_graph.loop_crossing_graph.has_edge(right_loop, left_loop):
+            current_crossing = self.knit_graph.braid_graph.get_crossing(right_loop, left_loop)
+            if current_crossing.opposite == crossing_direction:  # inverted crossing direction
+                self.knit_graph.braid_graph.loop_crossing_graph.remove_edge(right_loop, left_loop)
+            else:
+                self.knit_graph.add_crossing(right_loop, left_loop, crossing_direction.opposite)
+        else:
+            self.knit_graph.add_crossing(left_loop, right_loop, crossing_direction)
+
+    def _cross_loops_by_rightward_xfer(self, starting_needle: Needle, aligned_needle: Needle, xfer_loops: list[Machine_Knit_Loop]) -> None:
+        """
+        Update the knitgraph's braid graph with a loop crossing created by a rightward crossing from the starting_needle to the aligned needle in a transfer.
+
+        Args:
+            starting_needle: The needle holding loops at the start of the transfer.
+            aligned_needle: The needle receiving loops in the transfer.
+            xfer_loops: The loops being transferred.
+        """
+        starting_position = starting_needle.racked_position_on_front(self.rack)
+        front_crossed_positions = [f for f in self.front_bed[starting_position:starting_position + abs(self.rack) + 1]
+                                   if f != starting_needle and f != aligned_needle and f.has_loops]
+        for n in front_crossed_positions:
+            for left_loop in xfer_loops:
+                for right_loop in n.held_loops:
+                    # cross the transferred loops to right, under the cross loops on the front bed.
+                    self._add_xfer_crossing(left_loop, right_loop, Crossing_Direction.Under_Right)
+        back_crossed_positions = [b for b in self.back_bed[starting_position:starting_position + abs(self.rack) + 1]
+                                  if b != starting_needle and b != aligned_needle and b.has_loops]
+        for n in back_crossed_positions:
+            for left_loop in xfer_loops:
+                for right_loop in n.held_loops:
+                    # cross the transferred loops to the right, over the cross loops on the back bed.
+                    self._add_xfer_crossing(left_loop, right_loop, Crossing_Direction.Over_Right)
+
+    def _cross_loops_by_leftward_xfer(self, starting_needle: Needle, aligned_needle: Needle, xfer_loops: list[Machine_Knit_Loop]) -> None:
+        """
+        Update the knitgraph's braid graph with a loop crossing created by a leftward crossing from the starting_needle to the aligned needle in a transfer.
+
+        Args:
+            starting_needle: The needle holding loops at the start of the transfer.
+            aligned_needle: The needle receiving loops in the transfer.
+            xfer_loops: The loops being transferred.
+        """
+        starting_position = starting_needle.racked_position_on_front(self.rack)
+        front_crossed_positions = [f for f in self.front_bed[starting_position - self.rack:starting_position + 1]
+                                   if f != starting_needle and f != aligned_needle and f.has_loops]
+        for n in front_crossed_positions:
+            for right_loop in xfer_loops:
+                for left_loop in n.held_loops:
+                    # cross the crossed loops on the front bed to the right, over the transferred loops
+                    self._add_xfer_crossing(left_loop, right_loop, Crossing_Direction.Over_Right)
+        back_crossed_positions = [b for b in self.back_bed[starting_position - self.rack:starting_position + 1]
+                                  if b != starting_needle and b != aligned_needle and b.has_loops]
+        for n in back_crossed_positions:
+            for right_loop in xfer_loops:
+                for left_loop in n.held_loops:
+                    # cross the crossed loops on the back bed to the right, under the transferred loops
+                    self._add_xfer_crossing(left_loop, right_loop, Crossing_Direction.Under_Right)
+
+    def _cross_loops_by_xfer(self, starting_needle: Needle, aligned_needle: Needle, xfer_loops: list[Machine_Knit_Loop]) -> None:
+        """
+        Update the knitgraph's braid graph with a loop crossing created by a transfer from the starting_needle to the aligned needle.
+
+        Args:
+            starting_needle: The needle holding loops at the start of the transfer.
+            aligned_needle: The needle receiving loops in the transfer.
+            xfer_loops: The loops being transferred.
+        """
+        if self.rack < 0:  # rightward xfer
+            self._cross_loops_by_rightward_xfer(starting_needle, aligned_needle, xfer_loops)
+        elif self.rack > 0:  # leftward xfer
+            self._cross_loops_by_leftward_xfer(starting_needle, aligned_needle, xfer_loops)
+
     def xfer(self, starting_needle: Needle, to_slider: bool = False, from_split: bool = False) -> list[Machine_Knit_Loop]:
         """Move all loops on starting_needle to aligned needle at current racking.
 
@@ -495,10 +578,8 @@ class Knitting_Machine(_Base_Knitting_Machine):
         # Get the needle and aligned needle in the current machine state.
         starting_needle = self[starting_needle]  # get needle on the machine.
         assert isinstance(starting_needle, Needle)
-        starting_position = starting_needle.opposite().racked_position_on_front(self.rack)
         aligned_needle = self[self.get_aligned_needle(starting_needle, to_slider)]  # get needle on the machine.
         assert isinstance(aligned_needle, Needle)
-        aligned_position = aligned_needle.racked_position_on_front(self.rack)
 
         # Drop the loops from the starting bed and add them to the aligned needle on the opposite bed.
         if starting_needle.is_front:
@@ -514,19 +595,7 @@ class Knitting_Machine(_Base_Knitting_Machine):
                 loop.transfer_loop(aligned_needle)
             xfer_loops: list[Machine_Knit_Loop] = self.front_bed.add_loops(aligned_needle, held_loops, drop_prior_loops=False)
 
-        # Calculate loop crossings to update the knitgraph's artin-braid for cable crossing.
-        crossed_positions = [f for f in self.front_bed[starting_position: aligned_position + 1]
-                             if f != starting_needle and f != aligned_needle and f.has_loops]  # Only does rightward crossings. Leftward is implied
-        for n in crossed_positions:
-            for left_loop in xfer_loops:
-                for right_loop in n.held_loops:
-                    self.knit_graph.add_crossing(left_loop, right_loop, Crossing_Direction.Under_Right)
-        crossed_positions = [b for b in self.back_bed[starting_position: aligned_position + 1]
-                             if b != starting_needle and b != aligned_needle and b.has_loops]  # Only does rightward crossings. Leftward is implied
-        for n in crossed_positions:
-            for left_loop in xfer_loops:
-                for right_loop in n.held_loops:
-                    self.knit_graph.add_crossing(left_loop, right_loop, Crossing_Direction.Over_Right)
+        self._cross_loops_by_xfer(starting_needle, aligned_needle, xfer_loops)
 
         if not from_split:  # Update the carriage position, regardless of carrier behaviors.
             self.carriage.transferring = True
