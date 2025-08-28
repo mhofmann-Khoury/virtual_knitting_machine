@@ -59,6 +59,14 @@ class Yarn_Insertion_System:
         self._hooked_carrier: Yarn_Carrier | None = None
 
     @property
+    def hook_input_direction(self) -> None | Carriage_Pass_Direction:
+        """
+        Returns:
+            None | Carriage_Pass_Direction: The direction that the carrier was moving when the yarn-inserting hook was use. None if the yarn-inserting hook is not active.
+        """
+        return self._hook_input_direction
+
+    @property
     def hooked_carrier(self) -> Yarn_Carrier | None:
         """
         Returns:

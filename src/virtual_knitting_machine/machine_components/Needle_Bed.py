@@ -1,10 +1,11 @@
 """Representation module for needle beds on knitting machines.
 This module provides the Needle_Bed class which represents one bed of needles (front or back) on a knitting machine,
 managing both regular needles and slider needles with their associated loops and operations."""
+from __future__ import annotations
+
 import warnings
 from typing import TYPE_CHECKING, Iterator
 
-from virtual_knitting_machine._knitting_machine_base import _Base_Knitting_Machine
 from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import (
     Needle_Holds_Too_Many_Loops,
 )
@@ -17,7 +18,7 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop i
 )
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine import Knitting_Machine
+    from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 
 
 class Needle_Bed:
@@ -29,14 +30,14 @@ class Needle_Bed:
         sliders (list[Slider_Needle]): The slider needles on this bed ordered from 0 to max.
     """
 
-    def __init__(self, is_front: bool, knitting_machine: _Base_Knitting_Machine) -> None:
+    def __init__(self, is_front: bool, knitting_machine: Knitting_Machine) -> None:
         """Initialize a needle bed representation for the machine.
 
         Args:
             is_front (bool): True if this is the front bed, False if it is the back bed.
             knitting_machine (Knitting_Machine): The knitting machine this bed belongs to.
         """
-        self._knitting_machine: _Base_Knitting_Machine = knitting_machine
+        self._knitting_machine: Knitting_Machine = knitting_machine
         self._is_front: bool = is_front
         self.needles: list[Needle] = [Needle(self._is_front, i) for i in range(0, self.needle_count)]
         self.sliders: list[Slider_Needle] = [Slider_Needle(self._is_front, i) for i in range(0, self.needle_count)]

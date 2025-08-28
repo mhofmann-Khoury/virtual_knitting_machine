@@ -12,7 +12,6 @@ from typing import cast
 from knit_graphs.artin_wale_braids.Crossing_Direction import Crossing_Direction
 from knit_graphs.Knit_Graph import Knit_Graph
 
-from virtual_knitting_machine._knitting_machine_base import _Base_Knitting_Machine
 from virtual_knitting_machine.knitting_machine_exceptions.racking_errors import (
     Max_Rack_Exception,
 )
@@ -50,12 +49,16 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn i
 )
 
 
-class Knitting_Machine(_Base_Knitting_Machine):
+class Knitting_Machine:
     """A virtual representation of a V-Bed WholeGarment knitting machine.
 
     This class provides comprehensive functionality for simulating knitting operations including
     needle management, carriage control, yarn carrier operations, racking, and knit graph construction
     with support for all standard knitting operations like knit, tuck, transfer, split, and miss.
+
+    Attributes:
+        machine_specification (Knitting_Machine_Specification): The specification to build this machine from.
+        knit_graph (Knit_Graph): The knit graph that has been formed on the machine.
     """
 
     def __init__(self, machine_specification: Knitting_Machine_Specification = Knitting_Machine_Specification(), knit_graph: Knit_Graph | None = None) -> None:
@@ -67,13 +70,42 @@ class Knitting_Machine(_Base_Knitting_Machine):
             knit_graph (Knit_Graph | None, optional):
                 Existing knit graph to use, creates new one if None. Defaults to None.
         """
-        super().__init__(machine_specification, knit_graph)
+        self.machine_specification: Knitting_Machine_Specification = machine_specification
+        if knit_graph is None:
+            knit_graph = Knit_Graph()
+        self.knit_graph: Knit_Graph = knit_graph
         self._front_bed: Needle_Bed = Needle_Bed(is_front=True, knitting_machine=self)
         self._back_bed: Needle_Bed = Needle_Bed(is_front=False, knitting_machine=self)
         self._carrier_system: Yarn_Insertion_System = Yarn_Insertion_System(self, self.machine_specification.carrier_count)
         self._carriage: Carriage = Carriage(self, self.needle_count - 1)
         self._rack: int = 0
         self._all_needle_rack: bool = False
+
+    @property
+    def needle_count(self) -> int:
+        """Get the needle width of the machine.
+
+        Returns:
+            int: The needle width of the machine.
+        """
+        return int(self.machine_specification.needle_count)
+
+    @property
+    def max_rack(self) -> int:
+        """Get the maximum distance that the machine can rack.
+
+        Returns:
+            int: The maximum distance that the machine can rack.
+        """
+        return int(self.machine_specification.maximum_rack)
+
+    def __len__(self) -> int:
+        """Get the needle bed width of the machine.
+
+        Returns:
+            int: The needle bed width of the machine.
+        """
+        return self.needle_count
 
     def copy(self, starting_state: Knitting_Machine | None = None) -> Knitting_Machine:
         """Create a crude copy of this machine state with all relevant yarns inhooked and loops formed on required locations.
