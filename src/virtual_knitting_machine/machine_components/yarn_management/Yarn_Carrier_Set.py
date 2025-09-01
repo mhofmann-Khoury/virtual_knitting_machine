@@ -9,6 +9,9 @@ from typing import TYPE_CHECKING, Iterator
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
     Duplicate_Carriers_In_Set,
 )
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
+    Carriage_Pass_Direction,
+)
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
     Yarn_Carrier,
@@ -71,15 +74,18 @@ class Yarn_Carrier_Set:
             carriers = [carriers]
         return carriers
 
-    def position_carriers(self, carrier_system: Yarn_Insertion_System, position: Needle | int | None) -> None:
+    def position_carriers(self, carrier_system: Yarn_Insertion_System, position: Needle | int | None, direction: Carriage_Pass_Direction | None = None) -> None:
         """Set the position of all involved carriers to the given position.
 
         Args:
             carrier_system (Yarn_Insertion_System): Carrier system referenced by set.
             position (Needle | int | None): The position to move the carrier set to, if None this means the carrier is not active.
+            direction (Carriage_Pass_Direction, optional): The direction of the carrier movement. If this is not provided, the direction will be inferred.
         """
         for carrier in self.get_carriers(carrier_system):
             carrier.position = position
+            if direction is not None:
+                carrier.last_direction = direction
 
     @property
     def carrier_ids(self) -> list[int]:

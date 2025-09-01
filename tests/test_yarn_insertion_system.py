@@ -1,5 +1,6 @@
 """Comprehensive unit tests for the Yarn_Insertion_System class."""
 import unittest
+import warnings
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
@@ -81,10 +82,6 @@ class TestYarnInsertionSystem(unittest.TestCase):
         carrier_ids = self.system.carrier_ids
         self.assertEqual(carrier_ids, [1, 2, 3, 4, 5])
 
-    def test_hook_size_property(self):
-        """Test hook_size property."""
-        self.assertEqual(self.system.hook_size, 5)
-
     def test_inserting_hook_available_property_true(self):
         """Test inserting_hook_available property when hook is available."""
         self.assertIsNone(self.system.hooked_carrier)
@@ -110,7 +107,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
         """Test conflicts_with_inserting_hook when hook is not active."""
         needle = Needle(True, 10)
 
-        result = self.system.conflicts_with_inserting_hook(needle + 1, Carriage_Pass_Direction.Leftward)
+        result = self.system.conflicts_with_inserting_hook(needle + 1)
         self.assertFalse(result)
 
     def test_conflicts_with_inserting_hook_leftward_conflict(self):
@@ -122,7 +119,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
         self.assertTrue(self.system[1].is_active)
         self.system.knitting_machine.tuck(Yarn_Carrier_Set(1), needle, Carriage_Pass_Direction.Leftward)
 
-        result = self.system.conflicts_with_inserting_hook(needle + 1, Carriage_Pass_Direction.Leftward)
+        result = self.system.conflicts_with_inserting_hook(needle + 1)
         self.assertTrue(result)
 
     def test_conflicts_with_inserting_hook_leftward_no_conflict(self):
@@ -131,7 +128,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
         self.system.inhook(1)
         self.system.knitting_machine.tuck(Yarn_Carrier_Set(1), needle, Carriage_Pass_Direction.Leftward)
 
-        result = self.system.conflicts_with_inserting_hook(needle, Carriage_Pass_Direction.Leftward)
+        result = self.system.conflicts_with_inserting_hook(needle)
         self.assertFalse(result)
 
     def test_missing_carriers_all_active(self):
@@ -231,7 +228,9 @@ class TestYarnInsertionSystem(unittest.TestCase):
         carrier.is_hooked = True
 
         with self.assertRaises(Hooked_Carrier_Exception):
-            self.system.outhook(1)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", Out_Inactive_Carrier_Warning)
+                self.system.outhook(1)
 
     def test_make_loops_inactive_carrier_raises_exception(self):
         """Test make_loops with inactive carrier raises exception."""

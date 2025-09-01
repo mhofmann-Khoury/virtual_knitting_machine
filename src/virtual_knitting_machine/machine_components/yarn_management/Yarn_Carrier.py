@@ -15,6 +15,9 @@ from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warn
     In_Active_Carrier_Warning,
     Out_Inactive_Carrier_Warning,
 )
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
+    Carriage_Pass_Direction,
+)
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import (
     Machine_Knit_Yarn,
 )
@@ -32,6 +35,8 @@ class Yarn_Carrier:
     Each carrier tracks its state including position, active status, and hook connection.
     """
 
+    STOPPING_DISTANCE: int = 10  # int: The distance carriers are moved when kicked to avoid conflicts.
+
     def __init__(self, carrier_id: int, yarn: None | Machine_Knit_Yarn = None, yarn_properties: Yarn_Properties | None = None, knit_graph: Knit_Graph | None = None) -> None:
         """Initialize a yarn carrier with specified ID and optional yarn configuration.
 
@@ -44,6 +49,7 @@ class Yarn_Carrier:
         self._is_active: bool = False
         self._is_hooked: bool = False
         self._position: None | int = None
+        self._last_direction: None | Carriage_Pass_Direction = None
         if yarn is not None:
             self._yarn: Machine_Knit_Yarn = yarn
             self._yarn.knit_graph = knit_graph
@@ -71,14 +77,91 @@ class Yarn_Carrier:
     @position.setter
     def position(self, new_position: None | Needle | int) -> None:
         """Set the position of the carrier.
+        Infers the direction of the carrier movement from the differences between the states.
+        If the direction is ambiguous because the operation occurs at the same location, the last direction is reversed.
 
         Args:
             new_position (None | Needle | int): The new position for the carrier, None if inactive, or a needle/position value.
         """
         if new_position is None:
             self._position = None
+            self.last_direction = None  # No position means no carrier position direction.
         else:
+            if self.position is None:
+                self.last_direction = Carriage_Pass_Direction.Leftward  # moving in a leftward position when the carrier is inserted
+            else:
+                if int(new_position) < self.position:
+                    self.last_direction = Carriage_Pass_Direction.Leftward
+                elif int(new_position) > self.position:
+                    self.last_direction = Carriage_Pass_Direction.Rightward
+                else:
+                    assert isinstance(self.last_direction, Carriage_Pass_Direction)
+                    self.last_direction = self.last_direction.opposite()
             self._position = int(new_position)
+
+    def direction_to_needle(self, needle_position: int | Needle) -> Carriage_Pass_Direction:
+        """
+        Args:
+            needle_position (int | Needle): The position of a needle to move towards.
+
+        Returns:
+            Carriage_Pass_Direction: The direction that the carrier will move to reach the given position from its current position.
+        """
+        if self.position is None:  # inactive carriers enter from the right
+            return Carriage_Pass_Direction.Leftward
+        elif int(needle_position) < self.position:
+            return Carriage_Pass_Direction.Leftward
+        elif int(needle_position) > self.position:
+            return Carriage_Pass_Direction.Rightward
+        else:
+            assert isinstance(self.last_direction, Carriage_Pass_Direction)
+            return self.last_direction.opposite()
+
+    @property
+    def last_direction(self) -> None | Carriage_Pass_Direction:
+        """
+        Returns:
+            Carriage_Pass_Direction | None: The last direction that the carrier was moved in or None if the carrier is inactive.
+        """
+        return self._last_direction
+
+    @last_direction.setter
+    def last_direction(self, direction: None | Carriage_Pass_Direction) -> None:
+        """
+        Sets the last direction that the carrier was move in.
+        Args:
+            direction (Carriage_Pass_Direction | None): The direction of the last move or None if the carrier is inactive.
+        """
+        self._last_direction = direction
+
+    @property
+    def conflicting_needle_slot(self) -> int | None:
+        """
+        Returns:
+            int | None: The needle slot that currently conflicts with the carrier or None if the carrier is not active.
+        """
+        if not self.is_active:
+            return None
+        else:
+            assert isinstance(self.position, int)
+            assert isinstance(self.last_direction, Carriage_Pass_Direction)
+            if self.last_direction is Carriage_Pass_Direction.Leftward:
+                return self.position - 1
+            else:
+                return self.position + 1
+
+    @property
+    def needle_range(self) -> None | tuple[int, int]:
+        """
+        Returns:
+            None | tuple[int, int]: The range of positions that a carrier may exist after an ambiguous movement or None if the carrier is inactive.
+        """
+        if self.position is None:
+            return None
+        elif self.last_direction is Carriage_Pass_Direction.Leftward:
+            return self.position - self.STOPPING_DISTANCE, self.position
+        else:
+            return self.position, self.position + self.STOPPING_DISTANCE
 
     @property
     def is_active(self) -> bool:
@@ -130,6 +213,7 @@ class Yarn_Carrier:
         if self.is_active:
             warnings.warn(In_Active_Carrier_Warning(self.carrier_id))  # Warn user but do no in action
         self.is_active = True
+        self.last_direction = Carriage_Pass_Direction.Leftward
 
     def inhook(self) -> None:
         """Record inhook operation to bring in carrier using insertion hook.
@@ -151,6 +235,7 @@ class Yarn_Carrier:
         if not self.is_active:
             warnings.warn(Out_Inactive_Carrier_Warning(self.carrier_id))  # Warn use but do not do out action
         self.is_active = False
+        self.last_direction = None
 
     def outhook(self) -> None:
         """Record outhook operation to cut and remove carrier using insertion hook.

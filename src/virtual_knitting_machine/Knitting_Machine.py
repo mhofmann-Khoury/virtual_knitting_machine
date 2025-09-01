@@ -473,7 +473,7 @@ class Knitting_Machine:
             warnings.warn(Knit_on_Empty_Needle_Warning(needle))
 
         # position the carrier set to align with the knitting needle
-        carrier_set.position_carriers(self.carrier_system, needle)
+        carrier_set.position_carriers(self.carrier_system, needle, direction)
         # Set the carriage for this operation
         self.carriage.transferring = False
         self.carriage.move(direction, needle.position)
@@ -674,7 +674,7 @@ class Knitting_Machine:
             needle (Needle): Needle to position the carriers from.
             direction (Carriage_Pass_Direction): The carriage direction for the miss operation.
         """
-        carrier_set.position_carriers(self.carrier_system, needle)
+        carrier_set.position_carriers(self.carrier_system, needle, direction)
         self.carriage.transferring = False
         self.carriage.move(direction, needle.position)
 

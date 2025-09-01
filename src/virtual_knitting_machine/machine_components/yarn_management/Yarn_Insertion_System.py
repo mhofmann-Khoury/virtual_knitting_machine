@@ -7,6 +7,7 @@ import warnings
 from typing import TYPE_CHECKING, cast
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
+    Blocked_by_Yarn_Inserting_Hook_Exception,
     Hooked_Carrier_Exception,
     Inserting_Hook_In_Use_Exception,
     Use_Inactive_Carrier_Exception,
@@ -66,6 +67,23 @@ class Yarn_Insertion_System:
         """
         return self._hook_input_direction
 
+    @hook_input_direction.setter
+    def hook_input_direction(self, direction: Carriage_Pass_Direction | None) -> None:
+        """
+        Sets the direction of movement for the yarn-inserting hook.
+        Args:
+            direction (Carriage_Pass_Direction | None): The direction of the yarn-inserting hook's motion or None if the hook is being released.
+
+        Raises:
+             ValueError: If the direction is Rightward. The direction must be a Leftward direction.
+        """
+        if direction is None:
+            self._hook_input_direction = None
+        elif direction is Carriage_Pass_Direction.Rightward:
+            raise ValueError("Yarn Inserting Hook must start in a leftward direction")
+        else:
+            self._hook_input_direction = direction
+
     @property
     def hooked_carrier(self) -> Yarn_Carrier | None:
         """
@@ -94,25 +112,22 @@ class Yarn_Insertion_System:
         """
         return [int(c) for c in self.carriers]
 
-    def position_carrier(self, carrier_id: int, position: int | Needle) -> None:
+    def position_carrier(self, carrier_id: int | Yarn_Carrier, position: int | Needle | None, direction: Carriage_Pass_Direction | None = None) -> None:
         """Update the position of a specific carrier.
 
         Args:
-            carrier_id (int): The carrier to update.
-            position (int | Needle): The position of the carrier.
+            carrier_id (int | Yarn_Carrier): The carrier to update.
+            position (int | Needle | None): The position of the carrier.
+            direction (Carriage_Pass_Direction, optional): The direction of the carrier movement. If this is not provided, the direction will be inferred.
         """
         carrier = self[carrier_id]
         assert isinstance(carrier, Yarn_Carrier)
+        if position is not None:
+            if self.conflicts_with_inserting_hook(position):
+                raise Blocked_by_Yarn_Inserting_Hook_Exception(carrier, int(position))
         carrier.position = position
-
-    @property
-    def hook_size(self) -> int:
-        """Get the number of needles blocked to the right of the yarn inserting hook position.
-
-        Returns:
-            int: The number of needles blocked to the right of the yarn inserting hook position.
-        """
-        return int(self.knitting_machine.machine_specification.hook_size)
+        if direction is not None:
+            carrier.last_direction = direction
 
     @property
     def inserting_hook_available(self) -> bool:
@@ -132,24 +147,19 @@ class Yarn_Insertion_System:
         """
         return {c for c in self.carriers if c.is_active}
 
-    def conflicts_with_inserting_hook(self, needle: Needle, direction: Carriage_Pass_Direction) -> bool:
-        """Check if a needle position conflicts with the inserting hook position based on carriage direction.
+    def conflicts_with_inserting_hook(self, needle_position: Needle | int | None) -> bool:
+        """Check if a needle position conflicts with the inserting hook position.
 
         Args:
-            needle (Needle): The needle to check for compliance.
-            direction (Carriage_Pass_Direction): The carriage direction for hook conflict calculation.
+            needle_position (Needle | int | None): The needle position to check for compliance, or None if the position is moving a carrier off the machine.
 
         Returns:
-            bool: True if inserting hook is conflicting with needle, False otherwise.
+            bool: True if inserting hook conflicts with a needle slot because the slot is to the right of the hook's current position. False otherwise.
         """
-        if self._hook_position is not None:  # reserve positions to right of needle
-            if direction is Carriage_Pass_Direction.Leftward:
-                hook_start, hook_end = self._hook_position + 1, self._hook_position + self.hook_size
-            else:
-                hook_start, hook_end = self._hook_position - self.hook_size, self._hook_position - 1
-            return bool(hook_start <= needle.position < hook_end)
-        else:  # no conflicts if hook is not active
-            return False
+        if needle_position is None or self.inserting_hook_available:
+            return False  # Non-position does not conflict with yarn-inserting hook.
+        assert isinstance(self._hook_position, int)
+        return bool(self._hook_position <= int(needle_position))
 
     def missing_carriers(self, carrier_ids: list[int | Yarn_Carrier]) -> list[int]:
         """Get list of carrier IDs that are not currently active.
@@ -236,7 +246,7 @@ class Yarn_Insertion_System:
         self._hooked_carrier = None
         self._searching_for_position = False
         self._hook_position = None
-        self._hook_input_direction = None
+        self.hook_input_direction = None
 
     def out(self, carrier_id: int | Yarn_Carrier) -> None:
         """Move carrier to gripper, removing it from action but does not cut it loose.
@@ -310,8 +320,8 @@ class Yarn_Insertion_System:
         needle = self.knitting_machine[needle]
         assert isinstance(needle, Needle)
         if self.searching_for_position:  # mark inserting hook position
-            self._hook_position = needle.position
-            self._hook_input_direction = direction
+            self._hook_position = needle.position + 1  # Position yarn inserting hook at the needle slot to the right of the needle.
+            self.hook_input_direction = direction
             self._searching_for_position = False
             self.knitting_machine.carriage.move_to(self._hook_position)
         loops: list[Machine_Knit_Loop] = []

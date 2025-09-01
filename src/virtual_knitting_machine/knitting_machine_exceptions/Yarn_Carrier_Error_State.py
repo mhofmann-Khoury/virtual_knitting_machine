@@ -43,6 +43,12 @@ class Hooked_Carrier_Exception(Yarn_Carrier_Exception):
         super().__init__(carrier_id, f"Cannot Hook {carrier_id} out because it is on the yarn inserting hook.")
 
 
+class Blocked_by_Yarn_Inserting_Hook_Exception(Yarn_Carrier_Exception):
+    def __init__(self, carrier_id: Any, slot: int) -> None:
+        self._slot: int = slot
+        super().__init__(carrier_id, f"Cannot use carrier {carrier_id} on needle slot {slot} because it is blocked by the yarn inserting hook.")
+
+
 class Inserting_Hook_In_Use_Exception(Yarn_Carrier_Exception):
     """Exception for attempting to use the yarn inserting hook when it is already occupied by another carrier.
     This exception occurs when trying to perform hook operations while the insertion hook is already in use by a different carrier, preventing conflicts in hook operations."""
