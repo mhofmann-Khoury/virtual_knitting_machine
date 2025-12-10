@@ -6,7 +6,7 @@ needle history, transfer operations, and machine state tracking for loops create
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from knit_graphs.Loop import Loop
 from knit_graphs.Yarn import Yarn
@@ -15,9 +15,7 @@ from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception impor
     Slider_Loop_Exception,
     Xfer_Dropped_Loop_Exception,
 )
-
-if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 
 class Machine_Knit_Loop(Loop):
