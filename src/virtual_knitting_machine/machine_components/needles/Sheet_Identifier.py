@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.needles.Sheet_Needle import (
-    Sheet_Needle,
-    Slider_Sheet_Needle,
-)
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import (
-    Slider_Needle,
-)
+from virtual_knitting_machine.machine_components.needles.Sheet_Needle import Sheet_Needle, Slider_Sheet_Needle
+from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 
 
 class Sheet_Identifier:
@@ -42,7 +39,7 @@ class Sheet_Identifier:
         return self._gauge
 
     def get_needle(self, needle: Needle) -> Sheet_Needle:
-        """ Used to identify the sheet needle from a given base needle.
+        """Used to identify the sheet needle from a given base needle.
         Args:
             needle: Needle to access from sheet. Maybe a sheet needle which will be retargeted to this sheet.
 
@@ -60,7 +57,7 @@ class Sheet_Identifier:
             return Sheet_Needle(needle.is_front, pos, self.sheet, self.gauge)
 
     def needle(self, is_front: bool, position: int) -> Sheet_Needle:
-        """ Gets a needle within the sheet with specified position
+        """Gets a needle within the sheet with specified position
 
         Args:
             is_front (bool): True if needle is on front bed.
@@ -84,8 +81,19 @@ class Sheet_Identifier:
     def __lt__(self, other: Sheet_Identifier | int) -> bool:
         return self.sheet < int(other)
 
-    def __eq__(self, other: Sheet_Identifier | int) -> bool:
+    def __eq__(self, other: object) -> bool:
+        """
+
+        Args:
+            other (Sheet_Identifier | int): The other sheet identifier to compare to.
+
+        Returns:
+            bool:
+                True if the two sheets are identical. False otherwise.
+                If a Sheet Identifier is given, both the sheet and gauge must match. If an integer is given, only the sheet needs to match.
+
+        """
         if isinstance(other, Sheet_Identifier):
             return self.sheet == other.sheet and self.gauge == other.gauge
         else:
-            return self.sheet == int(other)
+            return self.sheet == cast(int, other)

@@ -3,15 +3,12 @@
 This module provides classes for managing needles in a layered gauging schema used in  multi-sheet knitting.
 It includes the Sheet_Needle class which extends the base Needle class to support gauge-based positioning, and the Slider_Sheet_Needle class for slider operations within sheets.
 """
+
 from __future__ import annotations
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import (
-    Slider_Needle,
-)
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
-    Machine_Knit_Loop,
-)
+from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 
 class Sheet_Needle(Needle):
@@ -151,11 +148,12 @@ class Sheet_Needle(Needle):
         Returns:
             Sheet_Needle: New sheet needle with the sum position.
         """
-        position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
+        else:
+            position = int(other)
         return self.__class__(self.is_front, self.sheet_pos + position, self.sheet, self.gauge)
 
     def __radd__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
@@ -167,11 +165,12 @@ class Sheet_Needle(Needle):
         Returns:
             Sheet_Needle: New sheet needle with the sum position.
         """
-        position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
+        else:
+            position = int(other)
         return self.__class__(self.is_front, position + self.sheet_pos, self.sheet, self.gauge)
 
     def __sub__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
@@ -183,11 +182,12 @@ class Sheet_Needle(Needle):
         Returns:
             Sheet_Needle: New sheet needle with the difference position.
         """
-        position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
+        else:
+            position = int(other)
         return self.__class__(self.is_front, self.sheet_pos - position, self.sheet, self.gauge)
 
     def __rsub__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
@@ -199,11 +199,12 @@ class Sheet_Needle(Needle):
         Returns:
             Sheet_Needle: New sheet needle with the difference position.
         """
-        position = other
         if isinstance(other, Sheet_Needle):
             position = other.sheet_pos
         elif isinstance(other, Needle):
             position = other.position
+        else:
+            position = int(other)
         return self.__class__(self.is_front, position - self.sheet_pos, self.sheet, self.gauge)
 
 

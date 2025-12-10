@@ -3,6 +3,7 @@
 This module provides the Slider_Needle class, which is a specialized type of needle that can only transfer loops but cannot be knit through.
 Slider needles are commonly used in knitting machines for loop manipulation operations such as transfers and temporary loop storage.
 """
+
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 

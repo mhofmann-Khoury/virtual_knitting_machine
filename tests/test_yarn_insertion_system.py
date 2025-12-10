@@ -1,4 +1,5 @@
 """Comprehensive unit tests for the Yarn_Insertion_System class."""
+
 import unittest
 import warnings
 
@@ -8,27 +9,17 @@ from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_Sta
     Inserting_Hook_In_Use_Exception,
     Use_Inactive_Carrier_Exception,
 )
-from virtual_knitting_machine.Knitting_Machine_Specification import (
-    Knitting_Machine_Specification,
-)
+from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
     In_Active_Carrier_Warning,
     In_Loose_Carrier_Warning,
     Out_Inactive_Carrier_Warning,
 )
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
-    Carriage_Pass_Direction,
-)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
-    Yarn_Carrier,
-)
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import (
-    Yarn_Carrier_Set,
-)
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import (
-    Yarn_Insertion_System,
-)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
 
 
 class TestYarnInsertionSystem(unittest.TestCase):

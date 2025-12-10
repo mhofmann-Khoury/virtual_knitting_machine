@@ -1,20 +1,13 @@
 """Comprehensive unit tests for the Carriage class."""
+
 import unittest
 import warnings
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import (
-    Carriage_Off_Edge_Warning,
-)
-from virtual_knitting_machine.machine_components.carriage_system.Carriage import (
-    Carriage,
-)
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
-    Carriage_Pass_Direction,
-)
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import (
-    Carriage_Side,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import Carriage_Off_Edge_Warning
+from virtual_knitting_machine.machine_components.carriage_system.Carriage import Carriage
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import Carriage_Side
 
 
 class TestCarriage(unittest.TestCase):
@@ -27,18 +20,16 @@ class TestCarriage(unittest.TestCase):
         self.mock_machine = Knitting_Machine()
 
         # Create carriage with typical parameters
-        self.carriage = Carriage(
-            knitting_machine=self.mock_machine,
-            right_needle_position=20,
-            left_needle_position=0
-        )
+        self.carriage = Carriage(knitting_machine=self.mock_machine, right_needle_position=20, left_needle_position=0)
 
     def test_initialization_valid_parameters(self):
         """Test carriage initialization with valid parameters."""
         self.assertEqual(self.carriage.knitting_machine, self.mock_machine)
         self.assertEqual(self.carriage._left_needle_position, 0)
         self.assertEqual(self.carriage._right_needle_position, 20)
-        self.assertEqual(self.carriage.last_direction, Carriage_Pass_Direction.Leftward)  # Defaults to assuming a leftward motion parked the carriage on the left side.
+        self.assertEqual(
+            self.carriage.last_direction, Carriage_Pass_Direction.Leftward
+        )  # Defaults to assuming a leftward motion parked the carriage on the left side.
         self.assertEqual(self.carriage.current_needle_position, 0)  # Should start at left for Rightward movement
         self.assertFalse(self.carriage.transferring)
 
@@ -326,9 +317,7 @@ class TestCarriage(unittest.TestCase):
     def test_custom_range_carriage(self):
         """Test carriage with custom left/right range."""
         custom_carriage = Carriage(
-            knitting_machine=self.mock_machine,
-            right_needle_position=100,
-            left_needle_position=50
+            knitting_machine=self.mock_machine, right_needle_position=100, left_needle_position=50
         )
 
         # Should start at left position
@@ -369,7 +358,7 @@ class TestCarriage(unittest.TestCase):
             (Carriage_Pass_Direction.Rightward, 5),
             (Carriage_Pass_Direction.Rightward, 10),
             (Carriage_Pass_Direction.Leftward, 3),
-            (Carriage_Pass_Direction.Rightward, 15)
+            (Carriage_Pass_Direction.Rightward, 15),
         ]
 
         for direction, target in moves:

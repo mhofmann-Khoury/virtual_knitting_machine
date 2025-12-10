@@ -1,19 +1,14 @@
 """A module containing the Carriage class for managing carriage position and movements in virtual knitting machines.
 This module provides functionality for tracking carriage position, validating movements, and managing transfer operations on knitting machines."""
+
 from __future__ import annotations
 
 import warnings
 from typing import TYPE_CHECKING
 
-from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import (
-    Carriage_Off_Edge_Warning,
-)
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
-    Carriage_Pass_Direction,
-)
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import (
-    Carriage_Side,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import Carriage_Off_Edge_Warning
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import Carriage_Side
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
@@ -30,7 +25,9 @@ class Carriage:
 
     """
 
-    def __init__(self, knitting_machine: Knitting_Machine, right_needle_position: int, left_needle_position: int = 0) -> None:
+    def __init__(
+        self, knitting_machine: Knitting_Machine, right_needle_position: int, left_needle_position: int = 0
+    ) -> None:
         """Initialize a new carriage with specified position range and starting direction.
 
         Args:
@@ -158,7 +155,7 @@ class Carriage:
             directions.append(Carriage_Pass_Direction.Leftward)
         if not self.on_right_side:
             directions.append(Carriage_Pass_Direction.Rightward)
-        assert len(directions) > 0, f"Carriage must have at least 1 direction option."
+        assert len(directions) > 0, "Carriage must have at least 1 direction option."
         return directions
 
     def left_of(self, needle_position: int) -> bool:
@@ -224,10 +221,20 @@ class Carriage:
         if (direction_to_position is not direction) and (direction_to_position is not None):
             self.move_to(end_position)
         if end_position < self._left_needle_position:
-            warnings.warn(Carriage_Off_Edge_Warning(end_position, Carriage_Side.Left_Side, self._left_needle_position, self._right_needle_position))
+            warnings.warn(
+                Carriage_Off_Edge_Warning(
+                    end_position, Carriage_Side.Left_Side, self._left_needle_position, self._right_needle_position
+                ),
+                stacklevel=2,
+            )
             end_position = self._left_needle_position
         elif end_position > self._right_needle_position:
-            warnings.warn(Carriage_Off_Edge_Warning(end_position, Carriage_Side.Right_Side, self._left_needle_position, self._right_needle_position))
+            warnings.warn(
+                Carriage_Off_Edge_Warning(
+                    end_position, Carriage_Side.Right_Side, self._left_needle_position, self._right_needle_position
+                ),
+                stacklevel=2,
+            )
             end_position = self._right_needle_position
         self.current_needle_position = end_position
         self.last_direction = direction

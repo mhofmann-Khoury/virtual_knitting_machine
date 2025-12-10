@@ -1,21 +1,17 @@
 """Representation module for needle beds on knitting machines.
 This module provides the Needle_Bed class which represents one bed of needles (front or back) on a knitting machine,
 managing both regular needles and slider needles with their associated loops and operations."""
+
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Iterator
+from collections.abc import Iterator
+from typing import TYPE_CHECKING, overload
 
-from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import (
-    Needle_Holds_Too_Many_Loops,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import Needle_Holds_Too_Many_Loops
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import (
-    Slider_Needle,
-)
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
-    Machine_Knit_Loop,
-)
+from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
@@ -93,7 +89,9 @@ class Needle_Bed:
         """
         return self._is_front
 
-    def add_loops(self, needle: Needle, loops: list[Machine_Knit_Loop], drop_prior_loops: bool = True) -> list[Machine_Knit_Loop]:
+    def add_loops(
+        self, needle: Needle, loops: list[Machine_Knit_Loop], drop_prior_loops: bool = True
+    ) -> list[Machine_Knit_Loop]:
         """Add loops to a given needle, optionally dropping existing loops as if a knit operation took place.
 
         Args:
@@ -113,11 +111,14 @@ class Needle_Bed:
             self.drop(needle)
         needle.add_loops(loops)
         if len(needle.held_loops) >= self._knitting_machine.machine_specification.maximum_loop_hold:
-            warnings.warn(Needle_Holds_Too_Many_Loops(needle, self._knitting_machine.machine_specification.maximum_loop_hold))
+            warnings.warn(
+                Needle_Holds_Too_Many_Loops(needle, self._knitting_machine.machine_specification.maximum_loop_hold),
+                stacklevel=2,
+            )
         if isinstance(needle, Slider_Needle):
             self._active_sliders.add(needle)
         for loop in loops:
-            assert loop.holding_needle == needle, f"Needle must be recorded in loop history"
+            assert loop.holding_needle == needle, "Needle must be recorded in loop history"
         return loops
 
     def drop(self, needle: Needle) -> list[Machine_Knit_Loop]:
@@ -131,12 +132,21 @@ class Needle_Bed:
         """
         needle = self[needle]  # make sure the correct needle instance in machine bed state is used
         assert isinstance(needle, Needle)
-        loops = [l for l in needle.held_loops]
+        loops = list(needle.held_loops)
         needle.drop()
         if needle in self._active_sliders:
             assert isinstance(needle, Slider_Needle)
             self._active_sliders.remove(needle)
         return loops
+
+    @overload
+    def __getitem__(self, item: Machine_Knit_Loop) -> Needle | None: ...
+
+    @overload
+    def __getitem__(self, item: Needle) -> Needle: ...
+
+    @overload
+    def __getitem__(self, item: slice) -> list[Needle]: ...
 
     def __getitem__(self, item: Machine_Knit_Loop | Needle | slice) -> Needle | list[Needle] | None:
         """Get an indexed needle on the bed, or find needle holding a specific loop.
@@ -156,7 +166,7 @@ class Needle_Bed:
             return self.get_needle_of_loop(item)
         elif isinstance(item, Needle):
             if item.position < 0 or item.position >= self.needle_count:
-                raise KeyError(f'Needle {item} is out of range of the needle bed of size {self.needle_count}')
+                raise KeyError(f"Needle {item} is out of range of the needle bed of size {self.needle_count}")
             if item.is_slider:
                 return self.sliders[item.position]
             else:
@@ -177,7 +187,7 @@ class Needle_Bed:
             return None
         needle = self[loop.holding_needle]
         assert isinstance(needle, Needle)
-        assert loop in needle.held_loops, f"Loop and needle meta data mismatch"
+        assert loop in needle.held_loops, "Loop and needle meta data mismatch"
         return needle
 
     def sliders_are_clear(self) -> bool:

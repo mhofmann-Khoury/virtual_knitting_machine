@@ -1,32 +1,27 @@
 """Representation module for yarn carrier sets on knitting machines.
 This module provides the Yarn_Carrier_Set class which represents a collection of yarn carriers that can be operated together in knitting operations.
 It manages multiple carriers as a single unit for positioning and operations."""
+
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Iterator
+from collections.abc import Iterator
+from typing import TYPE_CHECKING
 
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
-    Duplicate_Carriers_In_Set,
-)
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
-    Carriage_Pass_Direction,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Duplicate_Carriers_In_Set
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
-    Yarn_Carrier,
-)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import (
-        Yarn_Insertion_System,
-    )
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
 
 
 class Yarn_Carrier_Set:
     """A structure to represent a collection of yarn carriers that operate together as a single unit.
     This class manages multiple carriers for coordinated operations, positioning, and state management.
-    It provides methods for accessing carrier positions, managing duplicates, and converting to various representation formats."""
+    It provides methods for accessing carrier positions, managing duplicates, and converting to various representation formats.
+    """
 
     def __init__(self, carrier_ids: list[int | Yarn_Carrier] | int | Yarn_Carrier) -> None:
         """Initialize a yarn carrier set with one or more carrier identifiers.
@@ -38,14 +33,15 @@ class Yarn_Carrier_Set:
             Duplicate_Carriers_In_Set: If duplicate carrier IDs are found in the input list.
         """
         if isinstance(carrier_ids, list):
+            int_carrier_ids: list[int] = [int(cid) for cid in carrier_ids]
             duplicates = set()
             self._carrier_ids: list[int] = []
-            for c in carrier_ids:
-                if int(c) in duplicates:
-                    warnings.warn(Duplicate_Carriers_In_Set(c, carrier_ids))
+            for c in int_carrier_ids:
+                if c in duplicates:
+                    warnings.warn(Duplicate_Carriers_In_Set(c, int_carrier_ids), stacklevel=2)
                 else:
-                    duplicates.add(int(c))
-                    self._carrier_ids.append(int(c))
+                    duplicates.add(c)
+                    self._carrier_ids.append(c)
         else:
             self._carrier_ids: list[int] = [int(carrier_ids)]
 
@@ -69,12 +65,14 @@ class Yarn_Carrier_Set:
         Returns:
             list[Yarn_Carrier]: Carriers that correspond to the ids in the carrier set.
         """
-        carriers = carrier_system[self]
-        if not isinstance(carriers, list):
-            carriers = [carriers]
-        return carriers
+        return carrier_system[self]
 
-    def position_carriers(self, carrier_system: Yarn_Insertion_System, position: Needle | int | None, direction: Carriage_Pass_Direction | None = None) -> None:
+    def position_carriers(
+        self,
+        carrier_system: Yarn_Insertion_System,
+        position: Needle | int | None,
+        direction: Carriage_Pass_Direction | None = None,
+    ) -> None:
         """Set the position of all involved carriers to the given position.
 
         Args:
@@ -135,7 +133,7 @@ class Yarn_Carrier_Set:
         """
         return str(self)
 
-    def __eq__(self, other: None | Yarn_Carrier | int | list[Yarn_Carrier | int] | Yarn_Carrier_Set) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Check equality with another carrier set, carrier, or list of carriers.
 
         Args:
@@ -146,13 +144,16 @@ class Yarn_Carrier_Set:
         """
         if other is None:
             return False
-        elif isinstance(other, Yarn_Carrier) or isinstance(other, int):
+        elif isinstance(other, (Yarn_Carrier, int)):
             if len(self.carrier_ids) != 1:
                 return False
             return self.carrier_ids[0] == int(other)
-        elif len(self) != len(other):
+        elif isinstance(other, (list, Yarn_Carrier_Set)):
+            if len(self) != len(other):
+                return False
+            return not any(c != int(other_c) for c, other_c in zip(self, other, strict=False))
+        else:
             return False
-        return not any(c != int(other_c) for c, other_c in zip(self, other))
 
     def __iter__(self) -> Iterator[int]:
         """Iterate over the carrier IDs in this set.
@@ -200,7 +201,7 @@ class Yarn_Carrier_Set:
         """
         carrier_id = 0
         for place, carrier in enumerate(reversed(self.carrier_ids)):
-            multiplier = 10 ** place
+            multiplier = 10**place
             carrier_val = multiplier * carrier
             carrier_id += carrier_val
         return carrier_id

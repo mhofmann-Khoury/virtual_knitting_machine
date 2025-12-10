@@ -1,16 +1,13 @@
 """Collection of exceptions for error states that involve yarn carriers and yarn management operations.
 This module provides comprehensive exception classes for various yarn carrier issues including
 hook conflicts, inactive carrier usage, yarn cutting errors, and carrier system modifications that would cause critical operational failures."""
+
 from typing import TYPE_CHECKING, Any
 
-from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import (
-    Knitting_Machine_Exception,
-)
+from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import Knitting_Machine_Exception
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
-        Yarn_Carrier,
-    )
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 
 
 class Yarn_Carrier_Exception(Knitting_Machine_Exception):
@@ -46,12 +43,16 @@ class Hooked_Carrier_Exception(Yarn_Carrier_Exception):
 class Blocked_by_Yarn_Inserting_Hook_Exception(Yarn_Carrier_Exception):
     def __init__(self, carrier_id: Any, slot: int) -> None:
         self._slot: int = slot
-        super().__init__(carrier_id, f"Cannot use carrier {carrier_id} on needle slot {slot} because it is blocked by the yarn inserting hook.")
+        super().__init__(
+            carrier_id,
+            f"Cannot use carrier {carrier_id} on needle slot {slot} because it is blocked by the yarn inserting hook.",
+        )
 
 
 class Inserting_Hook_In_Use_Exception(Yarn_Carrier_Exception):
     """Exception for attempting to use the yarn inserting hook when it is already occupied by another carrier.
-    This exception occurs when trying to perform hook operations while the insertion hook is already in use by a different carrier, preventing conflicts in hook operations."""
+    This exception occurs when trying to perform hook operations while the insertion hook is already in use by a different carrier, preventing conflicts in hook operations.
+    """
 
     def __init__(self, carrier_id: Any) -> None:
         """Initialize an inserting hook in use exception.
@@ -59,7 +60,9 @@ class Inserting_Hook_In_Use_Exception(Yarn_Carrier_Exception):
         Args:
             carrier_id (int | Yarn_Carrier): The carrier that attempted to use the already occupied insertion hook.
         """
-        super().__init__(carrier_id, f"Cannot bring carrier {carrier_id} out because the yarn inserting hook is in use.")
+        super().__init__(
+            carrier_id, f"Cannot bring carrier {carrier_id} out because the yarn inserting hook is in use."
+        )
 
 
 class Use_Inactive_Carrier_Exception(Yarn_Carrier_Exception):
@@ -92,7 +95,8 @@ class Use_Cut_Yarn_Exception(Use_Inactive_Carrier_Exception):
 
 class Change_Active_Yarn_Exception(Yarn_Carrier_Exception):
     """Exception for attempting to change yarn properties on carriers that are currently active.
-    This exception occurs when trying to modify yarn properties or reassign yarn to a carrier that is actively being used for knitting operations, which could cause yarn consistency issues."""
+    This exception occurs when trying to modify yarn properties or reassign yarn to a carrier that is actively being used for knitting operations, which could cause yarn consistency issues.
+    """
 
     def __init__(self, carrier_id: Any) -> None:
         """Initialize a change active yarn exception.
@@ -110,4 +114,4 @@ class Change_Active_Carrier_System_Exception(Yarn_Carrier_Exception):
 
     def __init__(self) -> None:
         """Initialize a change active carrier system exception."""
-        super().__init__(-1, f"Cannot change active carrier system.")
+        super().__init__(-1, "Cannot change active carrier system.")

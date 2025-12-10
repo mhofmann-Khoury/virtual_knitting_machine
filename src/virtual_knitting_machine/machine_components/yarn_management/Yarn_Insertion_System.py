@@ -1,10 +1,11 @@
 """A module containing Yarn Insertion System classes for managing yarn carriers on knitting machines.
 This module provides the Yarn_Insertion_System class which manages the complete yarn carrier system including
 carrier states, insertion hook operations, position tracking, and loop creation operations."""
+
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, overload
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
     Blocked_by_Yarn_Inserting_Hook_Exception,
@@ -17,19 +18,11 @@ from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warn
     In_Loose_Carrier_Warning,
     Out_Inactive_Carrier_Warning,
 )
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
-    Carriage_Pass_Direction,
-)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
-    Yarn_Carrier,
-)
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import (
-    Yarn_Carrier_Set,
-)
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
-    Machine_Knit_Loop,
-)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
@@ -53,7 +46,9 @@ class Yarn_Insertion_System:
             carrier_count (int, optional): Number of yarn carriers to create. Defaults to 10.
         """
         self.knitting_machine: Knitting_Machine = knitting_machine
-        self.carriers: list[Yarn_Carrier] = [Yarn_Carrier(i, knit_graph=self.knitting_machine.knit_graph) for i in range(1, carrier_count + 1)]
+        self.carriers: list[Yarn_Carrier] = [
+            Yarn_Carrier(i, knit_graph=self.knitting_machine.knit_graph) for i in range(1, carrier_count + 1)
+        ]
         self._hook_position: None | int = None
         self._hook_input_direction: None | Carriage_Pass_Direction = None
         self._searching_for_position: bool = False
@@ -112,7 +107,12 @@ class Yarn_Insertion_System:
         """
         return [int(c) for c in self.carriers]
 
-    def position_carrier(self, carrier_id: int | Yarn_Carrier, position: int | Needle | None, direction: Carriage_Pass_Direction | None = None) -> None:
+    def position_carrier(
+        self,
+        carrier_id: int | Yarn_Carrier,
+        position: int | Needle | None,
+        direction: Carriage_Pass_Direction | None = None,
+    ) -> None:
         """Update the position of a specific carrier.
 
         Args:
@@ -122,9 +122,8 @@ class Yarn_Insertion_System:
         """
         carrier = self[carrier_id]
         assert isinstance(carrier, Yarn_Carrier)
-        if position is not None:
-            if self.conflicts_with_inserting_hook(position):
-                raise Blocked_by_Yarn_Inserting_Hook_Exception(carrier, int(position))
+        if position is not None and self.conflicts_with_inserting_hook(position):
+            raise Blocked_by_Yarn_Inserting_Hook_Exception(carrier, int(position))
         carrier.position = position
         if direction is not None:
             carrier.last_direction = direction
@@ -170,7 +169,7 @@ class Yarn_Insertion_System:
         Returns:
             list[int]: List of carrier ids that are not active (i.e., on grippers).
         """
-        return [cid for cid in carrier_ids if not cast(Yarn_Carrier, self[cid]).is_active]
+        return [int(cid) for cid in carrier_ids if not self[cid].is_active]
 
     def is_active(self, carrier_ids: list[int | Yarn_Carrier]) -> bool:
         """Check if all carriers in the given set are active (not on the gripper).
@@ -194,7 +193,7 @@ class Yarn_Insertion_System:
         Returns:
             bool: True if any yarn in yarn carrier set is loose (not on the inserting hook or tuck/knit on bed), False otherwise.
         """
-        return cast(Yarn_Carrier, self[carrier_id]).yarn.last_needle() is None
+        return self[carrier_id].yarn.last_needle() is None
 
     def bring_in(self, carrier_id: int | Yarn_Carrier) -> None:
         """Bring in a yarn carrier without insertion hook (tail to gripper), yarn is considered loose until knit.
@@ -209,9 +208,9 @@ class Yarn_Insertion_System:
         carrier = self[carrier_id]
         assert isinstance(carrier, Yarn_Carrier)
         if carrier.is_active:
-            warnings.warn(In_Active_Carrier_Warning(carrier_id))
+            warnings.warn(In_Active_Carrier_Warning(carrier_id), stacklevel=2)
         if carrier.yarn.last_needle() is None:
-            warnings.warn(In_Loose_Carrier_Warning(carrier_id))
+            warnings.warn(In_Loose_Carrier_Warning(carrier_id), stacklevel=2)
         carrier.bring_in()
 
     def inhook(self, carrier_id: int | Yarn_Carrier) -> None:
@@ -230,7 +229,7 @@ class Yarn_Insertion_System:
         carrier = self[carrier_id]
         assert isinstance(carrier, Yarn_Carrier)
         if carrier.is_active:
-            warnings.warn(In_Active_Carrier_Warning(carrier_id))
+            warnings.warn(In_Active_Carrier_Warning(carrier_id), stacklevel=2)
         if not self.inserting_hook_available and self.hooked_carrier != carrier:
             raise Inserting_Hook_In_Use_Exception(carrier_id)
         self._hooked_carrier = carrier
@@ -263,7 +262,7 @@ class Yarn_Insertion_System:
         carrier = self[carrier_id]
         assert isinstance(carrier, Yarn_Carrier)
         if not carrier.is_active:
-            warnings.warn(Out_Inactive_Carrier_Warning(carrier_id))
+            warnings.warn(Out_Inactive_Carrier_Warning(carrier_id), stacklevel=2)
         if carrier.is_hooked:
             raise Hooked_Carrier_Exception(carrier_id)
         carrier.out()
@@ -284,7 +283,7 @@ class Yarn_Insertion_System:
         carrier = self[carrier_id]
         assert isinstance(carrier, Yarn_Carrier)
         if not carrier.is_active:
-            warnings.warn(Out_Inactive_Carrier_Warning(carrier_id))
+            warnings.warn(Out_Inactive_Carrier_Warning(carrier_id), stacklevel=2)
         if not self.inserting_hook_available:
             Inserting_Hook_In_Use_Exception(carrier_id)
         if carrier.is_hooked:
@@ -303,7 +302,12 @@ class Yarn_Insertion_System:
             active_floats.update(carrier.yarn.active_floats())
         return active_floats
 
-    def make_loops(self, carrier_ids: list[int | Yarn_Carrier] | Yarn_Carrier_Set, needle: Needle, direction: Carriage_Pass_Direction) -> list[Machine_Knit_Loop]:
+    def make_loops(
+        self,
+        carrier_ids: list[int | Yarn_Carrier] | Yarn_Carrier_Set,
+        needle: Needle,
+        direction: Carriage_Pass_Direction,
+    ) -> list[Machine_Knit_Loop]:
         """Create loops using specified carriers on a needle, handling insertion hook positioning and float management.
 
         Args:
@@ -320,7 +324,9 @@ class Yarn_Insertion_System:
         needle = self.knitting_machine[needle]
         assert isinstance(needle, Needle)
         if self.searching_for_position:  # mark inserting hook position
-            self._hook_position = needle.position + 1  # Position yarn inserting hook at the needle slot to the right of the needle.
+            self._hook_position = (
+                needle.position + 1
+            )  # Position yarn inserting hook at the needle slot to the right of the needle.
             self.hook_input_direction = direction
             self._searching_for_position = False
             self.knitting_machine.carriage.move_to(self._hook_position)
@@ -331,15 +337,23 @@ class Yarn_Insertion_System:
             if not carrier.is_active:
                 raise Use_Inactive_Carrier_Exception(cid)
             float_source_needle = carrier.yarn.last_needle()
-            loop = carrier.yarn.make_loop_on_needle(holding_needle=needle, max_float_length=self.knitting_machine.machine_specification.maximum_float)
+            loop = carrier.yarn.make_loop_on_needle(
+                holding_needle=needle, max_float_length=self.knitting_machine.machine_specification.maximum_float
+            )
             if float_source_needle is not None:
                 float_source_needle = self.knitting_machine[float_source_needle]
                 float_start = min(float_source_needle.position, needle.position)
                 float_end = max(float_source_needle.position, needle.position)
-                front_floated_needles = [f for f in self.knitting_machine.front_bed[float_start: float_end + 1]
-                                         if f != float_source_needle and f != needle]
-                back_floated_needles = [b for b in self.knitting_machine.back_bed[float_start: float_end + 1]
-                                        if b != float_source_needle and b != needle]
+                front_floated_needles = [
+                    f
+                    for f in self.knitting_machine.front_bed[float_start : float_end + 1]
+                    if f != float_source_needle and f != needle
+                ]
+                back_floated_needles = [
+                    b
+                    for b in self.knitting_machine.back_bed[float_start : float_end + 1]
+                    if b != float_source_needle and b != needle
+                ]
                 for float_source_loop in float_source_needle.held_loops:
                     for fn in front_floated_needles:
                         for fl in fn.held_loops:
@@ -350,7 +364,15 @@ class Yarn_Insertion_System:
             loops.append(loop)
         return loops
 
-    def __getitem__(self, item: int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]) -> Yarn_Carrier | list[Yarn_Carrier]:
+    @overload
+    def __getitem__(self, item: int | Yarn_Carrier) -> Yarn_Carrier: ...
+
+    @overload
+    def __getitem__(self, item: Yarn_Carrier_Set | list[int | Yarn_Carrier]) -> list[Yarn_Carrier]: ...
+
+    def __getitem__(
+        self, item: int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]
+    ) -> Yarn_Carrier | list[Yarn_Carrier]:
         """Get carrier(s) by ID, carrier object, carrier set, or list of IDs/carriers.
 
         Args:
@@ -366,15 +388,17 @@ class Yarn_Insertion_System:
             if isinstance(item, Yarn_Carrier):
                 return self[item.carrier_id]
             elif isinstance(item, Yarn_Carrier_Set):
-                return self[item.carrier_ids]
+                return self[cast(list[int | Yarn_Carrier], [item.carrier_ids])]
             elif isinstance(item, list):
                 if len(item) == 1:
                     return self[item[0]]
                 else:
                     return [self[i] for i in item]
         except KeyError:
-            raise KeyError(f"Invalid carrier: {item}. Carriers range from 1 to {len(self.carriers)}")
+            raise KeyError(f"Invalid carrier: {item}. Carriers range from 1 to {len(self.carriers)}") from None
         assert isinstance(item, int)
         if item < 1 or item > len(self.carriers):
             raise KeyError(f"Invalid carrier index {item}")
-        return self.carriers[item - 1]  # Carriers are given from values starting at 1 but indexed in the list starting at zero
+        return self.carriers[
+            item - 1
+        ]  # Carriers are given from values starting at 1 but indexed in the list starting at zero

@@ -3,6 +3,7 @@
 This module extends the base Yarn class to include machine-specific functionality including
 carrier management, float tracking, loop creation, and machine state coordination for yarn operations on virtual knitting machines.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -11,21 +12,13 @@ from typing import TYPE_CHECKING
 from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn, Yarn_Properties
 
-from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
-    Use_Cut_Yarn_Exception,
-)
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
-    Long_Float_Warning,
-)
+from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Use_Cut_Yarn_Exception
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Long_Float_Warning
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
-    Machine_Knit_Loop,
-)
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
-        Yarn_Carrier,
-    )
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 
 
 class Machine_Knit_Yarn(Yarn):
@@ -39,7 +32,13 @@ class Machine_Knit_Yarn(Yarn):
         active_loops (dict[Machine_Knit_Loop, Needle]): Dictionary mapping active loops to their holding needles.
     """
 
-    def __init__(self, carrier: Yarn_Carrier, properties: Yarn_Properties | None, knit_graph: None | Knit_Graph, instance: int = 0) -> None:
+    def __init__(
+        self,
+        carrier: Yarn_Carrier,
+        properties: Yarn_Properties | None,
+        knit_graph: None | Knit_Graph,
+        instance: int = 0,
+    ) -> None:
         """Initialize a machine knit yarn with carrier and properties.
 
         Args:
@@ -52,7 +51,8 @@ class Machine_Knit_Yarn(Yarn):
         super().__init__(properties, knit_graph=knit_graph)
         self._instance: int = instance
         self._carrier: Yarn_Carrier = carrier
-        self.active_loops: dict[Machine_Knit_Loop: Needle] = {}
+        self._is_cut: bool = False
+        self.active_loops: dict[Machine_Knit_Loop, Needle] = {}
 
     @property
     def is_active(self) -> bool:
@@ -61,7 +61,7 @@ class Machine_Knit_Yarn(Yarn):
         Returns:
             bool: True if yarn is active and can form new loops, False otherwise.
         """
-        return self.carrier is not None and self.carrier.is_active
+        return not self._is_cut and self.carrier.is_active
 
     @property
     def is_hooked(self) -> bool:
@@ -79,7 +79,7 @@ class Machine_Knit_Yarn(Yarn):
         Returns:
             bool: True if yarn is no longer on a carrier, False otherwise.
         """
-        return self.carrier is None
+        return self._is_cut
 
     @property
     def carrier(self) -> Yarn_Carrier:
@@ -96,7 +96,7 @@ class Machine_Knit_Yarn(Yarn):
         Returns:
             Machine_Knit_Yarn: New yarn of the same type after cutting this yarn.
         """
-        self._carrier = None
+        self._is_cut = True
         return Machine_Knit_Yarn(self.carrier, self.properties, knit_graph=self.knit_graph, instance=self._instance + 1)
 
     @property
@@ -158,8 +158,14 @@ class Machine_Knit_Yarn(Yarn):
         if self.is_cut:
             raise Use_Cut_Yarn_Exception(self.carrier.carrier_id)
         last_needle = self.last_needle()
-        if max_float_length is not None and last_needle is not None and abs(holding_needle.position - last_needle.position) > max_float_length:
-            warnings.warn(Long_Float_Warning(self.carrier.carrier_id, last_needle, holding_needle, max_float_length))
+        if (
+            max_float_length is not None
+            and last_needle is not None
+            and abs(holding_needle.position - last_needle.position) > max_float_length
+        ):
+            warnings.warn(
+                Long_Float_Warning(self.carrier.carrier_id, last_needle, holding_needle, max_float_length), stacklevel=2
+            )
         loop = Machine_Knit_Loop(self._next_loop_id(), self, holding_needle)
         self.add_loop_to_end(loop)
         return loop

@@ -1,4 +1,5 @@
 """Comprehensive unit tests for the Sheet_Needle and Slider_Sheet_Needle classes."""
+
 import unittest
 from unittest.mock import Mock
 
@@ -8,12 +9,8 @@ from virtual_knitting_machine.machine_components.needles.Sheet_Needle import (
     Slider_Sheet_Needle,
     get_sheet_needle,
 )
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import (
-    Slider_Needle,
-)
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
-    Machine_Knit_Loop,
-)
+from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 
 class TestSheetNeedle(unittest.TestCase):
