@@ -39,7 +39,6 @@ extensions = [
     "sphinx.ext.todo",  # Support for TODO items
     "sphinx.ext.coverage",  # Check documentation coverage
     "sphinx.ext.doctest",  # Test code snippets in documentation
-    "sphinx_autodoc_typehints",  # Better type hint support
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -100,6 +99,11 @@ autodoc_class_signature = "mixed"
 # Control the order of content in module documentation
 autodoc_member_order = "bysource"
 
+# Type hints configuration (built-in Sphinx support)
+autodoc_typehints = "description"  # Show type hints in parameter descriptions
+autodoc_typehints_description_target = "documented"  # Only add type hints to documented parameters
+autodoc_typehints_format = "short"  # Use short type hint format (e.g., list instead of typing.List)
+
 # -- Options for autosummary ------------------------------------------------
 autosummary_generate = True
 autosummary_imported_members = True
@@ -132,12 +136,6 @@ intersphinx_mapping = {
 
 # -- Options for todo extension ----------------------------------------------
 todo_include_todos = True
-
-# -- Options for typehints ---------------------------------------------------
-typehints_fully_qualified = False
-always_document_param_types = True
-typehints_document_rtype = True
-typehints_use_rtype = True
 
 # -- Options for coverage extension ------------------------------------------
 coverage_ignore_modules = []
