@@ -134,20 +134,6 @@ class Needle_Bed:
             self._active_sliders.remove(needle)
         return loops
 
-    def get_needle_of_loop(self, loop: Machine_Knit_Loop) -> None | Needle:
-        """Get the needle that currently holds the specified loop.
-
-        Args:
-            loop (Machine_Knit_Loop): The loop being searched for.
-
-        Returns:
-            None | Needle: None if the bed does not hold the loop, otherwise the needle position that holds it.
-        """
-        if loop in self:
-            return self[loop]
-        else:
-            return None
-
     @property
     def sliders_are_clear(self) -> bool:
         """Check if no loops are on any slider needle.
@@ -194,12 +180,25 @@ class Needle_Bed:
                 return 0 <= item < self.needle_count
         elif isinstance(item, slice):
             return item.start in self and item.stop in self
-        else:
+        else:  # Machine Knit Loop
             holding_needle = item.holding_needle
             if holding_needle is None:
                 return False
             else:
                 return holding_needle in self
+
+    def get_needle_of_loop(self, loop: Machine_Knit_Loop) -> None | Needle:
+        """
+        Args:
+            loop (Machine_Knit_Loop): The loop being searched for.
+
+        Returns:
+            None | Needle: None if the bed does not hold the loop, otherwise the needle position that holds it.
+        """
+        if loop in self:
+            return loop.holding_needle
+        else:
+            return None
 
     @overload
     def __getitem__(self, item: Machine_Knit_Loop) -> Needle | None: ...

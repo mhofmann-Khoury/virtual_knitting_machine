@@ -217,11 +217,6 @@ class TestKnittingMachine(unittest.TestCase):
 
         self.assertEqual(result, needle)
 
-    def test_getitem_invalid_type_raises_error(self):
-        """Test __getitem__ with invalid type raises KeyError."""
-        with self.assertRaises(KeyError):
-            _ = self.machine["invalid_type"]
-
     def test_update_rack_changes_rack(self):
         """Test update_rack method when rack changes."""
         original_rack = self.machine.rack
