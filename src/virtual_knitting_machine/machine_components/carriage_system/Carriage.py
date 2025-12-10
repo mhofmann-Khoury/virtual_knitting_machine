@@ -7,6 +7,9 @@ import warnings
 from typing import TYPE_CHECKING
 
 from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import Carriage_Off_Edge_Warning
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
+    get_user_warning_stack_level_from_virtual_knitting_machine_package,
+)
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import Carriage_Side
 
@@ -95,13 +98,12 @@ class Carriage:
             self._position_prior_to_transfers = new_position
 
     @property
-    def reverse_of_last_direction(self) -> Carriage_Pass_Direction:
-        """Get the reverse of the last direction the carriage moved in.
-
-        Returns:
-            Carriage_Pass_Direction: The opposite direction of the last carriage movement.
+    def position_prior_to_transfers(self) -> int:
         """
-        return self.last_direction.opposite()
+        Returns:
+            int: The position of the carriage prior to its current transfer pass.
+        """
+        return self._position_prior_to_transfers
 
     @property
     def last_direction(self) -> Carriage_Pass_Direction:
@@ -122,6 +124,23 @@ class Carriage:
         self._last_direction = new_direction
         if not self.transferring:
             self._direction_prior_to_transfers = new_direction
+
+    @property
+    def reverse_of_last_direction(self) -> Carriage_Pass_Direction:
+        """Get the reverse of the last direction the carriage moved in.
+
+        Returns:
+            Carriage_Pass_Direction: The opposite direction of the last carriage movement.
+        """
+        return self.last_direction.opposite()
+
+    @property
+    def direction_prior_to_transfers(self) -> Carriage_Pass_Direction:
+        """
+        Returns:
+            Carriage_Pass_Direction: The direction the carriage was moving prior to the current transfer pass.
+        """
+        return self._direction_prior_to_transfers
 
     @property
     def on_left_side(self) -> bool:
@@ -146,9 +165,6 @@ class Carriage:
 
         Returns:
             list[Carriage_Pass_Direction]: List of possible directions the carriage can move from this position.
-
-        Raises:
-            AssertionError: If no directions are available (should never happen with valid carriage range).
         """
         directions = []
         if not self.on_left_side:
@@ -225,7 +241,7 @@ class Carriage:
                 Carriage_Off_Edge_Warning(
                     end_position, Carriage_Side.Left_Side, self._left_needle_position, self._right_needle_position
                 ),
-                stacklevel=2,
+                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
             )
             end_position = self._left_needle_position
         elif end_position > self._right_needle_position:
@@ -233,7 +249,7 @@ class Carriage:
                 Carriage_Off_Edge_Warning(
                     end_position, Carriage_Side.Right_Side, self._left_needle_position, self._right_needle_position
                 ),
-                stacklevel=2,
+                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
             )
             end_position = self._right_needle_position
         self.current_needle_position = end_position

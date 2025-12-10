@@ -330,11 +330,11 @@ class TestKnittingMachine(unittest.TestCase):
         self.machine.in_hook(1)
         needle = Needle(False, 1)
         _loops = self.machine.tuck(Yarn_Carrier_Set(1), needle, Carriage_Pass_Direction.Leftward)
-        self.assertTrue(self.machine.sliders_are_clear())
+        self.assertTrue(self.machine.sliders_are_clear)
         self.machine.xfer(needle, to_slider=True)
-        self.assertFalse(self.machine.sliders_are_clear())
+        self.assertFalse(self.machine.sliders_are_clear)
         self.machine.xfer(Slider_Needle(is_front=True, position=1), to_slider=False)
-        self.assertTrue(self.machine.sliders_are_clear())
+        self.assertTrue(self.machine.sliders_are_clear)
 
     def test_loop_holding_accessor_methods(self):
         """Test loop-holding needle accessor methods."""
@@ -374,7 +374,7 @@ class TestKnittingMachine(unittest.TestCase):
         # Test initial state
         self.assertEqual(machine.rack, 0)
         self.assertFalse(machine.all_needle_rack)
-        self.assertTrue(machine.sliders_are_clear())
+        self.assertTrue(machine.sliders_are_clear)
 
         # Test rack adjustment
         machine.rack = 2

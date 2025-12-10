@@ -42,7 +42,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
 
         self.assertEqual(system.knitting_machine, self.machine)
         self.assertEqual(len(system.carriers), 10)  # Default count
-        self.assertIsNone(system._hook_position)
+        self.assertIsNone(system.hook_position)
         self.assertIsNone(system.hook_input_direction)
         self.assertFalse(system._searching_for_position)
         self.assertIsNone(system.hooked_carrier)

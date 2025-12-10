@@ -8,6 +8,9 @@ import warnings
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
+    get_user_warning_stack_level_from_virtual_knitting_machine_package,
+)
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Duplicate_Carriers_In_Set
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
@@ -38,7 +41,10 @@ class Yarn_Carrier_Set:
             self._carrier_ids: list[int] = []
             for c in int_carrier_ids:
                 if c in duplicates:
-                    warnings.warn(Duplicate_Carriers_In_Set(c, int_carrier_ids), stacklevel=2)
+                    warnings.warn(
+                        Duplicate_Carriers_In_Set(c, int_carrier_ids),
+                        stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
+                    )
                 else:
                     duplicates.add(c)
                     self._carrier_ids.append(c)
