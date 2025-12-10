@@ -20,7 +20,7 @@ author = "Megan Hofmann"
 try:
     # Get version from installed package metadata
     # This reads from pyproject.toml when the package is installed
-    version = version("knit-script")
+    version = version("virtual-knitting-machine")
 except PackageNotFoundError:
     # Package is not installed (e.g., during development)
     # This happens when running from source without installation
@@ -159,7 +159,7 @@ show_authors = False
 pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
-modindex_common_prefix = ["knit_script."]
+modindex_common_prefix = ["virtual_knitting_machine."]
 
 
 # Custom autodoc processing to reorder content

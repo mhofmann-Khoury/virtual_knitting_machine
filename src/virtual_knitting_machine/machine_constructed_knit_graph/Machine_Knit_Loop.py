@@ -6,7 +6,7 @@ needle history, transfer operations, and machine state tracking for loops create
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING
 
 from knit_graphs.Loop import Loop
 from knit_graphs.Yarn import Yarn
@@ -15,7 +15,9 @@ from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception impor
     Slider_Loop_Exception,
     Xfer_Dropped_Loop_Exception,
 )
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+
+if TYPE_CHECKING:
+    from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 
 class Machine_Knit_Loop(Loop):
@@ -40,7 +42,8 @@ class Machine_Knit_Loop(Loop):
             Slider_Loop_Exception: If attempting to create a loop on a slider needle.
         """
         super().__init__(loop_id, yarn)
-        self.needle_history: list[Needle | None] = [source_needle]
+        self.needle_history: list[Needle] = [source_needle]
+        self._dropped: bool = False
         if self.source_needle.is_slider:
             raise Slider_Loop_Exception(self.source_needle)
 
@@ -51,7 +54,9 @@ class Machine_Knit_Loop(Loop):
         Returns:
             Needle | None: The needle currently holding this loop or None if not on a needle.
         """
-        return self.needle_history[-1]
+        if self.dropped:
+            return None
+        return self.last_needle
 
     @property
     def last_needle(self) -> Needle:
@@ -59,32 +64,26 @@ class Machine_Knit_Loop(Loop):
 
         Returns:
             Needle: The last needle that held this loop before it was dropped.
-
-        Raises:
-            AssertionError: If no needle history exists (should never happen for machine knit loops).
         """
-        for n in reversed(self.needle_history):
-            if n is not None:
-                return n
-        raise AssertionError("Machine knit loops must have at least a source needle.")
+        return self.needle_history[-1]
 
     @property
     def on_needle(self) -> bool:
         """Check if loop is currently on a holding needle.
 
         Returns:
-            bool: True if loop is currently on a holding needle, False otherwise.
+            bool: True if loop is currently on a holding needle (i.e., has not been dropped), False otherwise.
         """
-        return self.holding_needle is not None
+        return not self.dropped
 
     @property
     def dropped(self) -> bool:
-        """Check if loop is not on a holding needle (has been dropped).
+        """Check if loop has been dropped from a holding needle.
 
         Returns:
-            bool: True if loop is not on a holding needle, False otherwise.
+            bool: True if loop has been dropped from a holding needle, False otherwise.
         """
-        return not self.on_needle
+        return self._dropped
 
     @property
     def source_needle(self) -> Needle:
@@ -93,7 +92,7 @@ class Machine_Knit_Loop(Loop):
         Returns:
             Needle: The needle this loop was created on.
         """
-        return cast(Needle, self.needle_history[0])
+        return self.needle_history[0]
 
     def transfer_loop(self, target_needle: Needle) -> None:
         """Add target needle to the end of needle history for loop transfer operation.
@@ -110,9 +109,8 @@ class Machine_Knit_Loop(Loop):
 
     def drop(self) -> None:
         """Mark the loop as dropped by adding None to end of needle history."""
-        self.needle_history.append(None)
+        self._dropped = True
 
     def reverse_drop(self) -> None:
         """Removes dropped status from this loop. Used for transferring needles without recording a dropped action."""
-        if self.dropped:
-            self.needle_history.pop(-1)
+        self._dropped = False
