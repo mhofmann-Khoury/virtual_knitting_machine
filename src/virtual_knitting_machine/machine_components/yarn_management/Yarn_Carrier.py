@@ -10,6 +10,9 @@ from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn_Properties
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Hooked_Carrier_Exception
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
+    get_user_warning_stack_level_from_virtual_knitting_machine_package,
+)
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
     In_Active_Carrier_Warning,
     Out_Inactive_Carrier_Warning,
@@ -211,7 +214,10 @@ class Yarn_Carrier:
             In_Active_Carrier_Warning: If carrier is already active.
         """
         if self.is_active:
-            warnings.warn(In_Active_Carrier_Warning(self.carrier_id), stacklevel=2)  # Warn user but do no in action
+            warnings.warn(
+                In_Active_Carrier_Warning(self.carrier_id),
+                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
+            )  # Warn user but do no in action
         self.is_active = True
         self.last_direction = Carriage_Pass_Direction.Leftward
 
@@ -232,7 +238,8 @@ class Yarn_Carrier:
         """
         if not self.is_active:
             warnings.warn(
-                Out_Inactive_Carrier_Warning(self.carrier_id), stacklevel=2
+                Out_Inactive_Carrier_Warning(self.carrier_id),
+                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
             )  # Warn use but do not do out action
         self.is_active = False
         self.last_direction = None

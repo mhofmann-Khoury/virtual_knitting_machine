@@ -13,6 +13,9 @@ from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn, Yarn_Properties
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Use_Cut_Yarn_Exception
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
+    get_user_warning_stack_level_from_virtual_knitting_machine_package,
+)
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Long_Float_Warning
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
@@ -130,7 +133,6 @@ class Machine_Knit_Yarn(Yarn):
         """
         floats = {}
         for l in self.active_loops:
-            assert isinstance(l, Machine_Knit_Loop)
             n = self.next_loop(l)
             if n is not None and n in self.active_loops:
                 assert isinstance(n, Machine_Knit_Loop)
@@ -164,7 +166,8 @@ class Machine_Knit_Yarn(Yarn):
             and abs(holding_needle.position - last_needle.position) > max_float_length
         ):
             warnings.warn(
-                Long_Float_Warning(self.carrier.carrier_id, last_needle, holding_needle, max_float_length), stacklevel=2
+                Long_Float_Warning(self.carrier.carrier_id, last_needle, holding_needle, max_float_length),
+                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
             )
         loop = Machine_Knit_Loop(self._next_loop_id(), self, holding_needle)
         self.add_loop_to_end(loop)

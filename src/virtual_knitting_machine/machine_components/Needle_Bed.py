@@ -8,6 +8,9 @@ import warnings
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, overload
 
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
+    get_user_warning_stack_level_from_virtual_knitting_machine_package,
+)
 from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import Needle_Holds_Too_Many_Loops
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
@@ -39,14 +42,6 @@ class Needle_Bed:
         self.sliders: list[Slider_Needle] = [Slider_Needle(self._is_front, i) for i in range(0, self.needle_count)]
         self._active_sliders: set[Slider_Needle] = set()
 
-    def __iter__(self) -> Iterator[Needle]:
-        """Iterate over the needles in this bed.
-
-        Returns:
-            Iterator[Needle]: Iterator over the needles on this bed.
-        """
-        return iter(self.needles)
-
     def loop_holding_needles(self) -> list[Needle]:
         """Get list of needles on bed that actively hold loops.
 
@@ -72,14 +67,6 @@ class Needle_Bed:
         """
         return int(self._knitting_machine.machine_specification.needle_count)
 
-    def __len__(self) -> int:
-        """Get the number of needles on this bed.
-
-        Returns:
-            int: Number of needles on the bed.
-        """
-        return self.needle_count
-
     @property
     def is_front(self) -> bool:
         """Check if this is the front bed.
@@ -88,6 +75,14 @@ class Needle_Bed:
             bool: True if this is the front bed, False if back bed.
         """
         return self._is_front
+
+    @property
+    def is_back(self) -> bool:
+        """
+        Returns:
+            bool: True if this is the back bed, False if front bed.
+        """
+        return not self.is_front
 
     def add_loops(
         self, needle: Needle, loops: list[Machine_Knit_Loop], drop_prior_loops: bool = True
@@ -113,7 +108,7 @@ class Needle_Bed:
         if len(needle.held_loops) >= self._knitting_machine.machine_specification.maximum_loop_hold:
             warnings.warn(
                 Needle_Holds_Too_Many_Loops(needle, self._knitting_machine.machine_specification.maximum_loop_hold),
-                stacklevel=2,
+                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
             )
         if isinstance(needle, Slider_Needle):
             self._active_sliders.add(needle)
@@ -139,41 +134,6 @@ class Needle_Bed:
             self._active_sliders.remove(needle)
         return loops
 
-    @overload
-    def __getitem__(self, item: Machine_Knit_Loop) -> Needle | None: ...
-
-    @overload
-    def __getitem__(self, item: Needle) -> Needle: ...
-
-    @overload
-    def __getitem__(self, item: slice) -> list[Needle]: ...
-
-    def __getitem__(self, item: Machine_Knit_Loop | Needle | slice) -> Needle | list[Needle] | None:
-        """Get an indexed needle on the bed, or find needle holding a specific loop.
-
-        Args:
-            item (Machine_Knit_Loop | Needle | slice): The needle position to get, loop to find needle for, or slice for multiple needles.
-
-        Returns:
-            Needle | list[Needle] | None: The needle(s) at the specified position(s) or holding the specified loop.
-
-        Raises:
-            KeyError: If needle position is out of range or item type is not supported.
-        """
-        if isinstance(item, slice):
-            return self.needles[item]
-        elif isinstance(item, Machine_Knit_Loop):
-            return self.get_needle_of_loop(item)
-        elif isinstance(item, Needle):
-            if item.position < 0 or item.position >= self.needle_count:
-                raise KeyError(f"Needle {item} is out of range of the needle bed of size {self.needle_count}")
-            if item.is_slider:
-                return self.sliders[item.position]
-            else:
-                return self.needles[item.position]
-        else:
-            raise KeyError(f"Cannot get {item} from needle bed")
-
     def get_needle_of_loop(self, loop: Machine_Knit_Loop) -> None | Needle:
         """Get the needle that currently holds the specified loop.
 
@@ -183,13 +143,12 @@ class Needle_Bed:
         Returns:
             None | Needle: None if the bed does not hold the loop, otherwise the needle position that holds it.
         """
-        if loop.holding_needle is None:
+        if loop in self:
+            return self[loop]
+        else:
             return None
-        needle = self[loop.holding_needle]
-        assert isinstance(needle, Needle)
-        assert loop in needle.held_loops, "Loop and needle meta data mismatch"
-        return needle
 
+    @property
     def sliders_are_clear(self) -> bool:
         """Check if no loops are on any slider needle.
 
@@ -197,3 +156,85 @@ class Needle_Bed:
             bool: True if no loops are on a slider needle, False otherwise.
         """
         return len(self._active_sliders) == 0
+
+    def __len__(self) -> int:
+        """Get the number of needles on this bed.
+
+        Returns:
+            int: Number of needles on the bed.
+        """
+        return self.needle_count
+
+    def __iter__(self) -> Iterator[Needle]:
+        """Iterate over the needles in this bed.
+
+        Returns:
+            Iterator[Needle]: Iterator over the needles on this bed.
+        """
+        return iter(self.needles)
+
+    def __contains__(self, item: Machine_Knit_Loop | Needle | int | slice) -> bool:
+        """
+        Args:
+            item (Machine_Knit_Loop | Needle | int | slice): The value to find in the needle bed.
+
+        Returns:
+            bool:
+                True if the item is in the bed, False otherwise.
+                Integer and Slices are checked against the range of the needle bed.
+                Needles are checked against range and bed position.
+                Loops are checked to see if they are being held on this bed.
+        """
+        if isinstance(item, Needle):
+            return item.is_front == self.is_front and int(item) in self
+        elif isinstance(item, int):
+            if item < 0:  # allow negative indexing in slices and integers.
+                return abs(item) <= self.needle_count
+            else:
+                return 0 <= item < self.needle_count
+        elif isinstance(item, slice):
+            return item.start in self and item.stop in self
+        else:
+            holding_needle = item.holding_needle
+            if holding_needle is None:
+                return False
+            else:
+                return holding_needle in self
+
+    @overload
+    def __getitem__(self, item: Machine_Knit_Loop) -> Needle | None: ...
+
+    @overload
+    def __getitem__(self, item: Needle | int) -> Needle: ...
+
+    @overload
+    def __getitem__(self, item: slice) -> list[Needle]: ...
+
+    def __getitem__(self, item: Machine_Knit_Loop | Needle | slice | int) -> Needle | list[Needle] | None:
+        """Get an indexed needle on the bed, or find needle holding a specific loop.
+
+        Args:
+            item (Machine_Knit_Loop | Needle | slice | int): The needle position to get, loop to find needle for, or slice for multiple needles.
+
+        Returns:
+            Needle | list[Needle] | None: The needle(s) at the specified position(s) or holding the specified loop.
+
+        Raises:
+            KeyError: If needle position is out of range or the loop is not held on this bed.
+        """
+        if item not in self:
+            if isinstance(item, Machine_Knit_Loop):
+                raise KeyError(f"{item} is not an active loop on this bed")
+            elif isinstance(item, Needle):
+                raise KeyError(f"Needle {item} is out of range of the needle bed of size {self.needle_count}")
+            else:
+                raise KeyError(f"{item} is outside the range of this needle bed.")
+        if isinstance(item, (int, slice)):
+            return self.needles[item]
+        elif isinstance(item, Machine_Knit_Loop):
+            return self.get_needle_of_loop(item)
+        else:  # isinstance(item, Needle):
+            if item.is_slider:
+                return self.sliders[item.position]
+            else:
+                return self.needles[item.position]

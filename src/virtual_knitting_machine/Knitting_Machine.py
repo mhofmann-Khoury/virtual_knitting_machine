@@ -15,6 +15,9 @@ from knit_graphs.Knit_Graph import Knit_Graph
 
 from virtual_knitting_machine.knitting_machine_exceptions.racking_errors import Max_Rack_Exception
 from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
+    get_user_warning_stack_level_from_virtual_knitting_machine_package,
+)
 from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import Knit_on_Empty_Needle_Warning
 from virtual_knitting_machine.machine_components.carriage_system.Carriage import Carriage
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
@@ -48,10 +51,8 @@ class Knitting_Machine:
         """Initialize a virtual knitting machine with specified configuration.
 
         Args:
-            machine_specification (Knitting_Machine_Specification, optional):
-                Configuration parameters for the machine. Defaults to Knitting_Machine_Specification().
-            knit_graph (Knit_Graph | None, optional):
-                Existing knit graph to use, creates new one if None. Defaults to None.
+            machine_specification (Knitting_Machine_Specification, optional): Configuration parameters for the machine. Defaults to Knitting_Machine_Specification().
+            knit_graph (Knit_Graph | None, optional): Existing knit graph to use, creates new one if None. Defaults to None.
         """
         if machine_specification is None:
             machine_specification = Knitting_Machine_Specification()
@@ -108,7 +109,16 @@ class Knitting_Machine:
         Note:
             This copy does not guarantee continuity of the knitgraph structure or history,
             it only ensures loops and carriers are correctly positioned to mimic the current state.
+
+        Warns:
+            PendingDeprecationWarning: This method should not be called and instead this functionality should be accessed from Knitting_Machine_Snapshot.
         """
+        warnings.warn(
+            PendingDeprecationWarning(
+                "This method will eventually be deprecated and this functionality should be gained from the Knitting_Machine_Snapshot class"
+            ),
+            stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
+        )
         if starting_state is None:
             copy_machine_state = Knitting_Machine(machine_specification=self.machine_specification)
         else:
@@ -349,7 +359,6 @@ class Knitting_Machine:
             At racking 2 it is possible to transfer from f3 to b1 using formulas F = B + R, R = F - B, B = F - R.
         """
         needle = self[needle]
-        assert isinstance(needle, Needle)
         aligned_position = needle.position - self.rack if needle.is_front else needle.position + self.rack
         if aligned_slider:
             return Slider_Needle(not needle.is_front, aligned_position)
@@ -389,6 +398,7 @@ class Knitting_Machine:
         needed_rack = self.get_rack(front_pos, back_pos)
         return self.rack == needed_rack
 
+    @property
     def sliders_are_clear(self) -> bool:
         """Check if no loops are on any slider needle and knitting can be executed.
 
@@ -396,7 +406,7 @@ class Knitting_Machine:
             bool:
                 True if no loops are on a slider needle and knitting can be executed, False otherwise.
         """
-        return bool(self.front_bed.sliders_are_clear() and self.back_bed.sliders_are_clear())
+        return bool(self.front_bed.sliders_are_clear and self.back_bed.sliders_are_clear)
 
     def in_hook(self, carrier_id: int | Yarn_Carrier) -> None:
         """Declare that the in_hook for this yarn carrier is in use.
@@ -481,7 +491,10 @@ class Knitting_Machine:
         needle = self[needle]
         assert isinstance(needle, Needle)
         if not needle.has_loops:
-            warnings.warn(Knit_on_Empty_Needle_Warning(needle), stacklevel=2)
+            warnings.warn(
+                Knit_on_Empty_Needle_Warning(needle),
+                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
+            )
 
         # position the carrier set to align with the knitting needle
         carrier_set.position_carriers(self.carrier_system, needle, direction)
