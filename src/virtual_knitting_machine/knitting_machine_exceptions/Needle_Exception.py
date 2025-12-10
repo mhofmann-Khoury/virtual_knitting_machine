@@ -1,13 +1,12 @@
 """Module containing common machine knitting exceptions that involve needles and needle operations.
 This module provides exception classes for various needle-related critical errors including
 slider operations, loop transfers, alignment issues, and needle state violations that prevent successful knitting operations."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import (
-    Knitting_Machine_Exception,
-)
+from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import Knitting_Machine_Exception
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.needles.Needle import Needle
@@ -15,7 +14,8 @@ if TYPE_CHECKING:
 
 class Needle_Exception(Knitting_Machine_Exception):
     """Base class for exceptions related to specific needle operations and states.
-    This class provides a foundation for all needle-specific exceptions and includes the needle reference for detailed error reporting and debugging of needle-related operational failures."""
+    This class provides a foundation for all needle-specific exceptions and includes the needle reference for detailed error reporting and debugging of needle-related operational failures.
+    """
 
     def __init__(self, needle: Needle, message: str) -> None:
         """Initialize a needle-specific exception.
@@ -31,7 +31,8 @@ class Needle_Exception(Knitting_Machine_Exception):
 class Slider_Loop_Exception(Needle_Exception):
     """Exception for attempting to form loops on slider needles.
     This exception occurs when trying to create a new loop on a slider needle,
-    which is not allowed as slider needles can only hold and transfer loops but cannot be used for loop formation operations."""
+    which is not allowed as slider needles can only hold and transfer loops but cannot be used for loop formation operations.
+    """
 
     def __init__(self, needle: Needle) -> None:
         """Initialize a slider loop formation exception.
@@ -44,7 +45,8 @@ class Slider_Loop_Exception(Needle_Exception):
 
 class Clear_Needle_Exception(Needle_Exception):
     """Exception for attempting to use needles when sliders are not clear.
-    This exception occurs when trying to perform knitting operations while slider needles still hold loops, which must be cleared before standard knitting operations can proceed."""
+    This exception occurs when trying to perform knitting operations while slider needles still hold loops, which must be cleared before standard knitting operations can proceed.
+    """
 
     def __init__(self, needle: Needle) -> None:
         """Initialize a clear needle requirement exception.
@@ -57,7 +59,8 @@ class Clear_Needle_Exception(Needle_Exception):
 
 class Xfer_Dropped_Loop_Exception(Needle_Exception):
     """Exception for attempting to transfer dropped loops to target needles.
-    This exception occurs when trying to transfer a loop that has already been dropped from the machine, which is not physically possible as the loop is no longer held by any needle."""
+    This exception occurs when trying to transfer a loop that has already been dropped from the machine, which is not physically possible as the loop is no longer held by any needle.
+    """
 
     def __init__(self, needle: Needle) -> None:
         """Initialize a transfer dropped loop exception.
@@ -70,7 +73,8 @@ class Xfer_Dropped_Loop_Exception(Needle_Exception):
 
 class Misaligned_Needle_Exception(Needle_Exception):
     """Exception for operations attempted between needles that are not properly aligned at the current racking.
-    This exception occurs when trying to perform transfer or other cross-bed operations between needles that are not aligned according to the machine's current racking configuration."""
+    This exception occurs when trying to perform transfer or other cross-bed operations between needles that are not aligned according to the machine's current racking configuration.
+    """
 
     def __init__(self, start_needle: Needle, target_needle: Needle) -> None:
         """Initialize a misaligned needle exception.

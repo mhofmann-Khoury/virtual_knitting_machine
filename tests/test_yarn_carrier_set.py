@@ -1,20 +1,13 @@
 """Comprehensive unit tests for the Yarn_Carrier_Set class."""
+
 import unittest
 import warnings
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
-    Duplicate_Carriers_In_Set,
-)
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
-    Yarn_Carrier,
-)
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import (
-    Yarn_Carrier_Set,
-)
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import (
-    Yarn_Insertion_System,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Duplicate_Carriers_In_Set
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
 
 
 class TestYarnCarrierSet(unittest.TestCase):

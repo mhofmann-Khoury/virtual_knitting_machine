@@ -1,12 +1,9 @@
 """Comprehensive unit tests for the Carriage_Side enum."""
+
 import unittest
 
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
-    Carriage_Pass_Direction,
-)
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import (
-    Carriage_Side,
-)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import Carriage_Side
 
 
 class TestCarriageSide(unittest.TestCase):
@@ -142,10 +139,7 @@ class TestCarriageSide(unittest.TestCase):
 
     def test_enum_hashable(self):
         """Test that enum values are hashable and can be used as dict keys."""
-        side_mapping = {
-            self.left_side: "port",
-            self.right_side: "starboard"
-        }
+        side_mapping = {self.left_side: "port", self.right_side: "starboard"}
 
         self.assertEqual(side_mapping[self.left_side], "port")
         self.assertEqual(side_mapping[self.right_side], "starboard")
@@ -200,7 +194,7 @@ class TestCarriageSide(unittest.TestCase):
             self.assertEqual(
                 actual_direction,
                 expected_direction,
-                f"{side} {direction_type} direction should be {expected_direction}"
+                f"{side} {direction_type} direction should be {expected_direction}",
             )
 
     def test_enum_member_access(self):

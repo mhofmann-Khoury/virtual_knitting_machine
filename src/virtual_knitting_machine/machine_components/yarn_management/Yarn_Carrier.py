@@ -1,5 +1,6 @@
 """Yarn_Carrier representation module for managing individual yarn carriers on knitting machines.
 This module provides the Yarn_Carrier class which represents a single yarn carrier that can hold yarn, track position, and manage active/hooked states for knitting operations."""
+
 from __future__ import annotations
 
 import warnings
@@ -8,25 +9,17 @@ from typing import TYPE_CHECKING
 from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn_Properties
 
-from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
-    Hooked_Carrier_Exception,
-)
+from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Hooked_Carrier_Exception
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
     In_Active_Carrier_Warning,
     Out_Inactive_Carrier_Warning,
 )
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
-    Carriage_Pass_Direction,
-)
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import (
-    Machine_Knit_Yarn,
-)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import Machine_Knit_Yarn
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.needles.Needle import Needle
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import (
-        Yarn_Carrier_Set,
-    )
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 
 
 class Yarn_Carrier:
@@ -37,7 +30,13 @@ class Yarn_Carrier:
 
     STOPPING_DISTANCE: int = 10  # int: The distance carriers are moved when kicked to avoid conflicts.
 
-    def __init__(self, carrier_id: int, yarn: None | Machine_Knit_Yarn = None, yarn_properties: Yarn_Properties | None = None, knit_graph: Knit_Graph | None = None) -> None:
+    def __init__(
+        self,
+        carrier_id: int,
+        yarn: None | Machine_Knit_Yarn = None,
+        yarn_properties: Yarn_Properties | None = None,
+        knit_graph: Knit_Graph | None = None,
+    ) -> None:
         """Initialize a yarn carrier with specified ID and optional yarn configuration.
 
         Args:
@@ -52,7 +51,8 @@ class Yarn_Carrier:
         self._last_direction: None | Carriage_Pass_Direction = None
         if yarn is not None:
             self._yarn: Machine_Knit_Yarn = yarn
-            self._yarn.knit_graph = knit_graph
+            if knit_graph is not None:
+                self._yarn.knit_graph = knit_graph
         else:
             self._yarn: Machine_Knit_Yarn = Machine_Knit_Yarn(self, yarn_properties, knit_graph=knit_graph)
 
@@ -88,7 +88,9 @@ class Yarn_Carrier:
             self.last_direction = None  # No position means no carrier position direction.
         else:
             if self.position is None:
-                self.last_direction = Carriage_Pass_Direction.Leftward  # moving in a leftward position when the carrier is inserted
+                self.last_direction = (
+                    Carriage_Pass_Direction.Leftward
+                )  # moving in a leftward position when the carrier is inserted
             else:
                 if int(new_position) < self.position:
                     self.last_direction = Carriage_Pass_Direction.Leftward
@@ -107,9 +109,7 @@ class Yarn_Carrier:
         Returns:
             Carriage_Pass_Direction: The direction that the carrier will move to reach the given position from its current position.
         """
-        if self.position is None:  # inactive carriers enter from the right
-            return Carriage_Pass_Direction.Leftward
-        elif int(needle_position) < self.position:
+        if self.position is None or int(needle_position) < self.position:  # inactive carriers enter from the right
             return Carriage_Pass_Direction.Leftward
         elif int(needle_position) > self.position:
             return Carriage_Pass_Direction.Rightward
@@ -211,19 +211,17 @@ class Yarn_Carrier:
             In_Active_Carrier_Warning: If carrier is already active.
         """
         if self.is_active:
-            warnings.warn(In_Active_Carrier_Warning(self.carrier_id))  # Warn user but do no in action
+            warnings.warn(In_Active_Carrier_Warning(self.carrier_id), stacklevel=2)  # Warn user but do no in action
         self.is_active = True
         self.last_direction = Carriage_Pass_Direction.Leftward
 
     def inhook(self) -> None:
-        """Record inhook operation to bring in carrier using insertion hook.
-        """
+        """Record inhook operation to bring in carrier using insertion hook."""
         self.bring_in()
         self.is_hooked = True
 
     def releasehook(self) -> None:
-        """Record release hook operation to disconnect carrier from insertion hook.
-        """
+        """Record release hook operation to disconnect carrier from insertion hook."""
         self.is_hooked = False
 
     def out(self) -> None:
@@ -233,7 +231,9 @@ class Yarn_Carrier:
             Out_Inactive_Carrier_Warning: If carrier is already inactive.
         """
         if not self.is_active:
-            warnings.warn(Out_Inactive_Carrier_Warning(self.carrier_id))  # Warn use but do not do out action
+            warnings.warn(
+                Out_Inactive_Carrier_Warning(self.carrier_id), stacklevel=2
+            )  # Warn use but do not do out action
         self.is_active = False
         self.last_direction = None
 
@@ -268,7 +268,7 @@ class Yarn_Carrier:
         """
         return int(self) < int(other)
 
-    def __eq__(self, other: int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Equality comparison of a carrier to another carrier or object representing a carrier.
         Args:
@@ -277,12 +277,14 @@ class Yarn_Carrier:
         Returns:
             bool: True if this carrier is equal to the other. Carrier sets are equal if they only contain this carrier.
         """
-        if isinstance(other, Yarn_Carrier) or isinstance(other, int):
+        if isinstance(other, (Yarn_Carrier, int)):
             return self.carrier_id == int(other)
-        else:  # Yarn_Carrier_Set or list of carriers
+        elif isinstance(other, (Yarn_Carrier_Set, list)):
             if len(other) != 1:
                 return False
             return self == other[0]
+        else:
+            return False
 
     def __hash__(self) -> int:
         """Return hash value based on carrier ID.

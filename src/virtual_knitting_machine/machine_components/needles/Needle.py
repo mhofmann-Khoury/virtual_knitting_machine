@@ -4,13 +4,14 @@ This module provides the core Needle class which represents individual needles o
 Needles can be on the front or back bed and can hold loops for knitting operations. The module includes
 functionality for loop management, needle positioning, and various knitting operations.
 """
+
 from __future__ import annotations
+
+from typing import cast
 
 from knit_graphs.Pull_Direction import Pull_Direction
 
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import (
-    Machine_Knit_Loop,
-)
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 
 class Needle:
@@ -85,10 +86,10 @@ class Needle:
         """
         active_floats = {}
         for loop in self.held_loops:
-            next_loop = loop.next_loop_on_yarn()
+            next_loop = cast(Machine_Knit_Loop, loop.next_loop_on_yarn())
             if next_loop is not None and next_loop.on_needle:
                 active_floats[loop] = next_loop
-            prior_loop = loop.prior_loop_on_yarn()
+            prior_loop = cast(Machine_Knit_Loop, loop.prior_loop_on_yarn())
             if prior_loop is not None and prior_loop.on_needle:
                 active_floats[prior_loop] = loop
         return active_floats
@@ -103,7 +104,7 @@ class Needle:
         Returns:
             bool: True if the float between u and v overlaps the position of this needle.
         """
-        if not u.on_needle or not v.on_needle:
+        if u.holding_needle is None or v.holding_needle is None:
             return False
         left_position = min(u.holding_needle.position, v.holding_needle.position)
         right_position = max(u.holding_needle.position, v.holding_needle.position)
@@ -262,7 +263,7 @@ class Needle:
             try:
                 return self.position < int(other)
             except ValueError:
-                raise TypeError(f"Expected comparison to Needle or number but got {other}")
+                raise TypeError(f"Expected comparison to Needle or number but got {other}") from None
 
     def __int__(self) -> int:
         """Return integer representation of the needle position.
@@ -304,7 +305,9 @@ class Needle:
         else:  # same position at racking
             if not all_needle_racking or self.is_front == other.is_front:  # same needle
                 return 0
-            elif self.is_front:  # Self is on the front, implies other is on the back. Front comes before back in all_needle alignment
+            elif (
+                self.is_front
+            ):  # Self is on the front, implies other is on the back. Front comes before back in all_needle alignment
                 return -1
             else:  # implies self is on the back and other is on the front.
                 return 1
@@ -428,7 +431,7 @@ class Needle:
         """
         return other + self
 
-    def __eq__(self, other: Needle) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Check equality with another needle.
 
         Args:
@@ -437,7 +440,12 @@ class Needle:
         Returns:
             bool: True if needles are equal (same bed, position, and slider status).
         """
-        return self.is_front == other.is_front and self.is_slider == other.is_slider and self.position == other.position
+        return (
+            isinstance(other, Needle)
+            and self.is_front == other.is_front
+            and self.is_slider == other.is_slider
+            and self.position == other.position
+        )
 
     @property
     def is_slider(self) -> bool:

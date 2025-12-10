@@ -3,6 +3,7 @@
 This module provides enumerations for machine types and knitting positions,
 as well as a dataclass specification that defines all the parameters and constraints for configuring a virtual knitting machine.
 """
+
 from dataclasses import dataclass
 from enum import Enum
 
@@ -12,6 +13,7 @@ class Knitting_Machine_Type(Enum):
 
     Currently, supports the SWG091N2 whole garment knitting machine model with potential for additional machine types in the future.
     """
+
     SWG091N2 = "SWG091N2"
 
     def __str__(self) -> str:
@@ -45,6 +47,7 @@ class Knitting_Position(Enum):
     This enumeration defines where knitting operations are positioned on the machine bed,
     affecting how the machine interprets needle positions and carriage movements.
     """
+
     Left = "Left"  # Notes that the pattern will be positioned starting on te left most needle of the machine.
     Right = "Right"  # Notes that the pattern will be positioned ending on the rightmost needle of the machine.
     Center = "Center"  # Centers the pattern on the needle beds.
@@ -82,6 +85,7 @@ class Knitting_Machine_Specification:
     This dataclass defines all the configurable parameters that determine machine capabilities,
     limitations, and behavior during knitting operations.
     """
+
     machine: Knitting_Machine_Type = Knitting_Machine_Type.SWG091N2  #: The type of knitting machine being represented
     gauge: int = 15  #: The gauge of the knitting machine needles
     position: Knitting_Position = Knitting_Position.Right  #: The positioning configuration for knitting operations

@@ -1,22 +1,20 @@
 """A module containing warnings related to the yarn carrier system and yarn management operations.
 This module provides comprehensive warning classes for various yarn carrier issues including
 state mismatches, duplicate definitions, hook operation errors, and float length violations during machine knitting operations."""
+
 from typing import TYPE_CHECKING, Any
 
-from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
-    Knitting_Machine_Warning,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import Knitting_Machine_Warning
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import (
-        Yarn_Carrier,
-    )
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 
 
 class Yarn_Carrier_Warning(Knitting_Machine_Warning):
     """Base class for warnings related to yarn carrier operations and states.
-    This class provides a foundation for all yarn carrier-specific warnings and includes the carrier ID reference for detailed error reporting and system state tracking."""
+    This class provides a foundation for all yarn carrier-specific warnings and includes the carrier ID reference for detailed error reporting and system state tracking.
+    """
 
     def __init__(self, carrier_id: Any, message: str, ignore_instruction: bool = False) -> None:
         """Initialize a yarn carrier-specific warning.
@@ -32,7 +30,8 @@ class Yarn_Carrier_Warning(Knitting_Machine_Warning):
 
 class Multiple_Yarn_Definitions_Warning(Yarn_Carrier_Warning):
     """A warning for multiple yarn property definitions on the same carrier.
-    This warning occurs when yarn properties are defined multiple times for a single carrier, which may indicate conflicting yarn specifications or redundant operations."""
+    This warning occurs when yarn properties are defined multiple times for a single carrier, which may indicate conflicting yarn specifications or redundant operations.
+    """
 
     def __init__(self, carrier_id: Any) -> None:
         """Initialize a multiple yarn definitions warning.
@@ -58,13 +57,18 @@ class Release_Wrong_Carrier_Warning(Yarn_Carrier_Warning):
         self.hooked_carrier_id: Yarn_Carrier | None | int = hooked_carrier_id
         current_carrier_statement = f"Carrier {self.hooked_carrier_id} is on Yarn-Inserting_Hook"
         if self.hooked_carrier_id is None:
-            current_carrier_statement = f"No carrier is on the Yarn-Inserting Hook."
-        super().__init__(carrier_id, f"Tried to release carrier {carrier_id} which is not on yarn-inserting hook.\n\t{current_carrier_statement}", ignore_instruction=True)
+            current_carrier_statement = "No carrier is on the Yarn-Inserting Hook."
+        super().__init__(
+            carrier_id,
+            f"Tried to release carrier {carrier_id} which is not on yarn-inserting hook.\n\t{current_carrier_statement}",
+            ignore_instruction=True,
+        )
 
 
 class Loose_Release_Warning(Yarn_Carrier_Warning):
     """A warning for releasing loose yarn carriers with mismatched loop counts.
-    This warning occurs when a loose yarn release operation is performed with a different number of stabilizing loops than requested, indicating potential yarn state inconsistencies."""
+    This warning occurs when a loose yarn release operation is performed with a different number of stabilizing loops than requested, indicating potential yarn state inconsistencies.
+    """
 
     def __init__(self, carrier_id: Any, loops_before_release: int, loose_loop_count: int) -> None:
         """Initialize a loose release warning.
@@ -76,12 +80,16 @@ class Loose_Release_Warning(Yarn_Carrier_Warning):
         """
         self.loops_before_release: int = loops_before_release
         self.loose_loop_count: int = loose_loop_count
-        super().__init__(carrier_id, f"Released loose yarn on carrier {carrier_id} with {loops_before_release} stabling loops but requested {loose_loop_count}.")
+        super().__init__(
+            carrier_id,
+            f"Released loose yarn on carrier {carrier_id} with {loops_before_release} stabling loops but requested {loose_loop_count}.",
+        )
 
 
 class Defined_Active_Yarn_Warning(Yarn_Carrier_Warning):
     """A warning for defining yarn properties on an already active carrier.
-    This warning occurs when yarn properties are defined for a carrier that is already in active use, which may cause unexpected yarn behavior or state conflicts."""
+    This warning occurs when yarn properties are defined for a carrier that is already in active use, which may cause unexpected yarn behavior or state conflicts.
+    """
 
     def __init__(self, carrier_id: Any) -> None:
         """Initialize a defined active yarn warning.
@@ -94,7 +102,8 @@ class Defined_Active_Yarn_Warning(Yarn_Carrier_Warning):
 
 class In_Active_Carrier_Warning(Yarn_Carrier_Warning):
     """A warning for attempting to bring in a carrier that is already active.
-    This warning occurs when an 'in' operation is performed on a carrier that is already in active state, indicating redundant operations or state tracking issues."""
+    This warning occurs when an 'in' operation is performed on a carrier that is already in active state, indicating redundant operations or state tracking issues.
+    """
 
     def __init__(self, carrier_id: Any) -> None:
         """Initialize an 'in' active carrier warning.
@@ -102,12 +111,15 @@ class In_Active_Carrier_Warning(Yarn_Carrier_Warning):
         Args:
             carrier_id (int | Yarn_Carrier): The carrier that is already active but was requested to be brought in.
         """
-        super().__init__(carrier_id, f"Tried to bring in {carrier_id} but it is already active", ignore_instruction=True)
+        super().__init__(
+            carrier_id, f"Tried to bring in {carrier_id} but it is already active", ignore_instruction=True
+        )
 
 
 class In_Loose_Carrier_Warning(Yarn_Carrier_Warning):
     """A warning for attempting to bring in a loose carrier without proper hook operations.
-    This warning occurs when trying to bring in a carrier that has loose yarn, suggesting that an in-hook operation should be used instead for proper yarn management."""
+    This warning occurs when trying to bring in a carrier that has loose yarn, suggesting that an in-hook operation should be used instead for proper yarn management.
+    """
 
     def __init__(self, carrier_id: Any) -> None:
         """Initialize an 'in' loose carrier warning.
@@ -115,12 +127,17 @@ class In_Loose_Carrier_Warning(Yarn_Carrier_Warning):
         Args:
             carrier_id (int | Yarn_Carrier): The loose carrier that was attempted to be brought in.
         """
-        super().__init__(carrier_id, f"Tried to bring in {carrier_id} but carrier is loose. Try in-hooking {carrier_id}", ignore_instruction=False)
+        super().__init__(
+            carrier_id,
+            f"Tried to bring in {carrier_id} but carrier is loose. Try in-hooking {carrier_id}",
+            ignore_instruction=False,
+        )
 
 
 class Out_Inactive_Carrier_Warning(Yarn_Carrier_Warning):
     """A warning for attempting to bring out a carrier that is not currently active.
-    This warning occurs when an 'out' operation is performed on a carrier that is already inactive, indicating redundant operations or state tracking issues."""
+    This warning occurs when an 'out' operation is performed on a carrier that is already inactive, indicating redundant operations or state tracking issues.
+    """
 
     def __init__(self, carrier_id: Any) -> None:
         """Initialize an 'out' inactive carrier warning.
@@ -128,12 +145,15 @@ class Out_Inactive_Carrier_Warning(Yarn_Carrier_Warning):
         Args:
             carrier_id (int | Yarn_Carrier): The inactive carrier that was requested to be brought out.
         """
-        super().__init__(carrier_id, f"Cannot bring carrier {carrier_id} out because it is not active.", ignore_instruction=True)
+        super().__init__(
+            carrier_id, f"Cannot bring carrier {carrier_id} out because it is not active.", ignore_instruction=True
+        )
 
 
 class Duplicate_Carriers_In_Set(Yarn_Carrier_Warning):
     """A warning for duplicate carrier IDs found in carrier sets.
-    This warning occurs when a carrier set is created with duplicate carrier IDs, and the system automatically removes the duplicates to maintain set integrity."""
+    This warning occurs when a carrier set is created with duplicate carrier IDs, and the system automatically removes the duplicates to maintain set integrity.
+    """
 
     def __init__(self, carrier_id: Any, carrier_set: list[int]) -> None:
         """Initialize a duplicate carriers in set warning.
@@ -143,12 +163,15 @@ class Duplicate_Carriers_In_Set(Yarn_Carrier_Warning):
             carrier_set (list[int]): The original carrier set containing duplicates.
         """
         self.carrier_set: list[int] = carrier_set
-        super().__init__(carrier_id, f"Removed last duplicate {carrier_id} form {carrier_set}", ignore_instruction=False)
+        super().__init__(
+            carrier_id, f"Removed last duplicate {carrier_id} form {carrier_set}", ignore_instruction=False
+        )
 
 
 class Long_Float_Warning(Yarn_Carrier_Warning):
     """A warning for float segments that exceed the maximum allowed length.
-    This warning occurs when yarn floats between needles exceed the specified maximum float length, which may cause knitting issues or affect fabric quality."""
+    This warning occurs when yarn floats between needles exceed the specified maximum float length, which may cause knitting issues or affect fabric quality.
+    """
 
     def __init__(self, carrier_id: Any, prior_needle: Needle, next_needle: Needle, max_float_len: int) -> None:
         """Initialize a long float warning.
@@ -162,4 +185,8 @@ class Long_Float_Warning(Yarn_Carrier_Warning):
         self.prior_needle: Needle = prior_needle
         self.next_needle: Needle = next_needle
         self.max_float_len: int = max_float_len
-        super().__init__(carrier_id, f"Long float greater than {self.max_float_len} formed between {self.prior_needle} and {self.next_needle}.", ignore_instruction=False)
+        super().__init__(
+            carrier_id,
+            f"Long float greater than {self.max_float_len} formed between {self.prior_needle} and {self.next_needle}.",
+            ignore_instruction=False,
+        )

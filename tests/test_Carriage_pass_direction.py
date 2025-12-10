@@ -1,9 +1,8 @@
 """Comprehensive unit tests for the Carriage_Pass_Direction enum."""
+
 import unittest
 
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
-    Carriage_Pass_Direction,
-)
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 
@@ -198,7 +197,7 @@ class TestCarriagePassDirection(unittest.TestCase):
             Needle(is_front=True, position=7),
             Needle(is_front=True, position=2),
             Needle(is_front=True, position=5),
-            Needle(is_front=False, position=3)
+            Needle(is_front=False, position=3),
         ]
 
         sorted_needles = self.rightward.sort_needles(needles)
@@ -218,7 +217,7 @@ class TestCarriagePassDirection(unittest.TestCase):
             Needle(is_front=True, position=7),
             Needle(is_front=True, position=2),
             Needle(is_front=True, position=5),
-            Needle(is_front=False, position=3)
+            Needle(is_front=False, position=3),
         ]
 
         sorted_needles = self.leftward.sort_needles(needles)
@@ -275,7 +274,7 @@ class TestCarriagePassDirection(unittest.TestCase):
             Needle(is_front=True, position=3),
             Needle(is_front=False, position=3),
             Needle(is_front=True, position=5),
-            Needle(is_front=False, position=1)
+            Needle(is_front=False, position=1),
         ]
 
         sorted_rightward = self.rightward.sort_needles(needles)
@@ -287,13 +286,15 @@ class TestCarriagePassDirection(unittest.TestCase):
 
         # Check rightward order (ascending positions)
         rightward_positions = [n.position for n in sorted_rightward]
-        self.assertTrue(all(rightward_positions[i] <= rightward_positions[i + 1]
-                            for i in range(len(rightward_positions) - 1)))
+        self.assertTrue(
+            all(rightward_positions[i] <= rightward_positions[i + 1] for i in range(len(rightward_positions) - 1))
+        )
 
         # Check leftward order (descending positions)
         leftward_positions = [n.position for n in sorted_leftward]
-        self.assertTrue(all(leftward_positions[i] >= leftward_positions[i + 1]
-                            for i in range(len(leftward_positions) - 1)))
+        self.assertTrue(
+            all(leftward_positions[i] >= leftward_positions[i + 1] for i in range(len(leftward_positions) - 1))
+        )
 
     def test_enum_identity(self):
         """Test that enum instances maintain identity."""

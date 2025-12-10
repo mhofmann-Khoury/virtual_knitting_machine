@@ -3,9 +3,10 @@
 This module extends the base Loop class to capture machine-specific information including
 needle history, transfer operations, and machine state tracking for loops created by virtual knitting machines.
 """
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from knit_graphs.Loop import Loop
 from knit_graphs.Yarn import Yarn
@@ -43,7 +44,7 @@ class Machine_Knit_Loop(Loop):
         super().__init__(loop_id, yarn)
         self.needle_history: list[Needle | None] = [source_needle]
         if self.source_needle.is_slider:
-            raise Slider_Loop_Exception(self.holding_needle)
+            raise Slider_Loop_Exception(self.source_needle)
 
     @property
     def holding_needle(self) -> Needle | None:
@@ -67,7 +68,7 @@ class Machine_Knit_Loop(Loop):
         for n in reversed(self.needle_history):
             if n is not None:
                 return n
-        assert False, f"Machine knit loops must have at least a source needle."
+        raise AssertionError("Machine knit loops must have at least a source needle.")
 
     @property
     def on_needle(self) -> bool:
@@ -94,7 +95,7 @@ class Machine_Knit_Loop(Loop):
         Returns:
             Needle: The needle this loop was created on.
         """
-        return self.needle_history[0]
+        return cast(Needle, self.needle_history[0])
 
     def transfer_loop(self, target_needle: Needle) -> None:
         """Add target needle to the end of needle history for loop transfer operation.

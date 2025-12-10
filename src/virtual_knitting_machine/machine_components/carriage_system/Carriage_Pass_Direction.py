@@ -3,11 +3,12 @@
 This module defines the two directions a carriage can move across the needle bed and provides utility functions for
 needle positioning, comparison, and sorting operations relative to carriage movement direction.
 """
+
 from __future__ import annotations
 
 import functools
+from collections.abc import Iterable
 from enum import Enum
-from typing import Iterable
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
@@ -18,8 +19,9 @@ class Carriage_Pass_Direction(Enum):
     Needles are oriented on the machine left to right in ascending order: Left -> 0 1 2 ... N <- Right.
     This enum provides methods for needle comparison, positioning, and sorting operations relative to carriage movement direction.
     """
-    Leftward = "-" # Represents a Leftward decreasing movement of the carriage pass.
-    Rightward = "+" # Represents a Rightward increasing movement of the carriage pass.
+
+    Leftward = "-"  # Represents a Leftward decreasing movement of the carriage pass.
+    Rightward = "+"  # Represents a Rightward increasing movement of the carriage pass.
 
     def opposite(self) -> Carriage_Pass_Direction:
         """Get the opposite pass direction of this direction.
@@ -77,7 +79,9 @@ class Carriage_Pass_Direction(Enum):
             return needle_pos - 1
 
     @staticmethod
-    def rightward_needles_comparison(first_needle: Needle, second_needle: Needle, rack: int = 0, all_needle_rack: bool = False) -> int:
+    def rightward_needles_comparison(
+        first_needle: Needle, second_needle: Needle, rack: int = 0, all_needle_rack: bool = False
+    ) -> int:
         """Compare two needles for rightward carriage movement ordering.
 
         Args:
@@ -92,7 +96,9 @@ class Carriage_Pass_Direction(Enum):
         return int(-1 * first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))
 
     @staticmethod
-    def leftward_needles_comparison(first_needle: Needle, second_needle: Needle, rack: int = 0, all_needle_rack: bool = False) -> int:
+    def leftward_needles_comparison(
+        first_needle: Needle, second_needle: Needle, rack: int = 0, all_needle_rack: bool = False
+    ) -> int:
         """Compare two needles for leftward carriage movement ordering.
 
         Args:
@@ -107,7 +113,9 @@ class Carriage_Pass_Direction(Enum):
         """
         return int(first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))
 
-    def needle_direction_comparison(self, first_needle: Needle, second_needle: Needle, rack: int = 0, all_needle_rack: bool = False) -> int:
+    def needle_direction_comparison(
+        self, first_needle: Needle, second_needle: Needle, rack: int = 0, all_needle_rack: bool = False
+    ) -> int:
         """Compare two needles based on their order in this carriage pass direction.
 
         Args:
@@ -120,11 +128,17 @@ class Carriage_Pass_Direction(Enum):
             int: -1 if first_needle comes after second_needle in pass direction, 0 if needles are at equal alignment given the racking, 1 if first needle comes before second_needle in pass direction.
         """
         if self is Carriage_Pass_Direction.Rightward:
-            return Carriage_Pass_Direction.rightward_needles_comparison(first_needle, second_needle, rack, all_needle_rack)
+            return Carriage_Pass_Direction.rightward_needles_comparison(
+                first_needle, second_needle, rack, all_needle_rack
+            )
         else:
-            return Carriage_Pass_Direction.leftward_needles_comparison(first_needle, second_needle, rack, all_needle_rack)
+            return Carriage_Pass_Direction.leftward_needles_comparison(
+                first_needle, second_needle, rack, all_needle_rack
+            )
 
-    def needles_are_in_pass_direction(self, first_needle: Needle, second_needle: Needle, rack: int = 0, all_needle_rack: bool = False) -> bool:
+    def needles_are_in_pass_direction(
+        self, first_needle: Needle, second_needle: Needle, rack: int = 0, all_needle_rack: bool = False
+    ) -> bool:
         """Check if the first needle comes before the second needle in the given pass direction.
 
         Args:
@@ -164,9 +178,15 @@ class Carriage_Pass_Direction(Enum):
             list[Needle]: List of needles sorted in the pass direction.
         """
         ascending = self is Carriage_Pass_Direction.Rightward
-        position_sorted = sorted(needles,
-                                 key=functools.cmp_to_key(lambda x, y: Needle.needle_at_racking_cmp(x, y, racking, all_needle_racking=True)),
-                                 reverse=not ascending)
+
+        def _needle_cmp(x: Needle, y: Needle) -> int:
+            return Needle.needle_at_racking_cmp(x, y, racking, all_needle_racking=True)
+
+        position_sorted = sorted(
+            needles,
+            key=functools.cmp_to_key(_needle_cmp),
+            reverse=not ascending,
+        )
         return position_sorted
 
     def __str__(self) -> str:

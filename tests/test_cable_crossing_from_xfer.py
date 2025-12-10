@@ -1,19 +1,14 @@
 """Comprehensive unit tests for the Carriage class."""
+
 import unittest
 
 from knit_graphs.artin_wale_braids.Crossing_Direction import Crossing_Direction
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-from virtual_knitting_machine.Knitting_Machine_Specification import (
-    Knitting_Machine_Specification,
-)
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
-    Carriage_Pass_Direction,
-)
+from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import (
-    Yarn_Carrier_Set,
-)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 
 
 class TestCarriage(unittest.TestCase):
