@@ -109,7 +109,7 @@ jobs:
           mkdir -p docs/source/api
 
           # Generate API documentation from source code without creating modules.rst
-          poetry run sphinx-apidoc -o docs/source/api src/knit_graphs/ --force --module-first --separate --no-toc
+          poetry run sphinx-apidoc -o docs/source/api src/virtual_knitting_machine/ --force --module-first --separate --no-toc
 
           echo "📚 Building documentation..."
 

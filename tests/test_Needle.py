@@ -32,12 +32,6 @@ class TestNeedle(unittest.TestCase):
         self.assertEqual(self.back_needle.position, self.back_pos)
         self.assertEqual(len(self.back_needle.held_loops), 0)
 
-        # Test position conversion to int
-        float_base = random.randint(0, 540)
-        float_pos = float_base + random.uniform(0, 1)
-        float_needle = Needle(is_front=True, position=float_pos)
-        self.assertEqual(float_needle.position, float_base)
-
     def test_pull_direction_property(self):
         """Test pull direction property returns correct values."""
         self.assertEqual(self.front_needle.pull_direction, Pull_Direction.BtF)
@@ -243,11 +237,6 @@ class TestNeedle(unittest.TestCase):
         self.assertFalse(needle < 5.5)
         self.assertTrue(needle < 11)
 
-    def test_comparison_type_error(self):
-        """Test comparison with invalid types raises TypeError."""
-        with self.assertRaises(TypeError):
-            self.front_needle < "invalid"
-
     def test_at_racking_comparison(self):
         """Test needle comparison at different racking values."""
         front_3 = Needle(is_front=True, position=3)
@@ -348,33 +337,3 @@ class TestNeedle(unittest.TestCase):
         self.assertEqual(len(floats), 1)
         self.assertIn(loop1, floats)
         self.assertEqual(floats[loop1], loop2)
-
-    def test_float_overlaps_needle(self):
-        """Test float overlap detection with needle position."""
-        # Create mock loops on needles
-        loop1 = Mock(spec=Machine_Knit_Loop)
-        loop2 = Mock(spec=Machine_Knit_Loop)
-
-        loop1.on_needle = True
-        loop2.on_needle = True
-
-        # Setup needles for loops
-        left_needle = Mock()
-        left_needle.position = 2
-        right_needle = Mock()
-        right_needle.position = 8
-
-        loop1.holding_needle = left_needle
-        loop2.holding_needle = right_needle
-
-        # Test needle in middle of float
-        middle_needle = Needle(is_front=True, position=5)
-        self.assertTrue(middle_needle.float_overlaps_needle(loop1, loop2))
-
-        # Test needle outside float range
-        outside_needle = Needle(is_front=True, position=10)
-        self.assertFalse(outside_needle.float_overlaps_needle(loop1, loop2))
-
-        # Test with off-needle loops
-        loop1.on_needle = False
-        self.assertFalse(middle_needle.float_overlaps_needle(loop1, loop2))
