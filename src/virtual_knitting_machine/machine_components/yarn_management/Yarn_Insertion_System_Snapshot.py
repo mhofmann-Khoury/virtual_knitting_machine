@@ -1,5 +1,6 @@
 """Module containing Yarn Insertion System Snapshot class"""
 
+from collections.abc import Sequence
 from typing import cast, overload
 
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
@@ -176,7 +177,7 @@ class Yarn_Insertion_System_Snapshot:
 
     @overload
     def __getitem__(
-        self, item: Yarn_Carrier_Set | list[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
+        self, item: Yarn_Carrier_Set | Sequence[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
     ) -> list[Yarn_Carrier_Snapshot] | Yarn_Carrier_Snapshot: ...
 
     def __getitem__(
@@ -186,7 +187,7 @@ class Yarn_Insertion_System_Snapshot:
             | Yarn_Carrier
             | Yarn_Carrier_Snapshot
             | Yarn_Carrier_Set
-            | list[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
+            | Sequence[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
         ),
     ) -> Yarn_Carrier_Snapshot | list[Yarn_Carrier_Snapshot]:
         """Get carrier(s) by ID, carrier object, carrier set, or list of IDs/carriers.
@@ -205,7 +206,7 @@ class Yarn_Insertion_System_Snapshot:
                 return self[item.carrier_id]
             elif isinstance(item, Yarn_Carrier_Set):
                 return self[cast(list[int | Yarn_Carrier | Yarn_Carrier_Snapshot], [item.carrier_ids])]
-            elif isinstance(item, list):
+            elif isinstance(item, Sequence):
                 if len(item) == 1:
                     return self[item[0]]
                 else:

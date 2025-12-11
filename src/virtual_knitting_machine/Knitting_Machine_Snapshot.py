@@ -1,5 +1,6 @@
 """A module containing the Knitting_Machine_Snapshot class."""
 
+from collections.abc import Sequence
 from typing import overload
 
 from knit_graphs.Knit_Graph import Knit_Graph
@@ -236,7 +237,7 @@ class Knitting_Machine_Snapshot:
     # noinspection PyMissingOrEmptyDocstring
     @overload
     def get_carrier_snapshot(
-        self, carrier: Yarn_Carrier_Set | list[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
+        self, carrier: Yarn_Carrier_Set | Sequence[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
     ) -> Yarn_Carrier_Snapshot | list[Yarn_Carrier_Snapshot]: ...
 
     def get_carrier_snapshot(
@@ -246,13 +247,13 @@ class Knitting_Machine_Snapshot:
             | Yarn_Carrier
             | Yarn_Carrier_Snapshot
             | Yarn_Carrier_Set
-            | list[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
+            | Sequence[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
         ),
     ) -> Yarn_Carrier_Snapshot | list[Yarn_Carrier_Snapshot]:
         """Get the snapshot of the carrier or list of carriers owned by the machine at the given specification.
 
         Args:
-            carrier (int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier | Yarn_Carrier_Snapshot]):
+            carrier (int | Yarn_Carrier | Yarn_Carrier_Set | Sequence[int | Yarn_Carrier | Yarn_Carrier_Snapshot]):
                 The carrier defined by a given snapshot, carrier, carrier_set, integer or list of integers to form a set.
 
         Returns:
@@ -276,7 +277,7 @@ class Knitting_Machine_Snapshot:
 
     @overload
     def __getitem__(
-        self, item: Yarn_Carrier_Set | list[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
+        self, item: Yarn_Carrier_Set | Sequence[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
     ) -> Yarn_Carrier_Snapshot | list[Yarn_Carrier_Snapshot]: ...
 
     def __getitem__(
@@ -287,7 +288,7 @@ class Knitting_Machine_Snapshot:
             | Yarn_Carrier
             | Yarn_Carrier_Snapshot
             | Yarn_Carrier_Set
-            | list[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
+            | Sequence[int | Yarn_Carrier | Yarn_Carrier_Snapshot]
         ),
     ) -> Needle | list[Machine_Knit_Loop] | Yarn_Carrier_Snapshot | list[Yarn_Carrier_Snapshot]:
         if isinstance(item, Needle):
@@ -300,5 +301,5 @@ class Knitting_Machine_Snapshot:
                 return self.front_bed[item]
             except KeyError:
                 return self.back_bed[item]
-        elif isinstance(item, (Yarn_Carrier, Yarn_Carrier_Snapshot, list, Yarn_Carrier_Set)):
+        elif isinstance(item, (Yarn_Carrier, Yarn_Carrier_Snapshot, Sequence, Yarn_Carrier_Set)):
             return self.get_carrier_snapshot(item)

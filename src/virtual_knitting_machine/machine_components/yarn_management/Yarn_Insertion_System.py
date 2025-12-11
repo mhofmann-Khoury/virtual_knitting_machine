@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, cast, overload
+from typing import TYPE_CHECKING, overload
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
     Blocked_by_Yarn_Inserting_Hook_Exception,
@@ -407,10 +407,12 @@ class Yarn_Insertion_System:
     def __getitem__(self, item: int | Yarn_Carrier) -> Yarn_Carrier: ...
 
     @overload
-    def __getitem__(self, item: Yarn_Carrier_Set | list[int | Yarn_Carrier]) -> list[Yarn_Carrier] | Yarn_Carrier: ...
+    def __getitem__(
+        self, item: Yarn_Carrier_Set | list[int | Yarn_Carrier] | list[int] | list[Yarn_Carrier]
+    ) -> list[Yarn_Carrier] | Yarn_Carrier: ...
 
     def __getitem__(
-        self, item: int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]
+        self, item: int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier] | list[int] | list[Yarn_Carrier]
     ) -> Yarn_Carrier | list[Yarn_Carrier]:
         """Get carrier(s) by ID, carrier object, carrier set, or list of IDs/carriers.
 
@@ -427,7 +429,7 @@ class Yarn_Insertion_System:
             if isinstance(item, Yarn_Carrier):
                 return self[item.carrier_id]
             elif isinstance(item, Yarn_Carrier_Set):
-                return self[cast(list[int | Yarn_Carrier], [item.carrier_ids])]
+                return self[item.carrier_ids]
             elif isinstance(item, list):
                 if len(item) == 1:
                     return self[item[0]]

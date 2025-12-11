@@ -273,7 +273,9 @@ class Knitting_Machine:
     def __getitem__(self, item: Yarn_Carrier) -> Yarn_Carrier: ...
 
     @overload
-    def __getitem__(self, item: Yarn_Carrier_Set | list[int | Yarn_Carrier]) -> list[Yarn_Carrier]: ...
+    def __getitem__(
+        self, item: Yarn_Carrier_Set | list[int | Yarn_Carrier] | list[int] | list[Yarn_Carrier]
+    ) -> list[Yarn_Carrier]: ...
 
     def __getitem__(
         self,
@@ -284,6 +286,8 @@ class Knitting_Machine:
             | Yarn_Carrier
             | Yarn_Carrier_Set
             | list[int | Yarn_Carrier]
+            | list[int]
+            | list[Yarn_Carrier]
             | Machine_Knit_Loop
         ),
     ) -> Needle | Yarn_Carrier | list[Yarn_Carrier] | None:

@@ -5,7 +5,7 @@ It manages multiple carriers as a single unit for positioning and operations."""
 from __future__ import annotations
 
 import warnings
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from typing import TYPE_CHECKING
 
 from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
@@ -26,16 +26,16 @@ class Yarn_Carrier_Set:
     It provides methods for accessing carrier positions, managing duplicates, and converting to various representation formats.
     """
 
-    def __init__(self, carrier_ids: list[int | Yarn_Carrier] | int | Yarn_Carrier) -> None:
+    def __init__(self, carrier_ids: Sequence[int | Yarn_Carrier] | int | Yarn_Carrier) -> None:
         """Initialize a yarn carrier set with one or more carrier identifiers.
 
         Args:
-            carrier_ids (list[int | Yarn_Carrier] | int | Yarn_Carrier): The carrier IDs for this yarn carrier set, can be a single carrier or list of carriers.
+            carrier_ids (Sequence[int | Yarn_Carrier] | int | Yarn_Carrier): The carrier IDs for this yarn carrier set, can be a single carrier or list of carriers.
 
         Warns:
             Duplicate_Carriers_In_Set: If duplicate carrier IDs are found in the input list.
         """
-        if isinstance(carrier_ids, list):
+        if isinstance(carrier_ids, Sequence):
             int_carrier_ids: list[int] = [int(cid) for cid in carrier_ids]
             duplicates = set()
             self._carrier_ids: list[int] = []
@@ -191,15 +191,17 @@ class Yarn_Carrier_Set:
         """
         return len(self.carrier_ids)
 
-    def __contains__(self, carrier_id: int | Yarn_Carrier) -> bool:
+    def __contains__(self, carrier_id: int | Yarn_Carrier | Sequence[int | Yarn_Carrier]) -> bool:
         """Check if a carrier ID is contained in this set.
 
         Args:
-            carrier_id (int | Yarn_Carrier): Carrier ID to check for membership.
+            carrier_id (int | Yarn_Carrier | Sequence[int | Yarn_Carrier]): Carrier ID to check for membership. If a sequence is provided, all members are checked for.
 
         Returns:
-            bool: True if carrier ID is in this set, False otherwise.
+            bool: True if carrier ID(s) is in this set, False otherwise.
         """
+        if isinstance(carrier_id, Sequence):
+            return all(c in self for c in carrier_id)
         return int(carrier_id) in self.carrier_ids
 
     def carrier_DAT_ID(self) -> int:
