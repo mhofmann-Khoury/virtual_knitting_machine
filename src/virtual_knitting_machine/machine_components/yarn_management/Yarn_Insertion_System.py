@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, overload
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
@@ -184,22 +185,22 @@ class Yarn_Insertion_System:
             return False  # Non-position does not conflict with yarn-inserting hook.
         return self._hook_position <= int(needle_position)
 
-    def missing_carriers(self, carrier_ids: list[int | Yarn_Carrier]) -> list[int]:
+    def missing_carriers(self, carrier_ids: Sequence[int | Yarn_Carrier]) -> list[int]:
         """Get list of carrier IDs that are not currently active.
 
         Args:
-            carrier_ids (list[int | Yarn_Carrier]): The carrier set to check for the inactive carriers.
+            carrier_ids (Sequence[int | Yarn_Carrier]): The carrier set to check for the inactive carriers.
 
         Returns:
             list[int]: List of carrier ids that are not active (i.e., on grippers).
         """
         return [int(cid) for cid in carrier_ids if not self[cid].is_active]
 
-    def is_active(self, carrier_ids: list[int | Yarn_Carrier]) -> bool:
+    def is_active(self, carrier_ids: Sequence[int | Yarn_Carrier]) -> bool:
         """Check if all carriers in the given set are active (not on the gripper).
 
         Args:
-            carrier_ids (list[int | Yarn_Carrier]): List of carrier IDs to check.
+            carrier_ids (Sequence[int | Yarn_Carrier]): List of carrier IDs to check.
 
         Returns:
             bool: True if all carriers in set are active (not-on the gripper), Note: If an empty list of carriers is given, this will return true because the empty set is active.
