@@ -187,19 +187,15 @@ class Needle_Bed_Group(Visualizer_Group):
         slot = self.get_slot(needle.slot_number(self.rack))
         return slot[needle]
 
-    def add_loop_to_needle(
-        self, needle: Needle, loop: Machine_Knit_Loop, fill_color: str | None = None, line_color: str | None = None
-    ) -> None:
+    def add_loop_to_needle(self, needle: Needle, loop: Machine_Knit_Loop) -> None:
         """
         Add a circle representing a loop to the given needle.
         Args:
             needle (Needle): The needle to add the loop onto.
             loop (Machine_Knit_Loop): The active loop active on this needle.
-            fill_color (str, optional): The fill color for the loop. Defaults tot eh color assigned to the loop's yarn.
-            line_color (str, optional): The line color for the loop. Defaults to a darkened version of the fill_color.
         """
         needle_group = self[needle]
-        self.loops[loop] = needle_group.make_loop(loop, fill_color, line_color)
+        self.loops[loop] = needle_group.make_loop(loop)
 
     def add_float_line(self, loop1: Machine_Knit_Loop, loop2: Machine_Knit_Loop) -> None:
         """

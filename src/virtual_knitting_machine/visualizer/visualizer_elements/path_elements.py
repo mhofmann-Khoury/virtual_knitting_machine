@@ -25,6 +25,8 @@ class Path_Element(Visualizer_Element):
 
     Attributes:
         path_type (Path_Type): Type of path to form with this path element.
+        control_points (list[ControlPoint]): List of control points for this path element.
+        stroke (str): The color of the path line.
 
     """
 
@@ -38,8 +40,7 @@ class Path_Element(Visualizer_Element):
         stroke: str,
         control_points: list[tuple[int, int]] | None = None,
         path_type: Path_Type = Path_Type.Line,
-        darken_stroke: bool = True,
-        **path_kwargs: Any,
+        **element_kwargs: Any,
     ):
         """
         Initialize the Path SVG element.
@@ -54,17 +55,15 @@ class Path_Element(Visualizer_Element):
             control_points (list[tuple[int, int]], optional): The control points of the path. Defaults to an empty list to form lines.
             path_type (Path_Type): The type of path element this SVG element represents. This should match the provided number of control points.
             darken_stroke (bool, optional): If True, the stroke color is automatically darkened (as in a fill color for loops on a yarn). Defaults to True.
-            **path_kwargs (Any): Keyword arguments to configure the Path SVG element. Usually includes "stroke_width".
+            **element_kwargs (Any): Keyword arguments to configure the Path SVG element. Usually includes "stroke_width".
         """
-        super().__init__(start_x, start_y, name)
+        super().__init__(start_x, start_y, name, **element_kwargs)
         self._end_x: int = end_x
         self._end_y: int = end_y
         self.path_type: Path_Type = path_type
         self.control_points: list[tuple[int, int]] = [] if control_points is None else control_points
-        self._path_kwargs: dict[str, Any] = path_kwargs
-        if darken_stroke:
-            stroke = self.darken_color(stroke)
-        self._path_kwargs["stroke"] = stroke
+        self.stroke: str = stroke
+        self._element_kwargs["stroke"] = self.stroke
 
     @property
     def path_data(self) -> str:
@@ -208,4 +207,4 @@ class Path_Element(Visualizer_Element):
         return f"M {self.start_x},{self.start_y} C {self.control_x(1)},{self.control_y(1)} {self.control_x(2)},{self.control_y(2)} {self.end_x},{self.end_y}"
 
     def _build_svg_element(self) -> Path:
-        return Path(d=self.path_data, id=self.name, **self._path_kwargs)
+        return Path(d=self.path_data, id=self.name, **self._element_kwargs)

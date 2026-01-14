@@ -21,7 +21,6 @@ class Float_Line(Path_Element):
             loop_2.global_y,
             self.float_unique_id,
             stroke=self.loop_1.yarn.properties.color,
-            darken_stroke=True,
             **path_kwargs,
         )
 

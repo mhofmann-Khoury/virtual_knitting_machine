@@ -6,7 +6,6 @@ from typing import Any
 
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
-from svgwrite.shapes import Circle, Rect
 from svgwrite.text import Text
 
 
@@ -17,12 +16,13 @@ class Visualizer_Element:
         parent (Visualizer_Element | None): The optional parent element of this element used to find global coordinate position.
     """
 
-    def __init__(self, x: int, y: int, name: str):
+    def __init__(self, x: int, y: int, name: str, **element_kwargs: Any):
         self._svg_element: BaseElement | None = None
         self._x: int = x
         self._y: int = y
         self._name: str = name
         self.parent: Visualizer_Element | None = None
+        self._element_kwargs: dict[str, Any] = element_kwargs
 
     @property
     def name(self) -> str:
@@ -117,17 +117,46 @@ class Visualizer_Element:
         return hash(self.name)
 
     @staticmethod
-    def darken_color(color: str, factor: float = 0.7) -> str:
-        """Darken a hex or named color.
+    def fill_from_stroke(stroke: str, lighten_factor: float = 0.3) -> str:
+        """
         Args:
-            color (str): The color to darken. May be a named color or a hex representation of the color.
-            factor (float, optional): A factor to darken. Defaults to 0.7.
+            stroke (str): The color string of the stroke to be lightened for infill.
+            lighten_factor (float, optional): The factor to lighten the stroke color by. Defaults to 0.3.
 
         Returns:
-            str: The hex value string of the darkened color.
+            str: The fill color string created by lightening the stroke color.
         """
-        # Handle named colors
-        if not color.startswith("#"):
+        return Visualizer_Element.lighten_color(stroke, lighten_factor)
+
+    @staticmethod
+    def stroke_from_fill(fill: str, darken_factor: float = 0.7) -> str:
+        """
+
+        Args:
+            fill (str): The color string of the fill to be darkened for an outline.
+            darken_factor (float, optional): The factor to darken the fill color by. Defaults to 0.7.
+
+        Returns:
+            str: The stroke color string created by darkening the fill color.
+        """
+        return Visualizer_Element.darken_color(fill, darken_factor)
+
+    @staticmethod
+    def darken_color(color: str = "none", factor: float = 0.7) -> str:
+        """Darken a hex or named color.
+        Args:
+            color (str): The color to darken. Either a named color or a hex representation of the color.
+            factor (float, optional):
+                A factor to darken. Defaults to 0.7.
+                * 0.0 = No change.
+                * 1.0 = black.
+
+        Returns:
+            str: The color-string of the darkened color. If "none" color is given, this will return "black".
+        """
+        if color == "none":
+            return "black"
+        elif not color.startswith("#"):  # Handle named colors
             try:
                 import webcolors
 
@@ -143,13 +172,55 @@ class Visualizer_Element:
         b = int(int(color[4:6], 16) * factor)
         return f"#{r:02x}{g:02x}{b:02x}"
 
+    @staticmethod
+    def lighten_color(color: str = "none", factor: float = 0.3) -> str:
+        """Lighten a hex or named color.
+
+        Args:
+            color (str, optional): The color to lighten. Either a named color or a hex representation of the color. Defaults to transparent ("none").
+            factor (float, optional):
+                A factor to lighten (0.0 to 1.0). Defaults to 0.3.
+                * 0.0 = no change.
+                * 1.0 = white.
+        Returns:
+            str: The color-string of the lightened color. If "none" color is given, this will return "black".
+        """
+        if color == "none":
+            return "black"
+        elif not color.startswith("#"):  # Handle named colors
+            try:
+                import webcolors
+
+                color = webcolors.name_to_hex(color)
+            except (ImportError, ValueError):
+                # Fallback: assume it's already valid
+                pass
+
+        # Parse the color
+        color = color.lstrip("#")
+        r = int(color[0:2], 16)
+        g = int(color[2:4], 16)
+        b = int(color[4:6], 16)
+
+        # Lighten by moving each component toward 255 (white)
+        r = int(r + (255 - r) * factor)
+        g = int(g + (255 - g) * factor)
+        b = int(b + (255 - b) * factor)
+
+        # Clamp to valid range
+        r = min(255, r)
+        g = min(255, g)
+        b = min(255, b)
+
+        return f"#{r:02x}{g:02x}{b:02x}"
+
 
 class Text_Element(Visualizer_Element):
     """
     Wrapper class for Text SVG elements.
     """
 
-    def __init__(self, x: int, y: int, label: str, name: str | None = None, **text_kwargs: Any) -> None:
+    def __init__(self, x: int, y: int, label: str, name: str | None = None, **element_kwargs: Any) -> None:
         """
         Initialize the text element.
         Args:
@@ -157,73 +228,10 @@ class Text_Element(Visualizer_Element):
             y (int): The y coordinate of this element relative to its parent (or globally).
             label (str): The value of the text label.
             name (str, optional): The id name of this element defaults to "label_<label>".
-            **text_kwargs (Any): Keyword arguments used to configure the svg text element.
+            **element_kwargs (Any): Keyword arguments used to configure the svg text element.
         """
-        super().__init__(x, y, name if name is not None else f"label_{label}")
-        self._text_kwargs: dict[str, Any] = text_kwargs
+        super().__init__(x, y, name if name is not None else f"label_{label}", **element_kwargs)
         self.label: str = label
 
     def _build_svg_element(self) -> Text:
-        return Text(self.label, insert=(self.global_x, self.global_y), id=self.name, **self._text_kwargs)
-
-
-class Rect_Element(Visualizer_Element):
-    """
-    Wrapper class for Rectangle SVG elements.
-
-    Attributes:
-        width (int): The width of the rectangle.
-        height (int): The height of the rectangle.
-    """
-
-    def __init__(self, x: int, y: int, name: str, width: int, height: int, **rect_kwargs: Any) -> None:
-        """
-        Initialize the Rectangle SVG element.
-
-        Args:
-            x (int): The x coordinate of the rectangle element relative to its parent.
-            y (int): The y coordinate of the rectangle element relative to its parent.
-            name (str): The name of the rectangle element used as the element id.
-            width (int): The width of the rectangle in pixels.
-            height (int): The height of the rectangle in pixels.
-            **rect_kwargs (Any): The keyword elements to pass to configure the Rect SVG element.
-        """
-        super().__init__(x, y, name)
-        self._rect_kwargs: dict[str, Any] = rect_kwargs
-        self.width: int = width
-        self.height: int = height
-
-    def _build_svg_element(self) -> Rect:
-        return Rect(
-            insert=(self.global_x, self.global_y), id=self.name, size=(self.width, self.height), **self._rect_kwargs
-        )
-
-
-class Circle_Element(Visualizer_Element):
-    """
-    Wrapper class for Circle SVG elements.
-
-    Attributes:
-        radius (int): The radius of the circle.
-    """
-
-    def __init__(self, x: int, y: int, name: str, radius: int, auto_darken_stroke: bool = True, **circle_kwargs: Any):
-        """
-        Initialize the Circle SVG element.
-
-        Args:
-            x (int): The x coordinate of the circle's center relative to its parent.
-            y (int): The y coordinate of the circle's center relative to its parent.
-            name (str): The name of the circle element used as the element id.
-            radius (int): The radius of the circle in pixels.
-            auto_darken_stroke (bool, optional): If True, a stroke color will be derived from any fill parameter in the circle keyword arguments. Defaults to True.
-            **circle_kwargs (Any): The keyword elements to pass to configure the Circle SVG element.
-        """
-        super().__init__(x, y, name)
-        self._circle_kwargs: dict[str, Any] = circle_kwargs
-        if auto_darken_stroke and "fill" in self._circle_kwargs and self._circle_kwargs["fill"] != "none":
-            self._circle_kwargs["stroke"] = self.darken_color(self._circle_kwargs["fill"])
-        self.radius: int = radius
-
-    def _build_svg_element(self) -> Circle:
-        return Circle(center=(self.global_x, self.global_y), id=self.name, r=self.radius, **self._circle_kwargs)
+        return Text(self.label, insert=(self.global_x, self.global_y), id=self.name, **self._element_kwargs)

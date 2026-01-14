@@ -8,8 +8,8 @@ from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.visualizer_elements.loop_circle import Loop_Circle
-from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import Rect_Element
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_group import Visualizer_Group
+from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_shapes import Rect_Element
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.visualizer.visualizer_elements.needle_slot import Needle_Slot
@@ -25,14 +25,14 @@ class Needle_Group(Visualizer_Group):
         super().__init__(self._x_from_settings(), self._y_from_settings(), name=str(needle))
         fill = self.settings.Slider_Background_Color if self.is_slider else "none"
         self._needle_box: Rect_Element = Rect_Element(
+            width=self.settings.Needle_Width,
+            height=self.settings.Needle_Height,
             x=0,
             y=0,
             name=f"{self.name}_box",
-            width=self.settings.Needle_Width,
-            height=self.settings.Needle_Height,
-            stroke=self.settings.Needle_Stroke_Color,
             stroke_width=self.settings.Needle_Stroke_Width,
             fill=fill,
+            stroke=self.settings.Needle_Stroke_Color,
         )
         self.add_child(self._needle_box)
         self.loops: list[Loop_Circle] = []
@@ -143,14 +143,10 @@ class Needle_Group(Visualizer_Group):
         """
         return self.slot.settings
 
-    def make_loop(
-        self, loop: Machine_Knit_Loop, fill_color: str | None = None, line_color: str | None = None
-    ) -> Loop_Circle:
+    def make_loop(self, loop: Machine_Knit_Loop) -> Loop_Circle:
         """
         Args:
             loop (Machine_Knit_Loop): The active loop active on this needle.
-            fill_color (str, optional): The fill color for the loop. Defaults to the color assigned to the loop's yarn.
-            line_color (str, optional): The line color for the loop. Defaults to a darkened version of the fill_color.
         """
         x = self.global_x_position(self.settings.Needle_Width // 2)
         y = self.global_y_position(self.settings.Needle_Height // 2)
@@ -159,8 +155,6 @@ class Needle_Group(Visualizer_Group):
             y=y,
             loop=loop,
             diagram_settings=self.settings,
-            fill_color=fill_color,
-            line_color=line_color,
         )
         self.loops.append(loop_circle)
         return loop_circle

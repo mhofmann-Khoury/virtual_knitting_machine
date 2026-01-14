@@ -112,16 +112,16 @@ class Knitting_Machine_State_Protocol(Protocol):
 class Carrier_Yarn_Color_Defaults(Enum):
     """An enumeration of default yarn colors assigned to carriers"""
 
-    c1 = "lightcoral"  # str: The color of carrier 1 (soft pink-red)
-    c2 = "lightskyblue"  # str: The color of carrier 2 (soft blue)
-    c3 = "lightgreen"  # str: The color of carrier 3 (soft green)
-    c4 = "plum"  # str: The color of carrier 4 (soft purple)
-    c5 = "khaki"  # str: The color of carrier 5 (soft yellow-tan)
-    c6 = "wheat"  # str: The color of carrier 6 (soft beige)
-    c7 = "aquamarine"  # str: The color of carrier 7 (soft teal)
-    c8 = "palevioletred"  # Soft rose
-    c9 = "sandybrown"  # Warm tan
-    c10 = "powderblue"  # Soft powder blue
+    c1 = "firebrick"  # str: The color of carrier 1 (brick red)
+    c2 = "navy"  # str: The color of carrier 2 (dark navy blue)
+    c3 = "darkgreen"  # str: The color of carrier 3 (deep green)
+    c4 = "indigo"  # str: The color of carrier 4 (dark indigo)
+    c5 = "darkgoldenrod"  # str: The color of carrier 5 (deep gold)
+    c6 = "saddlebrown"  # str: The color of carrier 6 (saddle brown)
+    c7 = "darkcyan"  # str: The color of carrier 7 (deep cyan)
+    c8 = "purple"  # str: The color of carrier 8 (deep purple)
+    c9 = "darkorange"  # str: The color of carrier 9 (dark orange)
+    c10 = "darkslateblue"  # str: The color of carrier 10 (dark slate blue)
 
     @staticmethod
     def get_color_by_carrier_number(carrier_id: int | Yarn_Carrier) -> str:
