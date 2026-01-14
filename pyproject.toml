@@ -84,12 +84,13 @@ exclude = [
 [tool.poetry.dependencies]
 python = ">=3.11,<3.14"                        # Minimum Python version (allows 3.11.x, 3.12.x, etc.)
 knit-graphs = ">=0.0.11"
+svgwrite = "^1.4.3"
+webcolors = "^25.10.0"
 
 # =============================================================================
 # DEVELOPMENT DEPENDENCIES
 # =============================================================================
 # These packages are only needed during development and testing
-svgwrite = "^1.4.3"
 [tool.poetry.group.dev.dependencies]
 importlib-resources = ">=6.5.2"
 coverage = "^7.3.0"

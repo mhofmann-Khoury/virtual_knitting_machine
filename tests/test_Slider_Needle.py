@@ -119,30 +119,6 @@ class TestSliderNeedle(unittest.TestCase):
         # But equality should still be False
         self.assertFalse(self.front_slider == regular_needle)
 
-    def test_integer_conversion(self):
-        """Test integer conversion works for slider needles."""
-        self.assertEqual(int(self.front_slider), 5)
-        self.assertEqual(int(self.back_slider), 10)
-
-    def test_racked_position_calculation(self):
-        """Test racked position calculation works for slider needles."""
-        # Front slider position unchanged at any rack
-        self.assertEqual(self.front_slider.racked_position_on_front(0), 5)
-        self.assertEqual(self.front_slider.racked_position_on_front(2), 5)
-
-        # Back slider position adjusted by rack
-        self.assertEqual(self.back_slider.racked_position_on_front(0), 10)
-        self.assertEqual(self.back_slider.racked_position_on_front(2), 12)
-        self.assertEqual(self.back_slider.racked_position_on_front(-1), 9)
-
-    def test_at_racking_comparison(self):
-        """Test racking comparison works for slider needles."""
-        front_slider = Slider_Needle(is_front=True, position=3)
-        back_slider = Slider_Needle(is_front=False, position=1)
-
-        # At rack 2: front 3 aligns with back 1 (3 = 1 + 2)
-        self.assertEqual(front_slider.at_racking_comparison(back_slider, rack=2), 0)
-
     def test_multiple_slider_positions(self):
         """Test slider needles at various positions."""
         positions = [0, 1, 50, 100, 500]

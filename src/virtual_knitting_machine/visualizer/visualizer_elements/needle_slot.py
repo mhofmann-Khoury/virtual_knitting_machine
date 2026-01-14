@@ -3,12 +3,10 @@
 from typing import overload
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
-from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import (
-    Rect_Element,
-    Text_Element,
-    Visualizer_Element,
-)
+from virtual_knitting_machine.visualizer.visualizer_elements.needle_group import Needle_Group
+from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import Text_Element, Visualizer_Element
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_group import Visualizer_Group
 
 
@@ -42,79 +40,33 @@ class Needle_Slot(Visualizer_Group):
         self.rack: int = rack
         self.render_sliders: bool = render_sliders
         self._slot_number: int = slot_number
-        self._front_needle: Rect_Element | None = None
-        self._back_needle: Rect_Element | None = None
-        self._front_slider: Rect_Element | None = None
-        self._back_slider: Rect_Element | None = None
         self._back_label: Text_Element | None = None
-        self._front_label: Text_Element | None = None
-
-    def _build_group(self) -> None:
-        label_height = 0
-        all_needle_alignment = int(self.settings.Needle_Width / 2) if self.all_needle_rack else 0
         if self.settings.render_back_labels:
             self._back_label = Text_Element(
                 x=int(self.settings.Needle_Width / 2),
-                y=self.settings.Needle_Height,
-                label=str(self.slot_number - self.rack),
-                name=f"label_b{self.slot_number - self.rack}",
+                y=self.settings.back_label_y,
+                label=str(self.back_needle_position),
+                name=f"label_b{self.back_needle_position}",
                 text_anchor="middle",
                 alignment_baseline="baseline",
             )
             self.add_child(self._back_label)
-            label_height += self.settings.Needle_Height + self.settings.Label_Padding
-        # add back bed needle
-        self._back_needle = Rect_Element(
-            x=0,
-            y=label_height,
-            name=f"b{self.slot_number - self.rack}",
-            width=self.settings.Needle_Width,
-            height=self.settings.Needle_Height,
-            stroke=self.settings.Needle_Stroke_Color,
-            stroke_width=self.settings.Needle_Stroke_Width,
-            fill="none",
-        )
+        self._back_needle: Needle_Group = Needle_Group(Needle(is_front=False, position=self.back_needle_position), self)
         self.add_child(self._back_needle)
-        slider_height = 0
+        self._front_slider: Needle_Group | None = None
+        self._back_slider: Needle_Group | None = None
         if self.render_sliders:
-            self._back_slider = Rect_Element(
-                x=0,
-                y=label_height + self.settings.Needle_Height,
-                name=f"bs{self.slot_number - self.rack}",
-                width=self.settings.Needle_Width,
-                height=self.settings.Needle_Height,
-                stroke=self.settings.Needle_Stroke_Color,
-                stroke_width=self.settings.Needle_Stroke_Width,
-                fill=self.settings.Slider_Background_Color,
-            )
-            self._front_slider = Rect_Element(
-                x=all_needle_alignment,
-                y=label_height + 2 * self.settings.Needle_Height,
-                name=f"fs{self.slot_number}",
-                width=self.settings.Needle_Width,
-                height=self.settings.Needle_Height,
-                stroke=self.settings.Needle_Stroke_Color,
-                stroke_width=self.settings.Needle_Stroke_Width,
-                fill=self.settings.Slider_Background_Color,
-            )
+            self._back_slider = Needle_Group(Slider_Needle(is_front=False, position=self.back_needle_position), self)
+            self._front_slider = Needle_Group(Slider_Needle(is_front=True, position=self.slot_number), self)
             self.add_child(self._back_slider)
             self.add_child(self._front_slider)
-            slider_height += self.settings.Needle_Height * 2
-        self._front_needle = Rect_Element(
-            x=all_needle_alignment,
-            y=label_height + self.settings.Needle_Height + slider_height,
-            name=f"f{self.slot_number}",
-            width=self.settings.Needle_Width,
-            height=self.settings.Needle_Height,
-            stroke=self.settings.Needle_Stroke_Color,
-            stroke_width=self.settings.Needle_Stroke_Width,
-            fill="none",
-        )
+        self._front_needle: Needle_Group = Needle_Group(Needle(is_front=True, position=self.slot_number), self)
         self.add_child(self._front_needle)
+        self._front_label: Text_Element | None = None
         if self.settings.render_front_labels:
             self._front_label = Text_Element(
-                x=all_needle_alignment + int(self.settings.Needle_Width / 2),
-                y=2 * self.settings.Label_Padding + 3 * self.settings.Needle_Height + slider_height,
+                x=self._front_needle.x + int(self.settings.Needle_Width / 2),
+                y=self.settings.front_label_y(self.render_sliders),
                 label=str(self.slot_number),
                 name=f"label_f{self.slot_number}",
                 text_anchor="middle",
@@ -123,40 +75,34 @@ class Needle_Slot(Visualizer_Group):
             self.add_child(self._front_label)
 
     @property
-    def front_needle(self) -> Rect_Element:
+    def front_needle(self) -> Needle_Group:
         """
         Returns:
-            Rect_Element: The front needle element for the given slot.
+            Needle_Group: The front needle element for the given slot.
         """
-        if self._front_needle is None:
-            self._build_group()
-            assert self._front_needle is not None
         return self._front_needle
 
     @property
-    def back_needle(self) -> Rect_Element:
+    def back_needle(self) -> Needle_Group:
         """
         Returns:
-            Rect_Element: The back needle element for the given slot.
+            Needle_Group: The back needle element for the given slot.
         """
-        if self._back_needle is None:
-            self._build_group()
-            assert self._back_needle is not None
         return self._back_needle
 
     @property
-    def front_slider(self) -> Rect_Element | None:
+    def front_slider(self) -> Needle_Group | None:
         """
         Returns:
-            Rect_Element | None: The front slider element for the given slot or None if sliders were not rendered.
+            Needle_Group | None: The front slider element for the given slot or None if sliders were not rendered.
         """
         return self._front_slider
 
     @property
-    def back_slider(self) -> Rect_Element | None:
+    def back_slider(self) -> Needle_Group | None:
         """
         Returns:
-            Rect_Element: The back slider element for the given slot or None if sliders were not rendered.
+            Needle_Group: The back slider element for the given slot or None if sliders were not rendered.
         """
         return self._back_slider
 
@@ -168,13 +114,29 @@ class Needle_Slot(Visualizer_Group):
         """
         return self._slot_number
 
+    @property
+    def back_needle_position(self) -> int:
+        """
+
+        Returns:
+            int: The position of the back needle in this slot at the given racking.
+
+        Notes:
+            Racking Calculations:
+            * R = F - B
+            * F = R + B
+            * B = F - R.
+
+        """
+        return self.slot_number - self.rack
+
     @overload
-    def __getitem__(self, item: Needle) -> Rect_Element: ...
+    def __getitem__(self, item: Needle) -> Needle_Group: ...
 
     @overload
     def __getitem__(self, item: str) -> Visualizer_Element: ...
 
-    def __getitem__(self, item: Needle | str) -> Rect_Element | Visualizer_Element:
+    def __getitem__(self, item: Needle | str) -> Needle_Group | Visualizer_Element:
         """
 
         Args:
@@ -204,7 +166,7 @@ class Needle_Slot(Visualizer_Group):
             else:
                 return self.front_needle
         else:
-            if item.position != self.slot_number - self.rack:
+            if item.position != self.back_needle_position:
                 raise KeyError(f"{item} is not in slot {self.slot_number} at racking {self.rack}")
             if item.is_slider:
                 if self.back_slider is None:

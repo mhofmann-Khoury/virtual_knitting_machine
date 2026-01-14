@@ -167,16 +167,16 @@ class TestNeedle(unittest.TestCase):
         self.assertTrue(offset_negative.is_front)
         self.assertEqual(offset_negative.position, self.front_pos + negative_offset)
 
-    def test_racked_position_on_front(self):
+    def test_slot_number(self):
         """Test racked position calculation for front bed alignment."""
         # Front needle position unchanged
-        self.assertEqual(self.front_needle.racked_position_on_front(0), self.front_pos)
-        self.assertEqual(self.front_needle.racked_position_on_front(2), self.front_pos)
+        self.assertEqual(self.front_needle.slot_number(0), self.front_pos)
+        self.assertEqual(self.front_needle.slot_number(2), self.front_pos)
 
         # Back needle position adjusted by rack
-        self.assertEqual(self.back_needle.racked_position_on_front(0), self.back_pos)
-        self.assertEqual(self.back_needle.racked_position_on_front(2), self.back_pos + 2)
-        self.assertEqual(self.back_needle.racked_position_on_front(-1), self.back_pos - 1)
+        self.assertEqual(self.back_needle.slot_number(0), self.back_pos)
+        self.assertEqual(self.back_needle.slot_number(2), self.back_pos + 2)
+        self.assertEqual(self.back_needle.slot_number(-1), self.back_pos - 1)
 
     def test_main_needle(self):
         """Test getting main needle returns regular needle."""
@@ -204,11 +204,6 @@ class TestNeedle(unittest.TestCase):
         """Test integer conversion returns position."""
         self.assertEqual(int(self.front_needle), self.front_pos)
         self.assertEqual(int(self.back_needle), self.back_pos)
-
-    def test_index_conversion(self):
-        """Test index conversion returns position."""
-        self.assertEqual(self.front_needle.__index__(), self.front_pos)
-        self.assertEqual(self.back_needle.__index__(), self.back_pos)
 
     def test_comparison_with_needles(self):
         """Test comparison operations with other needles."""

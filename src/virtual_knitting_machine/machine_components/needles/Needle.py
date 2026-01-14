@@ -7,6 +7,7 @@ functionality for loop management, needle positioning, and various knitting oper
 
 from __future__ import annotations
 
+import warnings
 from typing import cast
 
 from knit_graphs.Pull_Direction import Pull_Direction
@@ -75,6 +76,15 @@ class Needle:
             bool: True if needle is holding loops, False otherwise.
         """
         return len(self.held_loops) > 0
+
+    @property
+    def is_slider(self) -> bool:
+        """Check if the needle is a slider needle.
+
+        Returns:
+            bool: True if the needle is a slider, False otherwise.
+        """
+        return False
 
     def active_floats(self) -> dict[Machine_Knit_Loop, Machine_Knit_Loop]:
         """Get active floats connecting to loops on this needle.
@@ -188,17 +198,47 @@ class Needle:
     def racked_position_on_front(self, rack: int) -> int:
         """Get the position of the needle on the front bed at a given racking.
 
+        The slot number indicates the front-bed alignment of the given needle.
+        For front bed needles this is equivalent to the position.
+        For back bed needles this is dependent on the racking alignment of the beds.
+
         Args:
-            rack (int): The racking value.
+            rack (int): The racking value to find the slot number for.
 
         Returns:
-            int:
-                The front needle position given a racking (no change for front bed needles).
+            int: The slot number of the given needle for the given racking.
+
+        Notes:
+            Racking Calculations:
+            * R = F - B
+            * F = R + B
+            * B = F - R.
         """
-        if self.is_front:
-            return self.position
-        else:
-            return self.position + rack
+        warnings.warn(
+            DeprecationWarning("racked_position_on_front is deprecated, use slot_number for same functionality"),
+            stacklevel=2,
+        )
+        return self.slot_number(rack)
+
+    def slot_number(self, rack: int) -> int:
+        """
+        The slot number indicates the front-bed alignment of the given needle.
+        For front bed needles this is equivalent to the position.
+        For back bed needles this is dependent on the racking alignment of the beds.
+
+        Args:
+            rack (int): The racking value to find the slot number for.
+
+        Returns:
+            int: The slot number of the given needle for the given racking.
+
+        Notes:
+            Racking Calculations:
+            * R = F - B
+            * F = R + B
+            * B = F - R.
+        """
+        return self.position if self.is_front else self.position + rack
 
     def main_needle(self) -> Needle:
         """Get the non-slider needle at this needle position.
@@ -273,14 +313,6 @@ class Needle:
         """
         return self.position
 
-    def __index__(self) -> int:
-        """Return index representation of the needle position.
-
-        Returns:
-            int: The needle position as an index.
-        """
-        return int(self)
-
     def at_racking_comparison(self, other: Needle, rack: int = 0, all_needle_racking: bool = False) -> int:
         """Compare needle positions at a given racking.
 
@@ -296,8 +328,8 @@ class Needle:
         Note:
             At an all needle racking, the front needle is always < the back needle, regardless of direction.
         """
-        self_pos = self.racked_position_on_front(rack)
-        other_pos = other.racked_position_on_front(rack)
+        self_pos = self.slot_number(rack)
+        other_pos = other.slot_number(rack)
         if self_pos < other_pos:
             return -1
         elif self_pos > other_pos:
@@ -305,9 +337,7 @@ class Needle:
         else:  # same position at racking
             if not all_needle_racking or self.is_front == other.is_front:  # same needle
                 return 0
-            elif (
-                self.is_front
-            ):  # Self is on the front, implies other is on the back. Front comes before back in all_needle alignment
+            elif self.is_front:  # Front comes before back in all_needle alignment
                 return -1
             else:  # implies self is on the back and other is on the front.
                 return 1
@@ -446,12 +476,3 @@ class Needle:
             and self.is_slider == other.is_slider
             and self.position == other.position
         )
-
-    @property
-    def is_slider(self) -> bool:
-        """Check if the needle is a slider needle.
-
-        Returns:
-            bool: True if the needle is a slider, False otherwise.
-        """
-        return False

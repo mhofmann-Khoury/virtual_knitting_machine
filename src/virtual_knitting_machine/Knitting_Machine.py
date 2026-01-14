@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import warnings
 from collections import defaultdict
+from collections.abc import Sequence
 from typing import overload
 
 from knit_graphs.artin_wale_braids.Crossing_Direction import Crossing_Direction
@@ -248,13 +249,19 @@ class Knitting_Machine:
         else:
             return self.back_bed[needle]
 
+    @overload
+    def get_carrier(self, carrier: int | Yarn_Carrier) -> Yarn_Carrier: ...
+
+    @overload
+    def get_carrier(self, carrier: Sequence[int | Yarn_Carrier]) -> Yarn_Carrier | list[Yarn_Carrier]: ...
+
     def get_carrier(
-        self, carrier: int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]
+        self, carrier: int | Yarn_Carrier | Sequence[int | Yarn_Carrier]
     ) -> Yarn_Carrier | list[Yarn_Carrier]:
         """Get the carrier or list of carriers owned by the machine at the given specification.
 
         Args:
-            carrier (int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]):
+            carrier (int | Yarn_Carrier | Sequence[int | Yarn_Carrier]):
                 The carrier defined by a given carrier, carrier_set, integer or list of integers to form a set.
 
         Returns:
@@ -569,7 +576,7 @@ class Knitting_Machine:
             aligned_needle: The needle receiving loops in the transfer.
             xfer_loops: The loops being transferred.
         """
-        starting_position = starting_needle.racked_position_on_front(self.rack)
+        starting_position = starting_needle.slot_number(self.rack)
         front_crossed_positions = [
             f
             for f in self.front_bed[starting_position : starting_position + abs(self.rack) + 1]
@@ -602,7 +609,7 @@ class Knitting_Machine:
             aligned_needle: The needle receiving loops in the transfer.
             xfer_loops: The loops being transferred.
         """
-        starting_position = starting_needle.racked_position_on_front(self.rack)
+        starting_position = starting_needle.slot_number(self.rack)
         front_crossed_positions = [
             f
             for f in self.front_bed[starting_position - self.rack : starting_position + 1]

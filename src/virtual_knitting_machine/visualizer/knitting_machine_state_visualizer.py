@@ -9,6 +9,31 @@ from virtual_knitting_machine.visualizer.machine_state_protocol import Knitting_
 from virtual_knitting_machine.visualizer.visualizer_elements.needle_bed_visualizer_group import Needle_Bed_Group
 
 
+def format_svg(svg_file: str) -> None:
+    """
+    Processes a given svg file and adds whitespace to make it human-readable.
+    White space includes new lines for every tag and tabs to show which tags are within other tags.
+    Args:
+        svg_file (str): The name of the svg file to reformat
+    """
+    import xml.dom.minidom as minidom
+
+    # Read the SVG file
+    with open(svg_file) as f:
+        svg_content = f.read()
+
+    # Parse and pretty-print
+    dom = minidom.parseString(svg_content)
+    pretty_svg = dom.toprettyxml(indent="  ")
+
+    # Remove the XML declaration line if you don't want it
+    # pretty_svg = '\n'.join(pretty_svg.split('\n')[1:])
+
+    # Write back to file
+    with open(svg_file, "w") as f:
+        f.write(pretty_svg)
+
+
 class Knitting_Machine_State_Visualizer:
     """
     Renders a given knitting machine state in an SVG format similar to diagrams used ACT Lab publications.
@@ -34,6 +59,16 @@ class Knitting_Machine_State_Visualizer:
         self.needle_bed_group: Needle_Bed_Group = Needle_Bed_Group(
             ls, rs, self.machine_state.rack, self.machine_state.all_needle_rack, show_sliders, self.settings
         )
+        for needle in self.machine_state.all_slider_loops():
+            for loop in needle.held_loops:
+                self.needle_bed_group.add_loop_to_needle(needle, loop)
+        for needle in self.machine_state.all_loops():
+            for loop in needle.held_loops:
+                self.needle_bed_group.add_loop_to_needle(needle, loop)
+
+        for loop1, loop2 in self.machine_state.active_floats():
+            self.needle_bed_group.add_float_line(loop1, loop2)
+
         self.drawing: Drawing = Drawing(
             size=(f"{self.settings.Drawing_Width}px", f"{self.settings.Drawing_Height}px"),
             viewBox=f"0 0 {self.settings.Drawing_Width} {self.settings.Drawing_Height}",
@@ -48,6 +83,10 @@ class Knitting_Machine_State_Visualizer:
         """
         # Add layers to drawing in order (bottom to top)
         self.needle_bed_group.add_to_drawing(self.drawing)
+        for float_line in self.needle_bed_group.floats:
+            float_line.add_to_drawing(self.drawing)
+        for loop_circle in self.needle_bed_group.loops.values():
+            loop_circle.add_to_drawing(self.drawing)
         return self.drawing
 
     def save(self, filename: str) -> None:
@@ -59,6 +98,7 @@ class Knitting_Machine_State_Visualizer:
         """
         self.render()
         self.drawing.saveas(filename)
+        format_svg(filename)
 
     def get_svg_string(self) -> str:
         """

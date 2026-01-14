@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 
 
-class Yarn_Insertion_System:
+class Yarn_Insertion_System(Sequence[Yarn_Carrier]):
     """A class for managing the complete state of the yarn insertion system including all yarn carriers on the knitting machine.
     This system handles carrier positioning, activation states, insertion hook operations, and coordinates loop creation across multiple carriers.
     It provides comprehensive management of yarn carrier operations including bring-in, hook operations, and float management.
@@ -405,20 +405,23 @@ class Yarn_Insertion_System:
         return loops
 
     @overload
-    def __getitem__(self, item: int | Yarn_Carrier) -> Yarn_Carrier: ...
+    def __getitem__(self, item: int) -> Yarn_Carrier: ...
 
     @overload
-    def __getitem__(
-        self, item: Yarn_Carrier_Set | list[int | Yarn_Carrier] | list[int] | list[Yarn_Carrier]
-    ) -> list[Yarn_Carrier] | Yarn_Carrier: ...
+    def __getitem__(self, item: slice) -> list[Yarn_Carrier]: ...
+    @overload
+    def __getitem__(self, item: Yarn_Carrier) -> Yarn_Carrier: ...
+
+    @overload
+    def __getitem__(self, item: Sequence[int | Yarn_Carrier]) -> list[Yarn_Carrier] | Yarn_Carrier: ...
 
     def __getitem__(
-        self, item: int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier] | list[int] | list[Yarn_Carrier]
+        self, item: int | Yarn_Carrier | Sequence[int | Yarn_Carrier] | slice
     ) -> Yarn_Carrier | list[Yarn_Carrier]:
         """Get carrier(s) by ID, carrier object, carrier set, or list of IDs/carriers.
 
         Args:
-            item (int | Yarn_Carrier | Yarn_Carrier_Set | list[int | Yarn_Carrier]): The identifier(s) for the carrier(s) to retrieve.
+            item (int | Yarn_Carrier | Sequence[int | Yarn_Carrier]): The identifier(s) for the carrier(s) to retrieve.
 
         Returns:
             Yarn_Carrier | list[Yarn_Carrier]: Single carrier or list of carriers corresponding to the input.
@@ -426,21 +429,20 @@ class Yarn_Insertion_System:
         Raises:
             KeyError: If invalid carrier ID is provided or carrier index is out of range.
         """
-        try:
-            if isinstance(item, Yarn_Carrier):
-                return self[item.carrier_id]
-            elif isinstance(item, Yarn_Carrier_Set):
-                return self[item.carrier_ids]
-            elif isinstance(item, list):
-                if len(item) == 1:
-                    return self[item[0]]
-                else:
-                    return [self[i] for i in item]
-        except KeyError:
-            raise KeyError(f"Invalid carrier: {item}. Carriers range from 1 to {len(self.carriers)}") from None
-        assert isinstance(item, int)
-        if item < 1 or item > len(self.carriers):
-            raise KeyError(f"Invalid carrier index {item}")
-        return self.carriers[
-            item - 1
-        ]  # Carriers are given from values starting at 1 but indexed in the list starting at zero
+        if isinstance(item, int):
+            if item < 1 or item > len(self.carriers):
+                raise KeyError(f"Invalid carrier: {item}. Carriers range from 1 to {len(self.carriers)}")
+            return self.carriers[
+                item - 1
+            ]  # Carriers are given from values starting at 1 but indexed in the list starting at zero
+        elif isinstance(item, Yarn_Carrier):
+            return self[item.carrier_id]
+        elif isinstance(item, slice):
+            return self.carriers[item]
+        elif len(item) == 1:
+            return self[item[0]]
+        else:
+            return [self[i] for i in item]
+
+    def __len__(self) -> int:
+        return len(self.carriers)

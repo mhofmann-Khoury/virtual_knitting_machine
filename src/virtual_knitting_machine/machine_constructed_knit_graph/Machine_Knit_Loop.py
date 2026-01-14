@@ -9,7 +9,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from knit_graphs.Loop import Loop
-from knit_graphs.Yarn import Yarn
 
 from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import (
     Slider_Loop_Exception,
@@ -18,6 +17,7 @@ from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception impor
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.needles.Needle import Needle
+    from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import Machine_Knit_Yarn
 
 
 class Machine_Knit_Loop(Loop):
@@ -30,7 +30,7 @@ class Machine_Knit_Loop(Loop):
         needle_history (list[Needle | None]): The list of needles in the order that they held loops. The last element will be None if the loop is dropped from a needle.
     """
 
-    def __init__(self, loop_id: int, yarn: Yarn, source_needle: Needle) -> None:
+    def __init__(self, loop_id: int, yarn: Machine_Knit_Yarn, source_needle: Needle) -> None:
         """Initialize a machine knit loop with yarn and source needle information.
 
         Args:
@@ -42,6 +42,7 @@ class Machine_Knit_Loop(Loop):
             Slider_Loop_Exception: If attempting to create a loop on a slider needle.
         """
         super().__init__(loop_id, yarn)
+        self.yarn: Machine_Knit_Yarn = yarn  # redeclare yarn with correct typing.
         self.needle_history: list[Needle] = [source_needle]
         self._dropped: bool = False
         if self.source_needle.is_slider:
@@ -114,3 +115,10 @@ class Machine_Knit_Loop(Loop):
     def reverse_drop(self) -> None:
         """Removes dropped status from this loop. Used for transferring needles without recording a dropped action."""
         self._dropped = False
+
+    def __hash__(self) -> int:
+        """
+        Returns:
+            int: A hash value of the tuple of the loop id, the yarn, and the source needle.
+        """
+        return hash((self.loop_id, self.yarn, self.source_needle))

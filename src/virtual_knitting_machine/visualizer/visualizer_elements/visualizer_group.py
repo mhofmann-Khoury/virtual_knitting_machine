@@ -17,19 +17,14 @@ class Visualizer_Group(Visualizer_Element):
 
     def __init__(self, x: int, y: int, name: str):
         super().__init__(x, y, name)
-        self.children: set[Visualizer_Element] = set()
+        self.children: list[Visualizer_Element] = []
 
-    def _build_group(self) -> None:
-        """
-        A method to be overridden by subclasses that builds the child elements of this group before adding them to the group element.
-        """
-        pass
-
-    def _build_svg_element(self) -> None:
-        self._build_group()
-        self._svg_element = Group(id=self.name)
+    def _build_svg_element(self) -> Group:
+        group = Group(id=self.name)
         for child in self.children:
-            self._svg_element.add(child.svg_element)
+            child_element = child._build_svg_element()
+            group.add(child_element)
+        return group
 
     def add_child(self, child: Visualizer_Element) -> None:
         """
@@ -37,7 +32,7 @@ class Visualizer_Group(Visualizer_Element):
         Args:
             child (Visualizer_Element): The child element to add.
         """
-        self.children.add(child)
+        self.children.append(child)
         child.parent = self
 
     def __getitem__(self, element_id: str) -> Visualizer_Element:

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Iterator, Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
     get_user_warning_stack_level_from_virtual_knitting_machine_package,
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
 
 
-class Yarn_Carrier_Set:
+class Yarn_Carrier_Set(Sequence[int]):
     """A structure to represent a collection of yarn carriers that operate together as a single unit.
     This class manages multiple carriers for coordinated operations, positioning, and state management.
     It provides methods for accessing carrier positions, managing duplicates, and converting to various representation formats.
@@ -51,7 +51,7 @@ class Yarn_Carrier_Set:
         else:
             self._carrier_ids: list[int] = [int(carrier_ids)]
 
-    def positions(self, carrier_system: Yarn_Insertion_System) -> list[None | int]:
+    def positions(self, carrier_system: Yarn_Insertion_System) -> list[int | None]:
         """Get the positions of all carriers in this set from the carrier system.
 
         Args:
@@ -172,6 +172,12 @@ class Yarn_Carrier_Set:
         """
         return iter(self.carrier_ids)
 
+    @overload
+    def __getitem__(self, index: int) -> int: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> list[int]: ...
+
     def __getitem__(self, item: int | slice) -> int | list[int]:
         """Get carrier ID(s) by index or slice.
 
@@ -191,7 +197,7 @@ class Yarn_Carrier_Set:
         """
         return len(self.carrier_ids)
 
-    def __contains__(self, carrier_id: int | Yarn_Carrier | Sequence[int | Yarn_Carrier]) -> bool:
+    def __contains__(self, carrier_id: object) -> bool:
         """Check if a carrier ID is contained in this set.
 
         Args:
@@ -202,7 +208,10 @@ class Yarn_Carrier_Set:
         """
         if isinstance(carrier_id, Sequence):
             return all(c in self for c in carrier_id)
-        return int(carrier_id) in self.carrier_ids
+        elif isinstance(carrier_id, (int, Yarn_Carrier)):
+            return int(carrier_id) in self.carrier_ids
+        else:
+            return False
 
     def carrier_DAT_ID(self) -> int:
         """Generate a number used in DAT files to represent the carrier set.
