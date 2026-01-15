@@ -133,24 +133,24 @@ class Yarn_Insertion_System(Sequence[Yarn_Carrier]):
         """
         return [int(c) for c in self.carriers]
 
-    def position_carrier(
+    def position_carrier_at_needle_slot(
         self,
         carrier_id: int | Yarn_Carrier,
-        position: int | Needle | None,
+        slot_position: int | None,
         direction: Carriage_Pass_Direction | None = None,
     ) -> None:
-        """Update the position of a specific carrier.
+        """Update the needle-slot position of a specific carrier.
 
         Args:
             carrier_id (int | Yarn_Carrier): The carrier to update.
-            position (int | Needle | None): The position of the carrier.
+            slot_position (int | None): The slot-position of the carrier.
             direction (Carriage_Pass_Direction, optional): The direction of the carrier movement. If this is not provided, the direction will be inferred.
         """
         carrier = self[carrier_id]
         assert isinstance(carrier, Yarn_Carrier)
-        if position is not None and self.conflicts_with_inserting_hook(position):
-            raise Blocked_by_Yarn_Inserting_Hook_Exception(carrier, int(position))
-        carrier.position = position
+        if slot_position is not None and self.conflicts_with_inserting_hook(slot_position):
+            raise Blocked_by_Yarn_Inserting_Hook_Exception(carrier, slot_position)
+        carrier.slot_position = slot_position
         if direction is not None:
             carrier.last_direction = direction
 
@@ -165,25 +165,24 @@ class Yarn_Insertion_System(Sequence[Yarn_Carrier]):
 
     @property
     def active_carriers(self) -> set[Yarn_Carrier]:
-        """Get set of carriers that are currently active (off the grippers).
-
+        """
         Returns:
             set[Yarn_Carrier]: Set of carriers that are currently active (off the grippers).
         """
         return {c for c in self.carriers if c.is_active}
 
-    def conflicts_with_inserting_hook(self, needle_position: Needle | int | None) -> bool:
+    def conflicts_with_inserting_hook(self, slot_position: int | None) -> bool:
         """Check if a needle position conflicts with the inserting hook position.
 
         Args:
-            needle_position (Needle | int | None): The needle position to check for compliance, or None if the position is moving a carrier off the machine.
+            slot_position (int | None): The needle-slot position to check for compliance, or None if the position is moving a carrier off the machine.
 
         Returns:
             bool: True if inserting hook conflicts with a needle slot because the slot is to the right of the hook's current position. False otherwise.
         """
-        if needle_position is None or self.inserting_hook_available:
+        if slot_position is None or self.inserting_hook_available:
             return False  # Non-position does not conflict with yarn-inserting hook.
-        return self._hook_position <= int(needle_position)
+        return self._hook_position <= slot_position
 
     def missing_carriers(self, carrier_ids: Sequence[int | Yarn_Carrier]) -> list[int]:
         """Get list of carrier IDs that are not currently active.

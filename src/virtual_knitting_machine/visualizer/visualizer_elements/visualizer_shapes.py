@@ -74,10 +74,10 @@ class Triangle_Element(Visualizer_Shape):
         Initialize the Triangle SVG element.
 
         Args:
-            x (int): The x coordinate of the shape.
-            y (int): The y coordinate of the shape.
-            name (str): The name-id of the shape.
             side_length (int): The length of the side of the equilateral triangle.
+            x (int): The x coordinate of the bottom vertex of the triangle.
+            y (int): The y coordinate of the top vertex of the triangle.
+            name (str): The name-id of the shape.
             stroke_width (int): The width of the outline of the shape.
             fill (str | int, optional): The fill color of the shape or the factor to lighten the stroke color by. Defaults to no fill color.
             stroke (str | float, optional): The color of the outline of the shape or the factor to darken the fill color by. Defaults to darkening the fill color by a factor of 0.7.
@@ -100,7 +100,7 @@ class Triangle_Element(Visualizer_Shape):
         Returns:
             tuple[float, float]: The top left vertex of the equilateral triangle pointing downward.
         """
-        return self.global_x - (self.side_length / 2), self.global_y - (self.height / 2)
+        return self.global_x - (self.side_length / 2), self.global_y - self.height
 
     @property
     def top_right_vertex(self) -> tuple[float, float]:
@@ -108,15 +108,15 @@ class Triangle_Element(Visualizer_Shape):
         Returns:
             tuple[float, float]: The top right vertex of the equilateral triangle pointing downward.
         """
-        return self.global_x + (self.side_length / 2), self.global_y - (self.height / 2)
+        return self.global_x + (self.side_length / 2), self.global_y - self.height
 
     @property
-    def bottom_vertex(self) -> tuple[float, float]:
+    def bottom_vertex(self) -> tuple[int, int]:
         """
         Returns:
-            tuple[float, float]: The bottom vertex of the equilateral triangle pointing downward.
+            tuple[int, int]: The bottom vertex of the equilateral triangle pointing downward.
         """
-        return self.global_x, self.global_y + (self.height / 2)
+        return self.global_x, self.global_y
 
     def _build_svg_element(self) -> Polygon:
         return Polygon(

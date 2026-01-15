@@ -3,10 +3,7 @@
 from typing import overload
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
-from virtual_knitting_machine.visualizer.visualizer_elements.float_path import Float_Line
-from virtual_knitting_machine.visualizer.visualizer_elements.loop_circle import Loop_Circle
 from virtual_knitting_machine.visualizer.visualizer_elements.needle_group import Needle_Group
 from virtual_knitting_machine.visualizer.visualizer_elements.needle_slot import Needle_Slot
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import Text_Element, Visualizer_Element
@@ -67,8 +64,6 @@ class Needle_Bed_Group(Visualizer_Group):
             self._add_side_labels(self.left_label)
             self.add_child(self.left_label)
         self.slots: dict[int, Needle_Slot] = {}
-        self.loops: dict[Machine_Knit_Loop, Loop_Circle] = {}
-        self.floats: set[Float_Line] = set()
         self.right_label: Visualizer_Group | None = None
         self._build_slots()
 
@@ -187,34 +182,11 @@ class Needle_Bed_Group(Visualizer_Group):
         slot = self.get_slot(needle.slot_number(self.rack))
         return slot[needle]
 
-    def add_loop_to_needle(self, needle: Needle, loop: Machine_Knit_Loop) -> None:
-        """
-        Add a circle representing a loop to the given needle.
-        Args:
-            needle (Needle): The needle to add the loop onto.
-            loop (Machine_Knit_Loop): The active loop active on this needle.
-        """
-        needle_group = self[needle]
-        self.loops[loop] = needle_group.make_loop(loop)
-
-    def add_float_line(self, loop1: Machine_Knit_Loop, loop2: Machine_Knit_Loop) -> None:
-        """
-        Adds a float line between the two connected loops.
-        Args:
-            loop1 (Machine_Knit_Loop): The first loop in the float.
-            loop2 (Machine_Knit_Loop): The second loop in the float.
-        """
-        loop_circle1 = self[loop1]
-        loop_circle2 = self[loop2]
-        self.floats.add(Float_Line(loop_circle1, loop_circle2, stroke_width=self.settings.Loop_Stroke_Width))
-
-    def __contains__(self, item: int | Needle | str | Machine_Knit_Loop) -> bool:
+    def __contains__(self, item: int | Needle | str) -> bool:
         if isinstance(item, Needle):
             return self.has_needle(item)
         elif isinstance(item, int):
             return self.has_slot(item)
-        elif isinstance(item, Machine_Knit_Loop):
-            return item in self.loops
         else:
             return super().__contains__(item)
 
@@ -227,17 +199,10 @@ class Needle_Bed_Group(Visualizer_Group):
     @overload
     def __getitem__(self, item: str) -> Visualizer_Element: ...
 
-    @overload
-    def __getitem__(self, item: Machine_Knit_Loop) -> Loop_Circle: ...
-
-    def __getitem__(
-        self, item: int | Needle | str | Machine_Knit_Loop
-    ) -> Needle_Slot | Needle_Group | Visualizer_Element | Loop_Circle:
+    def __getitem__(self, item: int | Needle | str) -> Needle_Slot | Needle_Group | Visualizer_Element:
         if isinstance(item, Needle):
             return self.get_needle_group(item)
         elif isinstance(item, int):
             return self.get_slot(item)
-        elif isinstance(item, Machine_Knit_Loop):
-            return self.loops[item]
         else:
             return super().__getitem__(item)

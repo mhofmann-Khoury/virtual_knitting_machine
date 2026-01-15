@@ -27,7 +27,7 @@ class TestYarnCarrier(unittest.TestCase):
         self.assertEqual(carrier.carrier_id, 10)
         self.assertFalse(carrier.is_active)
         self.assertFalse(carrier.is_hooked)
-        self.assertIsNone(carrier.position)
+        self.assertIsNone(carrier.slot_position)
 
     def test_yarn_property_getter(self):
         """Test yarn property getter."""
@@ -35,27 +35,20 @@ class TestYarnCarrier(unittest.TestCase):
 
     def test_position_property_getter(self):
         """Test position property getter."""
-        self.assertIsNone(self.carrier.position)
+        self.assertIsNone(self.carrier.slot_position)
 
-        self.carrier._position = 10
-        self.assertEqual(self.carrier.position, 10)
+        self.carrier._slot_position = 10
+        self.assertEqual(self.carrier.slot_position, 10)
 
     def test_position_property_setter_none(self):
         """Test position property setter with None."""
-        self.carrier.position = None
-        self.assertIsNone(self.carrier.position)
+        self.carrier.slot_position = None
+        self.assertIsNone(self.carrier.slot_position)
 
     def test_position_property_setter_integer(self):
         """Test position property setter with integer."""
-        self.carrier.position = 15
-        self.assertEqual(self.carrier.position, 15)
-
-    def test_position_property_setter_needle(self):
-        """Test position property setter with needle object."""
-        needle = Needle(is_front=True, position=25)
-
-        self.carrier.position = needle
-        self.assertEqual(self.carrier.position, 25)
+        self.carrier.slot_position = 15
+        self.assertEqual(self.carrier.slot_position, 15)
 
     def test_is_active_property_getter(self):
         """Test is_active property getter."""
@@ -72,13 +65,13 @@ class TestYarnCarrier(unittest.TestCase):
     def test_is_active_property_setter_false(self):
         """Test is_active property setter with False clears hook and position."""
         self.carrier._is_hooked = True
-        self.carrier._position = 10
+        self.carrier._slot_position = 10
 
         self.carrier.is_active = False
 
         self.assertFalse(self.carrier._is_active)
         self.assertFalse(self.carrier.is_hooked)
-        self.assertIsNone(self.carrier.position)
+        self.assertIsNone(self.carrier.slot_position)
 
     def test_is_hooked_property_getter(self):
         """Test is_hooked property getter."""
@@ -216,7 +209,7 @@ class TestYarnCarrier(unittest.TestCase):
         # Initial state
         self.assertFalse(self.carrier.is_active)
         self.assertFalse(self.carrier.is_hooked)
-        self.assertIsNone(self.carrier.position)
+        self.assertIsNone(self.carrier.slot_position)
 
         # Bring in and hook
         self.carrier.inhook()
@@ -225,26 +218,26 @@ class TestYarnCarrier(unittest.TestCase):
 
         # Set position
         self.carrier.position = 10
-        self.assertEqual(self.carrier.position, 10)
+        self.assertEqual(self.carrier.slot_position, 10)
 
         # Release hook
         self.carrier.releasehook()
         self.assertTrue(self.carrier.is_active)
         self.assertFalse(self.carrier.is_hooked)
-        self.assertEqual(self.carrier.position, 10)
+        self.assertEqual(self.carrier.slot_position, 10)
 
         # Out
         self.carrier.out()
         self.assertFalse(self.carrier.is_active)
         self.assertFalse(self.carrier.is_hooked)
-        self.assertIsNone(self.carrier.position)
+        self.assertIsNone(self.carrier.slot_position)
 
     def test_deactivation_clears_all_states(self):
         """Test that deactivating carrier clears all states."""
         # Set up active, hooked carrier with position
         self.carrier._is_active = True
         self.carrier._is_hooked = True
-        self.carrier._position = 15
+        self.carrier._slot_position = 15
 
         # Deactivate
         self.carrier.is_active = False
@@ -252,12 +245,12 @@ class TestYarnCarrier(unittest.TestCase):
         # All states should be cleared
         self.assertFalse(self.carrier.is_active)
         self.assertFalse(self.carrier.is_hooked)
-        self.assertIsNone(self.carrier.position)
+        self.assertIsNone(self.carrier.slot_position)
 
     def test_position_setting_with_float_conversion(self):
         """Test position setting converts float to int."""
         self.carrier.position = 12.7
-        self.assertEqual(self.carrier.position, 12)
+        self.assertEqual(self.carrier.slot_position, 12)
 
     def test_multiple_carriers_independence(self):
         """Test that multiple carriers maintain independent states."""
@@ -266,13 +259,13 @@ class TestYarnCarrier(unittest.TestCase):
 
         # Activate only carrier1
         carrier1.is_active = True
-        carrier1.position = 10
+        carrier1.slot_position = 10
 
         # Verify independence
         self.assertTrue(carrier1.is_active)
         self.assertFalse(carrier2.is_active)
-        self.assertEqual(carrier1.position, 10)
-        self.assertIsNone(carrier2.position)
+        self.assertEqual(carrier1.slot_position, 10)
+        self.assertIsNone(carrier2.slot_position)
 
     def test_hash_consistency_across_operations(self):
         """Test hash remains consistent across operations."""
@@ -280,7 +273,7 @@ class TestYarnCarrier(unittest.TestCase):
 
         # Perform various operations
         self.carrier.bring_in()
-        self.carrier.position = 5
+        self.carrier.slot_position = 5
         self.carrier.is_hooked = True
         self.carrier.out()
 
@@ -294,15 +287,3 @@ class TestYarnCarrier(unittest.TestCase):
 
         self.assertTrue(carrier_negative < carrier_0)
         self.assertTrue(carrier_0 < self.carrier)  # self.carrier has ID 5
-
-    def test_warning_messages_contain_carrier_id(self):
-        """Test that warning messages contain the carrier ID."""
-        self.carrier.is_active = True
-
-        with warnings.catch_warnings(record=True) as warning_list:
-            warnings.simplefilter("always")
-            self.carrier.bring_in()
-
-            self.assertEqual(len(warning_list), 1)
-            warning_instance = warning_list[0].message
-            self.assertEqual(warning_instance.carrier_id, self.carrier_id)

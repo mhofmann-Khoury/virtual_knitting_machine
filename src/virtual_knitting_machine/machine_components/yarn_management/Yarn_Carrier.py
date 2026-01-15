@@ -9,7 +9,10 @@ from typing import TYPE_CHECKING
 from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn_Properties
 
-from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Hooked_Carrier_Exception
+from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
+    Hooked_Carrier_Exception,
+    Use_Inactive_Carrier_Exception,
+)
 from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
     get_user_warning_stack_level_from_virtual_knitting_machine_package,
 )
@@ -50,7 +53,7 @@ class Yarn_Carrier:
         self._carrier_id: int = carrier_id
         self._is_active: bool = False
         self._is_hooked: bool = False
-        self._position: None | int = None
+        self._slot_position: int | None = None
         self._last_direction: None | Carriage_Pass_Direction = None
         if yarn is not None:
             self._yarn: Machine_Knit_Yarn = yarn
@@ -69,13 +72,57 @@ class Yarn_Carrier:
         return self._yarn
 
     @property
-    def position(self) -> None | int:
-        """Get the needle position that the carrier sits at or None if inactive.
-
-        Returns:
-            None | int: The needle position that the carrier sits at or None if the carrier is not active.
+    def slot_position(self) -> None | int:
         """
-        return self._position
+        Returns:
+            None | int: The needle-slot that the carrier was last moved to or None if the carrier is not active.
+        """
+        return self._slot_position
+
+    @slot_position.setter
+    def slot_position(self, new_slot: int | None) -> None:
+        """Set the slot-position of the carrier.
+        Infers the direction of the carrier movement from the differences between the states.
+        If the direction is ambiguous because the operation occurs at the same location, the last direction is reversed.
+
+        Args:
+            new_slot (int | None): The new needle-slot that the carrier was moved to or None if inactive.
+        """
+        if new_slot is None:
+            self._slot_position = None
+            self.last_direction = None  # No position means no carrier position direction.
+            self._is_active = False  # If there is no slot position, the carrier is inactive.
+        else:
+            if not self.is_active:
+                raise Use_Inactive_Carrier_Exception(self.carrier_id)
+            if self.slot_position is None:  # moving in a leftward position when the carrier is inserted
+                self.last_direction = Carriage_Pass_Direction.Leftward
+            else:
+                if new_slot < self.slot_position:
+                    self.last_direction = Carriage_Pass_Direction.Leftward
+                elif new_slot > self.slot_position:
+                    self.last_direction = Carriage_Pass_Direction.Rightward
+                else:
+                    assert isinstance(self.last_direction, Carriage_Pass_Direction)
+                    self.last_direction = self.last_direction.opposite()
+            self._slot_position = new_slot
+
+    @property
+    def position(self) -> None | int:
+        """
+        Returns:
+            None | int: The needle-slot that the carrier was last moved to or None if the carrier is not active.
+
+        Warns:
+            PendingDeprecationWarning: Switch use of position to slot_position property.
+        """
+        warnings.warn(
+            PendingDeprecationWarning(
+                "Position has been renamed to slot_position and will be deprecated in a future release."
+            ),
+            stacklevel=0,
+        )
+        return self._slot_position
 
     @position.setter
     def position(self, new_position: None | Needle | int) -> None:
@@ -85,24 +132,19 @@ class Yarn_Carrier:
 
         Args:
             new_position (None | Needle | int): The new position for the carrier, None if inactive, or a needle/position value.
+
+        Warns:
+            PendingDeprecationWarning: Switch use of position to slot_position property.
         """
-        if new_position is None:
-            self._position = None
-            self.last_direction = None  # No position means no carrier position direction.
-        else:
-            if self.position is None:
-                self.last_direction = (
-                    Carriage_Pass_Direction.Leftward
-                )  # moving in a leftward position when the carrier is inserted
-            else:
-                if int(new_position) < self.position:
-                    self.last_direction = Carriage_Pass_Direction.Leftward
-                elif int(new_position) > self.position:
-                    self.last_direction = Carriage_Pass_Direction.Rightward
-                else:
-                    assert isinstance(self.last_direction, Carriage_Pass_Direction)
-                    self.last_direction = self.last_direction.opposite()
-            self._position = int(new_position)
+        warnings.warn(
+            PendingDeprecationWarning(
+                "Position has been renamed to slot_position and will be deprecated in a future release. Needles will no longer be accepted as slot-positions",
+            ),
+            stacklevel=0,
+        )
+        if isinstance(new_position, Needle):
+            new_position = int(new_position)
+        self.slot_position = new_position
 
     def direction_to_needle(self, needle_position: int | Needle) -> Carriage_Pass_Direction:
         """
@@ -112,9 +154,11 @@ class Yarn_Carrier:
         Returns:
             Carriage_Pass_Direction: The direction that the carrier will move to reach the given position from its current position.
         """
-        if self.position is None or int(needle_position) < self.position:  # inactive carriers enter from the right
+        if (
+            self.slot_position is None or int(needle_position) < self.slot_position
+        ):  # inactive carriers enter from the right
             return Carriage_Pass_Direction.Leftward
-        elif int(needle_position) > self.position:
+        elif int(needle_position) > self.slot_position:
             return Carriage_Pass_Direction.Rightward
         else:
             assert isinstance(self.last_direction, Carriage_Pass_Direction)
@@ -146,12 +190,12 @@ class Yarn_Carrier:
         if not self.is_active:
             return None
         else:
-            assert isinstance(self.position, int)
+            assert isinstance(self.slot_position, int)
             assert isinstance(self.last_direction, Carriage_Pass_Direction)
             if self.last_direction is Carriage_Pass_Direction.Leftward:
-                return self.position - 1
+                return self.slot_position - 1
             else:
-                return self.position + 1
+                return self.slot_position + 1
 
     @property
     def needle_range(self) -> None | tuple[int, int]:
@@ -159,17 +203,16 @@ class Yarn_Carrier:
         Returns:
             None | tuple[int, int]: The range of positions that a carrier may exist after an ambiguous movement or None if the carrier is inactive.
         """
-        if self.position is None:
+        if self.slot_position is None:
             return None
         elif self.last_direction is Carriage_Pass_Direction.Leftward:
-            return self.position - self.STOPPING_DISTANCE, self.position
+            return self.slot_position - self.STOPPING_DISTANCE, self.slot_position
         else:
-            return self.position, self.position + self.STOPPING_DISTANCE
+            return self.slot_position, self.slot_position + self.STOPPING_DISTANCE
 
     @property
     def is_active(self) -> bool:
-        """Check if the carrier is currently active (off the grippers).
-
+        """
         Returns:
             bool: True if carrier is active, False otherwise.
         """
@@ -187,7 +230,7 @@ class Yarn_Carrier:
         else:
             self._is_active = False
             self.is_hooked = False
-            self.position = None
+            self.slot_position = None
 
     @property
     def is_hooked(self) -> bool:
@@ -241,8 +284,7 @@ class Yarn_Carrier:
                 Out_Inactive_Carrier_Warning(self.carrier_id),
                 stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
             )  # Warn use but do not do out action
-        self.is_active = False
-        self.last_direction = None
+        self.slot_position = None
 
     def outhook(self) -> None:
         """Record outhook operation to cut and remove carrier using insertion hook.

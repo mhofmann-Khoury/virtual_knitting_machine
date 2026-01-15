@@ -152,6 +152,14 @@ class Knitting_Machine:
         return self._carrier_system
 
     @property
+    def active_carriers(self) -> set[Yarn_Carrier]:
+        """
+        Returns:
+            set[Yarn_Carrier]: Set of carriers that are currently active (off the grippers).
+        """
+        return self.carrier_system.active_carriers
+
+    @property
     def carriage(self) -> Carriage:
         """
         Returns:
@@ -470,7 +478,6 @@ class Knitting_Machine:
         """
         self.miss(carrier_set, needle, direction)  # aligns the carriers and completes the carriage movement.
         needle = self[needle]
-        assert isinstance(needle, Needle)
         new_loops: list[Machine_Knit_Loop] = self.carrier_system.make_loops(carrier_set, needle, direction)
         if needle.is_front:
             self.front_bed.add_loops(needle, new_loops, drop_prior_loops=False)
@@ -500,7 +507,6 @@ class Knitting_Machine:
         """
         # Get the needle in the machine state
         needle = self[needle]
-        assert isinstance(needle, Needle)
         if not needle.has_loops:
             warnings.warn(
                 Knit_on_Empty_Needle_Warning(needle),
@@ -508,10 +514,7 @@ class Knitting_Machine:
             )
 
         # position the carrier set to align with the knitting needle
-        carrier_set.position_carriers(self.carrier_system, needle, direction)
-        # Set the carriage for this operation
-        self.carriage.transferring = False
-        self.carriage.move(direction, needle.position)
+        self.miss(carrier_set, needle, direction)
         # Drop and save the current loops, then add the child loops onto this needle.
         bed = self.front_bed if needle.is_front else self.back_bed
         parent_loops = bed.drop(needle)
@@ -736,9 +739,10 @@ class Knitting_Machine:
             needle (Needle): Needle to position the carriers from.
             direction (Carriage_Pass_Direction): The carriage direction for the miss operation.
         """
-        carrier_set.position_carriers(self.carrier_system, needle, direction)
+        slot_position = needle.slot_number(self.rack)
+        carrier_set.position_carriers_at_needle_slot(self.carrier_system, slot_position, direction)
         self.carriage.transferring = False
-        self.carriage.move(direction, needle.position)
+        self.carriage.move(direction, slot_position)
 
     def front_needles(self) -> list[Needle]:
         """Get list of all front bed needles.

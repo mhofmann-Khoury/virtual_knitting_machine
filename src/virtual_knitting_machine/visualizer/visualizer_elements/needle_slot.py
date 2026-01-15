@@ -32,10 +32,7 @@ class Needle_Slot(Visualizer_Group):
         render_sliders: bool = False,
     ) -> None:
         self.settings: Diagram_Settings = diagram_settings
-        x = x_index * diagram_settings.Needle_Width
-        if self.settings.render_left_labels:  # Add space for left labels
-            x += diagram_settings.Needle_Width
-        super().__init__(x, 0, f"slot_{slot_number}")
+        super().__init__(self.settings.x_of_needle(x_index), 0, f"slot_{slot_number}")
         self.all_needle_rack: bool = all_needle_rack
         self.rack: int = rack
         self.render_sliders: bool = render_sliders

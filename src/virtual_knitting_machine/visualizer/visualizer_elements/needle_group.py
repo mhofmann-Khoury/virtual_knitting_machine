@@ -5,9 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
-from virtual_knitting_machine.visualizer.visualizer_elements.loop_circle import Loop_Circle
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_group import Visualizer_Group
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_shapes import Rect_Element
 
@@ -35,7 +33,6 @@ class Needle_Group(Visualizer_Group):
             stroke=self.settings.Needle_Stroke_Color,
         )
         self.add_child(self._needle_box)
-        self.loops: list[Loop_Circle] = []
 
     def _x_from_settings(self) -> int:
         """
@@ -57,14 +54,6 @@ class Needle_Group(Visualizer_Group):
             )
         else:
             return self.settings.back_slider_y if self.is_slider else self.settings.back_needle_y
-
-    @property
-    def top_loop(self) -> Loop_Circle | None:
-        """
-        Returns:
-            Loop_Circle | None: The top active loop on this needle or None if the needle has no active loops.
-        """
-        return None if len(self.loops) == 0 else self.loops[-1]
 
     @property
     def needle_box(self) -> Rect_Element:
@@ -142,19 +131,3 @@ class Needle_Group(Visualizer_Group):
             Diagram_Settings: The settings of the diagram.
         """
         return self.slot.settings
-
-    def make_loop(self, loop: Machine_Knit_Loop) -> Loop_Circle:
-        """
-        Args:
-            loop (Machine_Knit_Loop): The active loop active on this needle.
-        """
-        x = self.global_x_position(self.settings.Needle_Width // 2)
-        y = self.global_y_position(self.settings.Needle_Height // 2)
-        loop_circle = Loop_Circle(
-            x=x,
-            y=y,
-            loop=loop,
-            diagram_settings=self.settings,
-        )
-        self.loops.append(loop_circle)
-        return loop_circle

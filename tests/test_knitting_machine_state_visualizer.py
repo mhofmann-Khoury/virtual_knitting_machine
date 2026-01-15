@@ -1,9 +1,10 @@
 from unittest import TestCase
 
+from resources.mock_machine_state import Mock_Machine_State
+
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.visualizer.knitting_machine_state_visualizer import Knitting_Machine_State_Visualizer
-from virtual_knitting_machine.visualizer.machine_state_protocol import Mock_Machine_State
 
 
 class TestKnitting_Machine_State_Visualizer(TestCase):

@@ -1,10 +1,7 @@
 """Module contains the Knitting Machine State Protocol"""
 
 from collections.abc import Sequence
-from enum import Enum
 from typing import Protocol, overload
-
-from knit_graphs.Yarn import Yarn_Properties
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
@@ -54,6 +51,14 @@ class Knitting_Machine_State_Protocol(Protocol):
         """
         Returns:
             int: The racking offset of the knitting machine at the time the snapshot was created.
+        """
+        pass
+
+    @property
+    def active_carriers(self) -> set[Yarn_Carrier]:
+        """
+        Returns:
+            set[Yarn_Carrier]: Set of carriers that are currently active (off the grippers).
         """
         pass
 
@@ -107,159 +112,3 @@ class Knitting_Machine_State_Protocol(Protocol):
                 The carrier or list of carriers owned by the machine at the given specification.
         """
         pass
-
-
-class Carrier_Yarn_Color_Defaults(Enum):
-    """An enumeration of default yarn colors assigned to carriers"""
-
-    c1 = "firebrick"  # str: The color of carrier 1 (brick red)
-    c2 = "navy"  # str: The color of carrier 2 (dark navy blue)
-    c3 = "darkgreen"  # str: The color of carrier 3 (deep green)
-    c4 = "indigo"  # str: The color of carrier 4 (dark indigo)
-    c5 = "darkgoldenrod"  # str: The color of carrier 5 (deep gold)
-    c6 = "saddlebrown"  # str: The color of carrier 6 (saddle brown)
-    c7 = "darkcyan"  # str: The color of carrier 7 (deep cyan)
-    c8 = "purple"  # str: The color of carrier 8 (deep purple)
-    c9 = "darkorange"  # str: The color of carrier 9 (dark orange)
-    c10 = "darkslateblue"  # str: The color of carrier 10 (dark slate blue)
-
-    @staticmethod
-    def get_color_by_carrier_number(carrier_id: int | Yarn_Carrier) -> str:
-        """
-        Args:
-            carrier_id (int | Yarn_Carrier): The carrier id or yarn-carrier to source a color for.
-
-        Returns:
-            str: The color name that is default for the given carrier.
-
-        Raises:
-            KeyError: If there is no default color for the given carrier.
-        """
-        c_name = f"c{carrier_id}" if isinstance(carrier_id, int) else str(carrier_id)
-        return Carrier_Yarn_Color_Defaults[c_name].value
-
-
-class Mock_Machine_State(Knitting_Machine_State_Protocol):
-
-    def __init__(
-        self, carriers_to_active_needles: dict[int, list[Needle]], rack: int = 0, all_needle_rack: bool = False
-    ) -> None:
-        self.carriers: dict[int, Yarn_Carrier] = {}
-        active_needles = set()
-        for cid, needles in carriers_to_active_needles.items():
-            active_needles.update(needles)
-            for n in needles:
-                self.form_loop_on_needle(cid, n)
-        assert not any(len(n.held_loops) == 0 for n in active_needles)
-        self.active_front_needles: list[Needle] = [n for n in active_needles if n.is_front and not n.is_slider]
-        self.active_back_needles: list[Needle] = [n for n in active_needles if n.is_back and not n.is_slider]
-        self.active_front_sliders: list[Slider_Needle] = [
-            n for n in active_needles if n.is_front and isinstance(n, Slider_Needle)
-        ]
-        self.active_back_sliders: list[Slider_Needle] = [
-            n for n in active_needles if n.is_back and isinstance(n, Slider_Needle)
-        ]
-        self._rack: int = rack
-        self._all_needle_rack: bool = all_needle_rack
-        self._leftmost_slot: int = int(min(active_needles)) if len(active_needles) > 0 else 0
-        self._rightmost_slot: int = int(max(active_needles)) if len(active_needles) > 0 else 0
-
-    @overload
-    def get_carrier(self, carrier: int | Yarn_Carrier) -> Yarn_Carrier: ...
-
-    @overload
-    def get_carrier(self, carrier: Sequence[int | Yarn_Carrier]) -> list[Yarn_Carrier]: ...
-
-    def get_carrier(
-        self, carrier: int | Yarn_Carrier | Sequence[int | Yarn_Carrier]
-    ) -> Yarn_Carrier | list[Yarn_Carrier]:
-        """Get the carrier or list of carriers owned by the machine at the given specification.
-
-        Args:
-            carrier (int | Yarn_Carrier | Sequence[int | Yarn_Carrier]):
-                The carrier defined by a given carrier, carrier_set, integer or list of integers to form a set.
-
-        Returns:
-            Yarn_Carrier | list[Yarn_Carrier]:
-                The carrier or list of carriers owned by the machine at the given specification.
-        """
-        if isinstance(carrier, (int, Yarn_Carrier)):
-            return self.carriers[int(carrier)]
-        else:
-            return [self.get_carrier(c) for c in carrier]
-
-    def add_yarn_carrier(self, carrier_id: int, yarn_color: str | None = None) -> None:
-        """
-        Adds a yarn-carrier based on the given values.
-        Args:
-            carrier_id (int): The id of the yarn-carrier.
-            yarn_color (str, optional): The name of the color to draw this yarn with. Defaults to the default color assigned to that carrier.
-        """
-        if yarn_color is None:
-            yarn_color = Carrier_Yarn_Color_Defaults.get_color_by_carrier_number(carrier_id)
-        self.carriers[carrier_id] = Yarn_Carrier(carrier_id, yarn_properties=Yarn_Properties(color=yarn_color))
-
-    def form_loop_on_needle(self, carrier_id: int, needle: Needle) -> Machine_Knit_Loop:
-        """
-        Form a loop at the end of the yarn on the given carrier and place it on the given needle.
-
-        Args:
-            carrier_id (int): The id of the carrier to form the loop from.
-            needle (Needle): The needle to form the loop on.
-
-        Returns:
-            Machine_Knit_Loop: The loop formed and added ot that needle
-        """
-        if carrier_id not in self.carriers:
-            self.add_yarn_carrier(carrier_id)
-        carrier = self.carriers[carrier_id]
-        if needle.is_slider:
-            main_needle = needle.main_needle().opposite()
-            loop = carrier.yarn.make_loop_on_needle(main_needle)
-            main_needle.add_loop(loop)
-            main_needle.transfer_loops(needle)
-        else:
-            loop = carrier.yarn.make_loop_on_needle(needle)
-            needle.add_loop(loop)
-        return loop
-
-    @property
-    def sliders_are_clear(self) -> bool:
-        """
-        Returns:
-            bool: True if there are no loops on back for front bed sliders. False otherwise.
-        """
-        return len(self.active_front_sliders) == 0 and len(self.active_back_sliders) == 0
-
-    @property
-    def all_needle_rack(self) -> bool:
-        """
-        Returns:
-            bool: True if the knitting machine is set for all needle rack, False otherwise.
-        """
-        return self._all_needle_rack
-
-    @property
-    def rack(self) -> int:
-        """
-        Returns:
-            int: The racking offset of the knitting machine at the time the snapshot was created.
-        """
-        return self._rack
-
-    def all_slider_loops(self) -> list[Slider_Needle]:
-        """Get list of all slider needles holding loops with front bed sliders given first.
-
-        Returns:
-            list[Slider_Needle]:
-                List of all slider needles holding loops with front bed sliders given first.
-        """
-        return [*self.active_front_sliders, *self.active_back_sliders]
-
-    def all_loops(self) -> list[Needle]:
-        """Get list of all needles holding loops with front bed needles given first.
-
-        Returns:
-            list[Needle]: List of all needles holding loops with front bed needles given first.
-        """
-        return [*self.active_front_needles, *self.active_back_needles]

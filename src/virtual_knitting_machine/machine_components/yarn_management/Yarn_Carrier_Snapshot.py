@@ -19,8 +19,8 @@ class Yarn_Carrier_Snapshot:
         self._carrier = yarn_carrier
         self._is_active: bool = yarn_carrier.is_active
         self._is_hooked: bool = yarn_carrier.is_hooked
-        self._position: None | int = yarn_carrier.position
-        self._last_direction: None | Carriage_Pass_Direction = yarn_carrier.last_direction
+        self._slot_position: int | None = yarn_carrier.slot_position
+        self._last_direction: Carriage_Pass_Direction | None = yarn_carrier.last_direction
         self._yarn: Machine_Knit_Yarn = yarn_carrier.yarn
         self._last_loop_id: int | None = int(self.yarn.last_loop) if self.yarn.last_loop is not None else None
 
@@ -69,7 +69,7 @@ class Yarn_Carrier_Snapshot:
         Returns:
             None | int: The needle position that the carrier sits at or None if the carrier is not active.
         """
-        return self._position
+        return self._slot_position
 
     @property
     def is_active(self) -> bool:

@@ -15,8 +15,8 @@ class Carriage_Snapshot:
         self._right_needle_position: int = 0
         self._transferring: bool = carriage.transferring
         self._last_direction: Carriage_Pass_Direction = carriage.last_direction
-        self._current_needle_position: int = carriage.current_needle_position
-        self._position_prior_to_transfers: int = carriage.position_prior_to_transfers
+        self._current_needle_position: int = carriage.current_needle_slot
+        self._position_prior_to_transfers: int = carriage.slot_prior_to_transfers
         self._direction_prior_to_transfers: Carriage_Pass_Direction = carriage.direction_prior_to_transfers
 
     @property

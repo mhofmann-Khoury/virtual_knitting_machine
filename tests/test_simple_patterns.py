@@ -25,11 +25,11 @@ class Test_Simple_Patterns(unittest.TestCase):
         cs = Yarn_Carrier_Set(1)
         for i in range(9, -1, -2):
             self.machine.tuck(cs, Needle(True, i), Carriage_Pass_Direction.Leftward)
-        self.assertEqual(self.machine.carrier_system[1].position, 1)
+        self.assertEqual(self.machine.carrier_system[1].slot_position, 1)
         self.assertEqual(len(self.machine.front_loops()), 5)
         for i in range(0, 10, 2):
             self.machine.tuck(cs, Needle(True, i), Carriage_Pass_Direction.Rightward)
-        self.assertEqual(self.machine.carrier_system[1].position, 8)
+        self.assertEqual(self.machine.carrier_system[1].slot_position, 8)
         self.assertEqual(len(self.machine.front_loops()), 10)
         self.machine.release_hook()
         self.assertEqual(len(self.machine.carrier_system.active_carriers), 1)

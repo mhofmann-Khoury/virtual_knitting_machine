@@ -13,7 +13,6 @@ from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning
 )
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Duplicate_Carriers_In_Set
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 
 if TYPE_CHECKING:
@@ -52,15 +51,30 @@ class Yarn_Carrier_Set(Sequence[int]):
             self._carrier_ids: list[int] = [int(carrier_ids)]
 
     def positions(self, carrier_system: Yarn_Insertion_System) -> list[int | None]:
-        """Get the positions of all carriers in this set from the carrier system.
-
+        """
         Args:
             carrier_system (Yarn_Insertion_System): The carrier system to reference position data from.
 
         Returns:
-            list[None | int]: The list of positions of each carrier in the carrier set.
+            list[None | int]: The list of slot-positions of each carrier in the carrier set.
+
+        Warns:
+            PendingDeprecationWarning: Switch to using slot_positions before this method is deprecated.
         """
-        return [c.position for c in self.get_carriers(carrier_system)]
+        warnings.warn(
+            PendingDeprecationWarning("Positions will be renamed to slot_positions in future release"), stacklevel=0
+        )
+        return self.slot_positions(carrier_system)
+
+    def slot_positions(self, carrier_system: Yarn_Insertion_System) -> list[int | None]:
+        """
+        Args:
+            carrier_system (Yarn_Insertion_System): The carrier system to reference position data from.
+
+        Returns:
+            list[None | int]: The list of slot-positions of each carrier in the carrier set.
+        """
+        return [c.slot_position for c in self.get_carriers(carrier_system)]
 
     def get_carriers(self, carrier_system: Yarn_Insertion_System) -> list[Yarn_Carrier]:
         """Get the actual carrier objects that correspond to the IDs in this carrier set.
@@ -76,23 +90,21 @@ class Yarn_Carrier_Set(Sequence[int]):
             carriers = [carriers]
         return carriers
 
-    def position_carriers(
+    def position_carriers_at_needle_slot(
         self,
         carrier_system: Yarn_Insertion_System,
-        position: Needle | int | None,
+        slot_position: int | None,
         direction: Carriage_Pass_Direction | None = None,
     ) -> None:
         """Set the position of all involved carriers to the given position.
 
         Args:
             carrier_system (Yarn_Insertion_System): Carrier system referenced by set.
-            position (Needle | int | None): The position to move the carrier set to, if None this means the carrier is not active.
+            slot_position (int | None): The needle-slot to move the carrier set to, if None this means the carrier is not active.
             direction (Carriage_Pass_Direction, optional): The direction of the carrier movement. If this is not provided, the direction will be inferred.
         """
-        for carrier in self.get_carriers(carrier_system):
-            carrier.position = position
-            if direction is not None:
-                carrier.last_direction = direction
+        for cid in self:
+            carrier_system.position_carrier_at_needle_slot(cid, slot_position, direction)
 
     @property
     def carrier_ids(self) -> list[int]:

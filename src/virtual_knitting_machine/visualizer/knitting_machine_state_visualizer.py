@@ -4,8 +4,12 @@ Contains the Knitting Visualizer class.
 
 from svgwrite import Drawing
 
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.machine_state_protocol import Knitting_Machine_State_Protocol
+from virtual_knitting_machine.visualizer.visualizer_elements.carrier_triangle import Carrier_Triangle
+from virtual_knitting_machine.visualizer.visualizer_elements.float_path import Float_Line
+from virtual_knitting_machine.visualizer.visualizer_elements.loop_circle import Loop_Circle
 from virtual_knitting_machine.visualizer.visualizer_elements.needle_bed_visualizer_group import Needle_Bed_Group
 
 
@@ -55,24 +59,82 @@ class Knitting_Machine_State_Visualizer:
             diagram_settings = Diagram_Settings()
         self.settings: Diagram_Settings = diagram_settings
         ls, rs = self._get_bed_slots()
+        self.leftmost_slot: int = ls
+        self.rightmost_slot: int = rs
         show_sliders = self.settings.render_empty_sliders or not self.machine_state.sliders_are_clear
         self.needle_bed_group: Needle_Bed_Group = Needle_Bed_Group(
-            ls, rs, self.machine_state.rack, self.machine_state.all_needle_rack, show_sliders, self.settings
+            self.leftmost_slot,
+            self.rightmost_slot,
+            self.machine_state.rack,
+            self.machine_state.all_needle_rack,
+            show_sliders,
+            self.settings,
         )
-        for needle in self.machine_state.all_slider_loops():
-            for loop in needle.held_loops:
-                self.needle_bed_group.add_loop_to_needle(needle, loop)
-        for needle in self.machine_state.all_loops():
-            for loop in needle.held_loops:
-                self.needle_bed_group.add_loop_to_needle(needle, loop)
-
-        for loop1, loop2 in self.machine_state.active_floats():
-            self.needle_bed_group.add_float_line(loop1, loop2)
-
+        self.loops: dict[Machine_Knit_Loop, Loop_Circle] = {}
+        self._add_active_loops()
+        self.floats: set[Float_Line] = set()
+        self._add_active_floats()
+        self.carriers: set[Carrier_Triangle] = set()
+        if self.settings.render_carriers:
+            self._add_active_carriers()
         self.drawing: Drawing = Drawing(
             size=(f"{self.settings.Drawing_Width}px", f"{self.settings.Drawing_Height}px"),
             viewBox=f"0 0 {self.settings.Drawing_Width} {self.settings.Drawing_Height}",
         )
+
+    def _get_bed_slots(self) -> tuple[int, int]:
+        """
+        Returns:
+            tuple[int, int]: The range from the left to right needle slots.
+        """
+        left_most_slot, right_most_slot = self.machine_state.slot_range
+        left_most_slot -= self.settings.Left_Needle_Buffer
+        right_most_slot += self.settings.Right_Needle_Buffer
+        return left_most_slot, right_most_slot
+
+    def index_of_slot(self, slot: int) -> int:
+        """
+        Args:
+            slot (int): The slot to be indexed from the left side of the diagram.
+
+        Returns:
+            int: The index of the given slot based on the leftmost slot rendered in this diagram.
+        """
+        return slot - self.leftmost_slot
+
+    def _add_active_floats(self) -> None:
+        """
+        Renders the floats between active loops on the diagram.
+        """
+        for loop1, loop2 in self.machine_state.active_floats():
+            loop_circle1 = self.loops[loop1]
+            loop_circle2 = self.loops[loop2]
+            self.floats.add(Float_Line(loop_circle1, loop_circle2, stroke_width=self.settings.Loop_Stroke_Width))
+
+    def _add_active_loops(self) -> None:
+        """
+        Renders the loop-circles for each active loop on the diagram.
+        """
+        for needle in self.machine_state.all_slider_loops():
+            for loop in needle.held_loops:
+                self.loops[loop] = Loop_Circle(loop, self.needle_bed_group[needle], self.settings)
+        for needle in self.machine_state.all_loops():
+            for loop in needle.held_loops:
+                self.loops[loop] = Loop_Circle(loop, self.needle_bed_group[needle], self.settings)
+
+    def _add_active_carriers(self) -> None:
+        """
+        Renders the carrier triangles for active carriers on the diagram.
+        """
+        for carrier in self.machine_state.active_carriers:
+            assert carrier.slot_position is not None
+            self.carriers.add(
+                Carrier_Triangle(
+                    carrier=carrier,
+                    needle_index=self.index_of_slot(carrier.slot_position),
+                    diagram_settings=self.settings,
+                )
+            )
 
     def render(self) -> Drawing:
         """
@@ -83,10 +145,12 @@ class Knitting_Machine_State_Visualizer:
         """
         # Add layers to drawing in order (bottom to top)
         self.needle_bed_group.add_to_drawing(self.drawing)
-        for float_line in self.needle_bed_group.floats:
+        for float_line in self.floats:
             float_line.add_to_drawing(self.drawing)
-        for loop_circle in self.needle_bed_group.loops.values():
+        for loop_circle in self.loops.values():
             loop_circle.add_to_drawing(self.drawing)
+        for carrier_triangle in self.carriers:
+            carrier_triangle.add_to_drawing(self.drawing)
         return self.drawing
 
     def save(self, filename: str) -> None:
@@ -109,13 +173,3 @@ class Knitting_Machine_State_Visualizer:
         """
         self.render()
         return str(self.drawing.tostring())
-
-    def _get_bed_slots(self) -> tuple[int, int]:
-        """
-        Returns:
-            tuple[int, int]: The range from the left to right needle slots.
-        """
-        left_most_slot, right_most_slot = self.machine_state.slot_range
-        left_most_slot -= self.settings.Left_Needle_Buffer
-        right_most_slot += self.settings.Right_Needle_Buffer
-        return left_most_slot, right_most_slot
