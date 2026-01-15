@@ -90,18 +90,47 @@ class Knitting_Machine_State_Protocol(Protocol):
         """
         pass
 
-    def active_floats(self) -> list[tuple[Machine_Knit_Loop, Machine_Knit_Loop]]:
+    @property
+    def active_loops(self) -> set[Machine_Knit_Loop]:
         """
         Returns:
-            list[tuple[Machine_Knit_Loop, Machine_Knit_Loop]]: List of all active floats between two active loops currently held on the needle beds.
+            set[Machine_Knit_Loop]: The set of loops currently held on a needle.
         """
         active_loops = set()
         for n in self.all_loops():
             active_loops.update(n.held_loops)
         for n in self.all_slider_loops():
             active_loops.update(n.held_loops)
-        floats = [(l, l.next_loop_on_yarn()) for l in active_loops]
-        return [(l, nl) for l, nl in floats if isinstance(nl, Machine_Knit_Loop) and nl in active_loops]
+        return active_loops
+
+    def active_floats(self) -> list[tuple[Machine_Knit_Loop, Machine_Knit_Loop]]:
+        """
+        Returns:
+            list[tuple[Machine_Knit_Loop, Machine_Knit_Loop]]: List of all active floats between two active loops currently held on the needle beds.
+        """
+        floats = [(l, l.next_loop_on_yarn()) for l in self.active_loops]
+        return [(l, nl) for l, nl in floats if isinstance(nl, Machine_Knit_Loop) and nl in self.active_loops]
+
+    def loops_crossed_by_float(self, loop1: Machine_Knit_Loop, loop2: Machine_Knit_Loop) -> set[Machine_Knit_Loop]:
+        """
+        Args:
+            loop1 (Machine_Knit_Loop): First loop in the float.
+            loop2 (Machine_Knit_Loop): Second loop in the float.
+
+        Returns:
+            set[Machine_Knit_Loop]: The set of machine knit loops that are held on needles crossed by the given float.
+        """
+        needle1 = loop1.holding_needle
+        assert needle1 is not None
+        needle2 = loop2.holding_needle
+        assert needle2 is not None
+        left_slot = min(needle1.slot_number(self.rack), needle2.slot_number(self.rack))
+        right_slot = max(needle1.slot_number(self.rack), needle2.slot_number(self.rack))
+        return {
+            l
+            for l in self.active_loops
+            if l.holding_needle is not None and left_slot < l.holding_needle.slot_number(self.rack) < right_slot
+        }
 
     @overload
     def get_carrier(self, carrier: int | Yarn_Carrier) -> Yarn_Carrier: ...

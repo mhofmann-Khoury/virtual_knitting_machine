@@ -24,7 +24,7 @@ class Path_Element(Visualizer_Element):
     Wrapper class for Path SVG elements, particularly useful for creating curves and splines.
 
     Attributes:
-        path_type (Path_Type): Type of path to form with this path element.
+        _path_type (Path_Type): Type of path to form with this path element.
         control_points (list[ControlPoint]): List of control points for this path element.
         stroke (str): The color of the path line.
 
@@ -38,7 +38,8 @@ class Path_Element(Visualizer_Element):
         end_y: int,
         name: str,
         stroke: str,
-        control_points: list[tuple[int, int]] | None = None,
+        stroke_width: int,
+        control_points: list[tuple[float, float]] | None = None,
         path_type: Path_Type = Path_Type.Line,
         **element_kwargs: Any,
     ):
@@ -52,7 +53,8 @@ class Path_Element(Visualizer_Element):
             end_y (int): The y coordinate of the path's ending point relative to its parent.
             name (str): The name of the path element used as the element id.
             stroke (str): The name of the stroke color used for this path.
-            control_points (list[tuple[int, int]], optional): The control points of the path. Defaults to an empty list to form lines.
+            stroke_width (int): The width of the path line.
+            control_points (list[tuple[float, float]], optional): The control points of the path. Defaults to an empty list to form lines.
             path_type (Path_Type): The type of path element this SVG element represents. This should match the provided number of control points.
             darken_stroke (bool, optional): If True, the stroke color is automatically darkened (as in a fill color for loops on a yarn). Defaults to True.
             **element_kwargs (Any): Keyword arguments to configure the Path SVG element. Usually includes "stroke_width".
@@ -60,10 +62,10 @@ class Path_Element(Visualizer_Element):
         super().__init__(start_x, start_y, name, **element_kwargs)
         self._end_x: int = end_x
         self._end_y: int = end_y
-        self.path_type: Path_Type = path_type
-        self.control_points: list[tuple[int, int]] = [] if control_points is None else control_points
+        self._path_type: Path_Type = path_type
+        self.control_points: list[tuple[float, float]] = [] if control_points is None else control_points
         self.stroke: str = stroke
-        self._element_kwargs["stroke"] = self.stroke
+        self.stroke_width: int = stroke_width
 
     @property
     def path_data(self) -> str:
@@ -71,9 +73,9 @@ class Path_Element(Visualizer_Element):
         Returns:
             str: The SVG path data string to form the path's specific curve.
         """
-        if self.path_type == Path_Type.Cubic:
+        if self._path_type == Path_Type.Cubic:
             return self.cubic_bezier_path_data
-        elif self.path_type == Path_Type.Quadratic:
+        elif self._path_type == Path_Type.Quadratic:
             return self.quadratic_bezier_path_data
         else:  # Default to lines because any number of control points can be ignored to from a line
             return self.line_path_data
@@ -110,23 +112,61 @@ class Path_Element(Visualizer_Element):
         """
         return self._end_y
 
-    def control_x(self, cp_index: int = 1) -> int:
+    @property
+    def x_dist(self) -> int:
+        """
+        Returns:
+            int: The distance between the x coordinates at the start and end of the path.
+        """
+        return abs(self.start_x - self.end_x)
+
+    @property
+    def y_dist(self) -> int:
+        """
+        Returns:
+            int: The distance between the y coordinates at the start and end of the path.
+        """
+        return abs(self.start_y - self.end_y)
+
+    @property
+    def mid_x(self) -> float:
+        """
+        Returns:
+            float: The midpoint between the x coordinates at the start and end of the path.
+        """
+        if self.start_x < self.end_x:
+            return self.start_x + (self.x_dist / 2)
+        else:
+            return self.end_x + (self.x_dist / 2)
+
+    @property
+    def mid_y(self) -> float:
+        """
+        Returns:
+            float: The midpoint between the y coordinates at the start and end of the path.
+        """
+        if self.start_y < self.end_y:
+            return self.start_y + (self.y_dist / 2)
+        else:
+            return self.end_y + (self.y_dist / 2)
+
+    def control_x(self, cp_index: int = 1) -> float:
         """
         Args:
             cp_index (int, optional): Index of the control point. Defaults to first control point.
 
         Returns:
-            int: The x coordinate of the specified control point.
+            float: The x coordinate of the specified control point.
         """
         return self.control_points[cp_index][0]
 
-    def control_y(self, cp_index: int = 1) -> int:
+    def control_y(self, cp_index: int = 1) -> float:
         """
         Args:
             cp_index (int, optional): Index of the control point. Defaults to first control point.
 
         Returns:
-            int: The y coordinate of the specified control point.
+            float: The y coordinate of the specified control point.
         """
         return self.control_points[cp_index][1]
 
@@ -172,12 +212,12 @@ class Path_Element(Visualizer_Element):
             str: SVG path data string for the quadratic Bézier curve.
         """
         if len(self.control_points) == 0:
-            control_x = (self.start_x + self.end_x) // 2
+            control_x = self.mid_x
             # Offset perpendicular to the line for a natural arc
-            control_y = (self.start_y + self.end_y) // 2 - abs(self.end_x - self.start_x) // 4
+            control_y = (self.start_y + self.end_y) / 2 - abs(self.end_x - self.start_x) / 4
         else:
-            control_x = self.control_x(1)
-            control_y = self.control_y(1)
+            control_x = self.control_x(0)
+            control_y = self.control_y(0)
         return f"M {self.start_x},{self.start_y} Q {control_x},{control_y} {self.end_x},{self.end_y}"
 
     @property
@@ -204,7 +244,41 @@ class Path_Element(Visualizer_Element):
         """
         if len(self.control_points) != 2:
             raise ValueError("Cubic Bezier curve requires 2 control points.")
-        return f"M {self.start_x},{self.start_y} C {self.control_x(1)},{self.control_y(1)} {self.control_x(2)},{self.control_y(2)} {self.end_x},{self.end_y}"
+        return f"M {self.start_x},{self.start_y} C {self.control_x(0)},{self.control_y(0)} {self.control_x(1)},{self.control_y(1)} {self.end_x},{self.end_y}"
+
+    def set_cubic_downward_curve(self, peak_of_curve: float) -> None:
+        """
+        Sets the path type to a downward facing arc set at the midpoint between the start and end position and peaking above the highest end point.
+
+        Args:
+            peak_of_curve (float): The amount for the arc to peak above the highest end point.
+        """
+        self._path_type = Path_Type.Cubic
+        self.control_points = [(self.start_x, self.start_y - peak_of_curve), (self.end_x, self.end_y - peak_of_curve)]
+
+    def set_cubic_upward_curve(self, peak_of_curve: float) -> None:
+        """
+        Sets the path type to an up facing arc set at the midpoint between the start and end position and peaking below the lowest end point.
+
+        Args:
+            peak_of_curve (int): The amount for the arc to peak below the lowest end point.
+        """
+        self._path_type = Path_Type.Cubic
+        self.control_points = [(self.start_x, self.start_y + peak_of_curve), (self.end_x, self.end_y + peak_of_curve)]
+
+    def set_cubic_crossing_curve(self) -> None:
+        """
+        Sets the path type to form a cube curve between the two points at diagonal positions from each other.
+        """
+        self._path_type = Path_Type.Cubic
+        self.control_points = [(self.start_x, self.end_y), (self.end_x, self.start_y)]
 
     def _build_svg_element(self) -> Path:
-        return Path(d=self.path_data, id=self.name, **self._element_kwargs)
+        return Path(
+            d=self.path_data,
+            id=self.name,
+            stroke=self.stroke,
+            stroke_width=self.stroke_width,
+            fill="none",
+            **self._element_kwargs,
+        )

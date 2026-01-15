@@ -30,6 +30,10 @@ class Machine_Knit_Loop(Loop):
         needle_history (list[Needle | None]): The list of needles in the order that they held loops. The last element will be None if the loop is dropped from a needle.
     """
 
+    _Machine_Loop_Count: int = (
+        0  # The number of loops that have been made since the beginning of the machine knitting session.
+    )
+
     def __init__(self, loop_id: int, yarn: Machine_Knit_Yarn, source_needle: Needle) -> None:
         """Initialize a machine knit loop with yarn and source needle information.
 
@@ -42,11 +46,21 @@ class Machine_Knit_Loop(Loop):
             Slider_Loop_Exception: If attempting to create a loop on a slider needle.
         """
         super().__init__(loop_id, yarn)
+        self._loop_count_on_machine: int = Machine_Knit_Loop._Machine_Loop_Count
+        Machine_Knit_Loop._Machine_Loop_Count += 1  # next instance will be a later loop.
         self.yarn: Machine_Knit_Yarn = yarn  # redeclare yarn with correct typing.
         self.needle_history: list[Needle] = [source_needle]
         self._dropped: bool = False
         if self.source_needle.is_slider:
             raise Slider_Loop_Exception(self.source_needle)
+
+    @property
+    def loop_count_on_machine(self) -> int:
+        """
+        Returns:
+            int: The number of loops that had been created prior to forming this loop. Use this for a time-series comparison of loops across yarns.
+        """
+        return self._loop_count_on_machine
 
     @property
     def holding_needle(self) -> Needle | None:
@@ -122,3 +136,19 @@ class Machine_Knit_Loop(Loop):
             int: A hash value of the tuple of the loop id, the yarn, and the source needle.
         """
         return hash((self.loop_id, self.yarn, self.source_needle))
+
+    def __lt__(self, other: Loop | int) -> bool:
+        """Compare loop_id with another loop or integer for ordering.
+
+        Args:
+            other (Loop | int): The other loop or integer to compare with.
+
+        Returns:
+            bool: True if this loop's id is less than the other's id.
+        """
+        if isinstance(other, int):
+            return self.loop_id < other
+        elif isinstance(other, Machine_Knit_Loop) and self.yarn != other.yarn:
+            return self.loop_count_on_machine < other.loop_count_on_machine
+        else:
+            return self.loop_id < other.loop_id

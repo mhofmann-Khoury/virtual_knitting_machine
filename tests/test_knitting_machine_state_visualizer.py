@@ -48,7 +48,7 @@ class TestKnitting_Machine_State_Visualizer(TestCase):
     def test_mix_sliders(self):
         state = Mock_Machine_State(
             {
-                1: [Needle(is_front=True, position=n) for n in range(3, 4)],
+                1: [Needle(is_front=True, position=n) for n in range(3, 5)],
                 2: [Slider_Needle(is_front=False, position=n) for n in range(7, 10)],
             }
         )
@@ -137,6 +137,27 @@ class TestKnitting_Machine_State_Visualizer(TestCase):
     def test_hook_position_sliders(self):
         state = Mock_Machine_State(
             {1: [Slider_Needle(is_front=True, position=n) for n in range(2, 6)]}, hook_position=4
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_longer_same_bed_floats(self):
+        state = Mock_Machine_State(
+            {
+                1: [Needle(is_front=True, position=n) for n in range(2, 6, 2)],
+                2: [Needle(is_front=False, position=n) for n in range(1, 6, 2)],
+            }
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_complex_floats(self):
+        state = Mock_Machine_State(
+            {
+                1: [Needle(is_front=True, position=n) for n in range(2, 6, 2)],
+                2: [*(Needle(is_front=True, position=n) for n in range(1, 6, 2)), Needle(True, 6)],
+                3: [*(Needle(is_front=False, position=n) for n in range(1, 6, 2)), Needle(True, 7)],
+            }
         )
         visualizer = Knitting_Machine_State_Visualizer(state)
         self.render_and_save(visualizer)

@@ -8,7 +8,10 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop i
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.machine_state_protocol import Knitting_Machine_State_Protocol
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carrier_triangle import Carrier_Triangle
-from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.float_path import Float_Line
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.float_path import (
+    Float_Orientation_To_Neighbors,
+    Float_Path,
+)
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.loop_circle import Loop_Circle
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_bed_visualizer_group import (
     Needle_Bed_Group,
@@ -77,7 +80,7 @@ class Knitting_Machine_State_Visualizer:
         )
         self.loops: dict[Machine_Knit_Loop, Loop_Circle] = {}
         self._add_active_loops()
-        self.floats: set[Float_Line] = set()
+        self.floats: set[Float_Path] = set()
         self._add_active_floats()
         self.carriers: set[Carrier_Triangle] = set()
         if self.settings.render_carriers:
@@ -129,18 +132,37 @@ class Knitting_Machine_State_Visualizer:
         for loop1, loop2 in self.machine_state.active_floats():
             loop_circle1 = self.loops[loop1]
             loop_circle2 = self.loops[loop2]
-            self.floats.add(Float_Line(loop_circle1, loop_circle2, stroke_width=self.settings.Loop_Stroke_Width))
+            needle_1 = loop1.holding_needle
+            assert needle_1 is not None
+            needle_2 = loop2.holding_needle
+            assert needle_2 is not None
+            loops_crossed = self.machine_state.loops_crossed_by_float(loop1, loop2)
+            # filter to loops that share a bed with at least one loop in the float
+            loops_crossed = {
+                l
+                for l in loops_crossed
+                if l.holding_needle is not None and l.holding_needle.is_front in (needle_1.is_front, needle_2.is_front)
+            }
+            orientation = Float_Orientation_To_Neighbors.Along_Bed
+            if len(loops_crossed) > 0:
+                if not any(l > loop1 or l > loop2 for l in loops_crossed):  # All loops are older than float
+                    orientation = Float_Orientation_To_Neighbors.Curve_Into_Bed
+                elif not any(l < loop1 or l < loop2 for l in loops_crossed):  # All loops are younger than the float.
+                    orientation = Float_Orientation_To_Neighbors.Curve_Away_From_Bed
+            self.floats.add(
+                Float_Path(
+                    loop_circle1, loop_circle2, self.machine_state.rack, self.settings, same_bed_orientation=orientation
+                )
+            )
 
     def _add_active_loops(self) -> None:
         """
         Renders the loop-circles for each active loop on the diagram.
         """
-        for needle in self.machine_state.all_slider_loops():
-            for loop in needle.held_loops:
-                self.loops[loop] = Loop_Circle(loop, self.needle_bed_group[needle], self.settings)
-        for needle in self.machine_state.all_loops():
-            for loop in needle.held_loops:
-                self.loops[loop] = Loop_Circle(loop, self.needle_bed_group[needle], self.settings)
+        for loop in sorted(self.machine_state.active_loops):
+            needle = loop.holding_needle
+            assert needle is not None
+            self.loops[loop] = Loop_Circle(loop, self.needle_bed_group[needle], self.settings)
 
     def _add_active_carriers(self) -> None:
         """
