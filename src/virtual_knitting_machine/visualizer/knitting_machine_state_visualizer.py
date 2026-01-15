@@ -92,10 +92,6 @@ class Knitting_Machine_State_Visualizer:
             if self.machine_state.hook_position is not None
             else None
         )
-        self.drawing: Drawing = Drawing(
-            size=(f"{self.settings.Drawing_Width}px", f"{self.settings.Drawing_Height}px"),
-            viewBox=f"0 0 {self.settings.Drawing_Width} {self.settings.Drawing_Height}",
-        )
 
     @property
     def needle_count(self) -> int:
@@ -178,24 +174,23 @@ class Knitting_Machine_State_Visualizer:
                 )
             )
 
-    def render(self) -> Drawing:
+    def render(self, drawing: Drawing) -> None:
         """
         Render the complete visualization by building all layers.
 
-        Returns:
-            Drawing: The complete SVG drawing.
+        Args:
+            drawing (Drawing): The drawing to add teh diagram to.
         """
         # Add layers to drawing in order (bottom to top)
-        self.needle_bed_group.add_to_drawing(self.drawing)
+        self.needle_bed_group.add_to_drawing(drawing)
         for float_line in self.floats:
-            float_line.add_to_drawing(self.drawing)
+            float_line.add_to_drawing(drawing)
         for loop_circle in self.loops.values():
-            loop_circle.add_to_drawing(self.drawing)
+            loop_circle.add_to_drawing(drawing)
         for carrier_triangle in self.carriers:
-            carrier_triangle.add_to_drawing(self.drawing)
+            carrier_triangle.add_to_drawing(drawing)
         if self.yarn_inserting_hook_block is not None:
-            self.yarn_inserting_hook_block.add_to_drawing(self.drawing)
-        return self.drawing
+            self.yarn_inserting_hook_block.add_to_drawing(drawing)
 
     def save(self, filename: str) -> None:
         """
@@ -204,8 +199,9 @@ class Knitting_Machine_State_Visualizer:
         Args:
             filename (str): Path to save the SVG file.
         """
-        self.render()
-        self.drawing.saveas(filename)
+        drawing = self._new_drawing()
+        self.render(drawing)
+        drawing.saveas(filename)
         format_svg(filename)
 
     def get_svg_string(self) -> str:
@@ -215,5 +211,15 @@ class Knitting_Machine_State_Visualizer:
         Returns:
             str: The SVG content as a string.
         """
-        self.render()
-        return str(self.drawing.tostring())
+        drawing = self._new_drawing()
+        self.render(drawing)
+        return str(drawing.tostring())
+
+    def _new_drawing(self) -> Drawing:
+        """
+        Returns:
+            Drawing: An empty drawing sized for the diagram."""
+        return Drawing(
+            size=(f"{self.settings.Drawing_Width}px", f"{self.settings.Drawing_Height}px"),
+            viewBox=f"0 0 {self.settings.Drawing_Width} {self.settings.Drawing_Height}",
+        )

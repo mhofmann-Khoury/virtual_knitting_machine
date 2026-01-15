@@ -10,20 +10,14 @@ from virtual_knitting_machine.visualizer.knitting_machine_state_visualizer impor
 class TestKnitting_Machine_State_Visualizer(TestCase):
 
     @staticmethod
-    def render_and_save(
-        visualizer: Knitting_Machine_State_Visualizer, save_file: str = "test_diagram.svg", print_svg: bool = True
-    ):
+    def render_and_save(visualizer: Knitting_Machine_State_Visualizer, save_file: str = "test_diagram.svg"):
         """
         Renders the given visualizer and outputs to a svg file.
         Args:
             visualizer (Knitting_Machine_State_Visualizer): The visualizer to render.
             save_file (str, optional): A path to a file to save the rendered svg file. Defaults to "test_diagram.svg".
-            print_svg (bool, optional): If True, prints the svg to console. Defaults to True.
         """
-        visualizer.render()
         visualizer.save(save_file)
-        if print_svg:
-            print(visualizer.get_svg_string())
 
     def test_render_front_needles(self):
         state = Mock_Machine_State({1: [Needle(is_front=True, position=n) for n in range(2, 3)]})
