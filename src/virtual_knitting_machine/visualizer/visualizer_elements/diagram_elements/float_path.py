@@ -2,7 +2,7 @@ from typing import Any
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
-from virtual_knitting_machine.visualizer.visualizer_elements.loop_circle import Loop_Circle
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.loop_circle import Loop_Circle
 from virtual_knitting_machine.visualizer.visualizer_elements.path_elements import Path_Element
 
 

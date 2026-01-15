@@ -67,7 +67,7 @@ class Yarn_Insertion_System(Sequence[Yarn_Carrier]):
         self._hooked_carrier: Yarn_Carrier | None = None
 
     @property
-    def hook_position(self) -> None | int:
+    def hook_position(self) -> int | None:
         """
         Returns:
             None | int: The needle slot of the yarn-insertion hook or None if the yarn-insertion hook is not active.
@@ -346,6 +346,7 @@ class Yarn_Insertion_System(Sequence[Yarn_Carrier]):
         carrier_ids: list[int | Yarn_Carrier] | Yarn_Carrier_Set,
         needle: Needle,
         direction: Carriage_Pass_Direction,
+        rack: int,
     ) -> list[Machine_Knit_Loop]:
         """Create loops using specified carriers on a needle, handling insertion hook positioning and float management.
 
@@ -353,6 +354,7 @@ class Yarn_Insertion_System(Sequence[Yarn_Carrier]):
             carrier_ids (list[int | Yarn_Carrier] | Yarn_Carrier_Set): The carriers to make the loops with on this needle.
             needle (Needle): The needle to make the loops on.
             direction (Carriage_Pass_Direction): The carriage direction for this operation.
+            rack (int): The current racking alignment between the beds when the loops are formed.
 
         Returns:
             list[Machine_Knit_Loop]: The set of loops made on this machine.
@@ -364,7 +366,7 @@ class Yarn_Insertion_System(Sequence[Yarn_Carrier]):
         assert isinstance(needle, Needle)
         if self.searching_for_position:  # mark inserting hook position
             self._hook_position = (
-                needle.position + 1
+                needle.slot_number(rack) + 1
             )  # Position yarn inserting hook at the needle slot to the right of the needle.
             self.hook_input_direction = direction
             self._searching_for_position = False
@@ -408,6 +410,7 @@ class Yarn_Insertion_System(Sequence[Yarn_Carrier]):
 
     @overload
     def __getitem__(self, item: slice) -> list[Yarn_Carrier]: ...
+
     @overload
     def __getitem__(self, item: Yarn_Carrier) -> Yarn_Carrier: ...
 

@@ -4,7 +4,7 @@ from typing import Any
 
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
-from virtual_knitting_machine.visualizer.visualizer_elements.needle_group import Needle_Group
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_group import Needle_Group
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_shapes import Circle_Element
 
 

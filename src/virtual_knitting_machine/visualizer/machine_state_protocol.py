@@ -62,6 +62,17 @@ class Knitting_Machine_State_Protocol(Protocol):
         """
         pass
 
+    @property
+    def hook_position(self) -> int | None:
+        """
+        Returns:
+            None | int: The needle slot of the yarn-insertion hook or None if the yarn-insertion hook is not active.
+
+        Notes:
+            The hook position will be None if its exact position is to the right of the edge of the knitting machine bed.
+        """
+        pass
+
     def all_slider_loops(self) -> list[Slider_Needle]:
         """Get list of all slider needles holding loops with front bed sliders given first.
 

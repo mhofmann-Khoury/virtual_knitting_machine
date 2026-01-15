@@ -128,3 +128,15 @@ class TestKnitting_Machine_State_Visualizer(TestCase):
         )
         visualizer = Knitting_Machine_State_Visualizer(state)
         self.render_and_save(visualizer)
+
+    def test_hook_position_no_sliders(self):
+        state = Mock_Machine_State({1: [Needle(is_front=True, position=n) for n in range(2, 6)]}, hook_position=3)
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_hook_position_sliders(self):
+        state = Mock_Machine_State(
+            {1: [Slider_Needle(is_front=True, position=n) for n in range(2, 6)]}, hook_position=4
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)

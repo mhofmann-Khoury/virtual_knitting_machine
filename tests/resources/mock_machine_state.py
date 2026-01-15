@@ -18,7 +18,9 @@ class Mock_Machine_State(Knitting_Machine_State_Protocol):
         carriers_to_active_needles: dict[int, list[Needle]],
         rack: int = 0,
         all_needle_rack: bool = False,
+        hook_position: int | None = None,
     ) -> None:
+        self._hook_position: int | None = hook_position
         self._rack: int = rack
         self._all_needle_rack: bool = all_needle_rack
         self.carriers: dict[int, Yarn_Carrier] = {}
@@ -38,6 +40,17 @@ class Mock_Machine_State(Knitting_Machine_State_Protocol):
         ]
         self._leftmost_slot: int = int(min(active_needles)) if len(active_needles) > 0 else 0
         self._rightmost_slot: int = int(max(active_needles)) if len(active_needles) > 0 else 0
+
+    @property
+    def hook_position(self) -> int | None:
+        """
+        Returns:
+            None | int: The needle slot of the yarn-insertion hook or None if the yarn-insertion hook is not active.
+
+        Notes:
+            The hook position will be None if its exact position is to the right of the edge of the knitting machine bed.
+        """
+        return self._hook_position
 
     @overload
     def get_carrier(self, carrier: int | Yarn_Carrier) -> Yarn_Carrier: ...

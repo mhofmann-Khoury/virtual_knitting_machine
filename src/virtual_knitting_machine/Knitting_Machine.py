@@ -88,6 +88,17 @@ class Knitting_Machine:
         """
         return int(self.machine_specification.maximum_rack)
 
+    @property
+    def hook_position(self) -> int | None:
+        """
+        Returns:
+            None | int: The needle slot of the yarn-insertion hook or None if the yarn-insertion hook is not active.
+
+        Notes:
+            The hook position will be None if its exact position is to the right of the edge of the knitting machine bed.
+        """
+        return self.carrier_system.hook_position
+
     def __len__(self) -> int:
         """Get the needle bed width of the machine.
 
@@ -478,7 +489,7 @@ class Knitting_Machine:
         """
         self.miss(carrier_set, needle, direction)  # aligns the carriers and completes the carriage movement.
         needle = self[needle]
-        new_loops: list[Machine_Knit_Loop] = self.carrier_system.make_loops(carrier_set, needle, direction)
+        new_loops: list[Machine_Knit_Loop] = self.carrier_system.make_loops(carrier_set, needle, direction, self.rack)
         if needle.is_front:
             self.front_bed.add_loops(needle, new_loops, drop_prior_loops=False)
         else:
@@ -519,7 +530,7 @@ class Knitting_Machine:
         bed = self.front_bed if needle.is_front else self.back_bed
         parent_loops = bed.drop(needle)
         # Make child loops by this specification
-        child_loops = self.carrier_system.make_loops(carrier_set, needle, direction)
+        child_loops = self.carrier_system.make_loops(carrier_set, needle, direction, self.rack)
         bed.add_loops(needle, child_loops, drop_prior_loops=False)  # drop should have occurred in prior line
 
         # Create stitches in the knitgraph.

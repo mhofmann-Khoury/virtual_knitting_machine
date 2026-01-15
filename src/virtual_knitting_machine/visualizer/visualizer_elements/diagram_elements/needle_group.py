@@ -10,7 +10,7 @@ from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_group im
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_shapes import Rect_Element
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.visualizer.visualizer_elements.needle_slot import Needle_Slot
+    from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_slot import Needle_Slot
 
 
 class Needle_Group(Visualizer_Group):

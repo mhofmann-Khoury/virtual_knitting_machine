@@ -4,8 +4,8 @@ from typing import overload
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
-from virtual_knitting_machine.visualizer.visualizer_elements.needle_group import Needle_Group
-from virtual_knitting_machine.visualizer.visualizer_elements.needle_slot import Needle_Slot
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_group import Needle_Group
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_slot import Needle_Slot
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import Text_Element, Visualizer_Element
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_group import Visualizer_Group
 

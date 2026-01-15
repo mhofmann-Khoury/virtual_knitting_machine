@@ -7,10 +7,15 @@ from svgwrite import Drawing
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.machine_state_protocol import Knitting_Machine_State_Protocol
-from virtual_knitting_machine.visualizer.visualizer_elements.carrier_triangle import Carrier_Triangle
-from virtual_knitting_machine.visualizer.visualizer_elements.float_path import Float_Line
-from virtual_knitting_machine.visualizer.visualizer_elements.loop_circle import Loop_Circle
-from virtual_knitting_machine.visualizer.visualizer_elements.needle_bed_visualizer_group import Needle_Bed_Group
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carrier_triangle import Carrier_Triangle
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.float_path import Float_Line
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.loop_circle import Loop_Circle
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_bed_visualizer_group import (
+    Needle_Bed_Group,
+)
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.yarn_inserting_hook_block import (
+    Yarn_Inserting_Hook_Block,
+)
 
 
 def format_svg(svg_file: str) -> None:
@@ -77,10 +82,25 @@ class Knitting_Machine_State_Visualizer:
         self.carriers: set[Carrier_Triangle] = set()
         if self.settings.render_carriers:
             self._add_active_carriers()
+        self.yarn_inserting_hook_block: Yarn_Inserting_Hook_Block | None = (
+            Yarn_Inserting_Hook_Block(
+                show_sliders, self.machine_state.hook_position - self.leftmost_slot, self.needle_count, self.settings
+            )
+            if self.machine_state.hook_position is not None
+            else None
+        )
         self.drawing: Drawing = Drawing(
             size=(f"{self.settings.Drawing_Width}px", f"{self.settings.Drawing_Height}px"),
             viewBox=f"0 0 {self.settings.Drawing_Width} {self.settings.Drawing_Height}",
         )
+
+    @property
+    def needle_count(self) -> int:
+        """
+        Returns:
+            int: The number of needle slots rendered on this diagram.
+        """
+        return self.rightmost_slot + 1 - self.leftmost_slot
 
     def _get_bed_slots(self) -> tuple[int, int]:
         """
@@ -151,6 +171,8 @@ class Knitting_Machine_State_Visualizer:
             loop_circle.add_to_drawing(self.drawing)
         for carrier_triangle in self.carriers:
             carrier_triangle.add_to_drawing(self.drawing)
+        if self.yarn_inserting_hook_block is not None:
+            self.yarn_inserting_hook_block.add_to_drawing(self.drawing)
         return self.drawing
 
     def save(self, filename: str) -> None:
