@@ -7,6 +7,7 @@ from svgwrite import Drawing
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.machine_state_protocol import Knitting_Machine_State_Protocol
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carriage_element import Carriage_Element
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carrier_triangle import Carrier_Triangle
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.float_path import (
     Float_Orientation_To_Neighbors,
@@ -90,6 +91,18 @@ class Knitting_Machine_State_Visualizer:
                 show_sliders, self.machine_state.hook_position - self.leftmost_slot, self.needle_count, self.settings
             )
             if self.machine_state.hook_position is not None
+            else None
+        )
+        carriage_on_diagram = self.leftmost_slot <= self.machine_state.current_needle_slot < self.rightmost_slot
+        self.carriage_block: Carriage_Element | None = (
+            Carriage_Element(
+                self.machine_state.last_direction,
+                self.machine_state.transferring,
+                self.machine_state.current_needle_slot - self.leftmost_slot,
+                show_sliders,
+                self.settings,
+            )
+            if self.settings.render_carriage and carriage_on_diagram
             else None
         )
 
@@ -191,6 +204,8 @@ class Knitting_Machine_State_Visualizer:
             carrier_triangle.add_to_drawing(drawing)
         if self.yarn_inserting_hook_block is not None:
             self.yarn_inserting_hook_block.add_to_drawing(drawing)
+        if self.carriage_block is not None:
+            self.carriage_block.add_to_drawing(drawing)
 
     def save(self, filename: str) -> None:
         """

@@ -3,6 +3,7 @@
 from collections.abc import Sequence
 from typing import Protocol, overload
 
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
@@ -70,6 +71,33 @@ class Knitting_Machine_State_Protocol(Protocol):
 
         Notes:
             The hook position will be None if its exact position is to the right of the edge of the knitting machine bed.
+        """
+        pass
+
+    @property
+    def transferring(self) -> bool:
+        """Check if carriage is currently running transfers.
+
+        Returns:
+            bool: True if carriage is currently running transfers, False otherwise.
+        """
+        pass
+
+    @property
+    def current_needle_slot(self) -> int:
+        """Get the front bed aligned position of the carriage at this time.
+
+        Returns:
+            int: The current needle position of the carriage.
+        """
+        pass
+
+    @property
+    def last_direction(self) -> Carriage_Pass_Direction:
+        """Get the last direction the carriage moved in.
+
+        Returns:
+            Carriage_Pass_Direction: The last direction the carriage moved in.
         """
         pass
 

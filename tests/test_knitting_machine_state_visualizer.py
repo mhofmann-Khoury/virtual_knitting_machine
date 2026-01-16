@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from resources.mock_machine_state import Mock_Machine_State
 
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.visualizer.knitting_machine_state_visualizer import Knitting_Machine_State_Visualizer
@@ -152,6 +153,60 @@ class TestKnitting_Machine_State_Visualizer(TestCase):
                 2: [*(Needle(is_front=True, position=n) for n in range(1, 6, 2)), Needle(True, 6)],
                 3: [*(Needle(is_front=False, position=n) for n in range(1, 6, 2)), Needle(True, 7)],
             }
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_left_transferring_carriage(self):
+        state = Mock_Machine_State(
+            {1: [Needle(is_front=True, position=n) for n in range(1, 10)]},
+            carriage_is_transferring=True,
+            carriage_needle_slot=2,
+            carriage_direction=Carriage_Pass_Direction.Leftward,
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_right_transferring_carriage(self):
+        state = Mock_Machine_State(
+            {1: [Needle(is_front=True, position=n) for n in range(1, 10)]},
+            carriage_is_transferring=True,
+            carriage_needle_slot=6,
+            carriage_direction=Carriage_Pass_Direction.Rightward,
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_left_carriage(self):
+        state = Mock_Machine_State(
+            {1: [Needle(is_front=True, position=n) for n in range(1, 10)]},
+            carriage_is_transferring=False,
+            carriage_needle_slot=2,
+            carriage_direction=Carriage_Pass_Direction.Leftward,
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_right_carriage(self):
+        state = Mock_Machine_State(
+            {1: [Needle(is_front=True, position=n) for n in range(1, 10)]},
+            carriage_is_transferring=False,
+            carriage_needle_slot=6,
+            carriage_direction=Carriage_Pass_Direction.Rightward,
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_carriage_off_right(self):
+        state = Mock_Machine_State(
+            {1: [Needle(is_front=True, position=n) for n in range(1, 10)]}, carriage_needle_slot=11
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_carriage_off_left(self):
+        state = Mock_Machine_State(
+            {1: [Needle(is_front=True, position=n) for n in range(4, 10)]}, carriage_needle_slot=2
         )
         visualizer = Knitting_Machine_State_Visualizer(state)
         self.render_and_save(visualizer)

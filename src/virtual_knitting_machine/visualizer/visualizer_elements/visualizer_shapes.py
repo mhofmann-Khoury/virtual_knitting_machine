@@ -50,10 +50,113 @@ class Visualizer_Shape(Visualizer_Element):
         self._element_kwargs["stroke_width"] = self.stroke_width
 
 
-class Triangle_Element(Visualizer_Shape):
+class Polygon_Element(Visualizer_Shape):
+    """
+    A wrapper for Polygon SVG elements.
+    """
+
+    def __init__(
+        self,
+        points: list[tuple[float, float]],
+        name: str,
+        stroke_width: int,
+        orientation: int | tuple[int, int] = 0,
+        fill: str | float = "none",
+        stroke: str | float = 0.7,
+        **shape_kwargs: Any,
+    ):
+        """
+        Args:
+            points (list[tuple[float, float]]): The ordered coordinates of the vertices of the polygon element.
+            name (str): The name-id of the shape.
+            stroke_width (int): The width of the outline of the shape.
+            orientation (int | tuple[int, int], optional):
+                If given a tuple, the vertices will be oriented from the given coordinate x, y point (e.g., a center point).
+                If given an integer, the vertices will be oriented from the vertex at that index.
+                Defaults to orienting around the first point in the points list.
+            fill (str | int, optional): The fill color of the shape or the factor to lighten the stroke color by. Defaults to no fill color.
+            stroke (str | float, optional): The color of the outline of the shape or the factor to darken the fill color by. Defaults to darkening the fill color by a factor of 0.7.
+            **shape_kwargs (Any): Additional keyword arguments to pass to the shape.
+        """
+        self._points: list[tuple[float, float]] = points
+        if isinstance(orientation, tuple):
+            x, y = orientation
+            exclude_index = -1
+        else:
+            x, y = int(self[orientation][0]), int(self[orientation][1])
+            exclude_index = orientation
+        super().__init__(x, y, name, stroke_width, fill, stroke, **shape_kwargs)
+        self._orient_from_origin(exclude_index)
+
+    def _orient_from_origin(self, exclude_index: int = -1) -> None:
+        """Adjusts the polygon vertices to be relative to x, y origin of this polygon.
+
+        Args:
+            exclude_index (int, optional): If an index is provided, that point is assumed to be the origin of the polygon element and should not be modified. Defaults to modifying all vertices.
+        """
+        self._points = [
+            (v[0] + self.x, v[1] + self.y) if i != exclude_index else (v[0], v[1]) for i, v in enumerate(self._points)
+        ]
+
+    @property
+    def x_coordinates(self) -> list[float]:
+        """
+        Returns:
+            list[float]: The x coordinate values for each vertex in the polygon.
+        """
+        return [x for x, _y in self._points]
+
+    @property
+    def y_coordinates(self) -> list[float]:
+        """
+        Returns:
+            list[float]: The y coordinate values for each vertex in the polygon.
+        """
+        return [y for _x, y in self._points]
+
+    @property
+    def global_points(self) -> list[tuple[float, float]]:
+        """
+        Returns:
+            list[tuple[float, float]]: The global coordinates of the polygon vertices.
+        """
+        if self.parent is not None:
+            return [(x + self.global_x, y + self.global_y) for x, y in self._points]
+        else:
+            return self._points
+
+    def _build_svg_element(self) -> Polygon:
+        return Polygon(
+            points=self.global_points,
+            id=self.name,
+            **self._element_kwargs,
+        )
+
+    def __getitem__(self, item: int) -> tuple[float, float]:
+        """
+        Args:
+            item (int): The index of the polygon vertice to return.
+
+        Returns:
+            tuple[float, float]: The coordinate of the indexed vertice.
+
+        Raises:
+            KeyError: If the index is out of bounds.
+        """
+        return self._points[item]
+
+    def __len__(self) -> int:
+        """
+        Returns:
+            int: The number of vertices in the polygon.
+        """
+        return len(self._points)
+
+
+class Triangle_Element(Polygon_Element):
     """
     Wrapper class for equilateral Triangle SVG elements.
-    The triangle points downward and is positioned around a center point.
+    The triangle points downward and is oriented to its bottom index.
 
     Attributes:
         side_length (int): The length of each side of the equilateral triangle.
@@ -83,8 +186,16 @@ class Triangle_Element(Visualizer_Shape):
             stroke (str | float, optional): The color of the outline of the shape or the factor to darken the fill color by. Defaults to darkening the fill color by a factor of 0.7.
             **shape_kwargs (Any): Additional keyword arguments to pass to the shape.
         """
-        super().__init__(x, y, name, stroke_width, fill, stroke, **shape_kwargs)
         self.side_length: int = side_length
+        super().__init__(
+            points=[(x, y), self.top_left_vertex, self.top_right_vertex],
+            orientation=0,
+            name=name,
+            stroke_width=stroke_width,
+            fill=fill,
+            stroke=stroke,
+            **shape_kwargs,
+        )
 
     @property
     def height(self) -> float:
@@ -100,7 +211,7 @@ class Triangle_Element(Visualizer_Shape):
         Returns:
             tuple[float, float]: The top left vertex of the equilateral triangle pointing downward.
         """
-        return self.global_x - (self.side_length / 2), self.global_y - self.height
+        return -1 * (self.side_length / 2), -1 * self.height
 
     @property
     def top_right_vertex(self) -> tuple[float, float]:
@@ -108,7 +219,7 @@ class Triangle_Element(Visualizer_Shape):
         Returns:
             tuple[float, float]: The top right vertex of the equilateral triangle pointing downward.
         """
-        return self.global_x + (self.side_length / 2), self.global_y - self.height
+        return self.side_length / 2, -1 * self.height
 
     @property
     def bottom_vertex(self) -> tuple[int, int]:
@@ -116,14 +227,7 @@ class Triangle_Element(Visualizer_Shape):
         Returns:
             tuple[int, int]: The bottom vertex of the equilateral triangle pointing downward.
         """
-        return self.global_x, self.global_y
-
-    def _build_svg_element(self) -> Polygon:
-        return Polygon(
-            points=[self.top_left_vertex, self.bottom_vertex, self.top_right_vertex],
-            id=self.name,
-            **self._element_kwargs,
-        )
+        return self.x, self.y
 
 
 class Rect_Element(Visualizer_Shape):

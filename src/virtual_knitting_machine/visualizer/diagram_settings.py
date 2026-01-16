@@ -16,6 +16,9 @@ class Diagram_Settings:
     Needle_Width: int = 20  # A constant value for the Width of needle squares in the visualization.
     Loop_Buffer: int = 6  # The padding from the edge of loop circles to the edge of the needle box.
     Slider_Background_Color: str = "lightgrey"  # The background color of slider needles.
+    Carriage_Color: str = "grey"  # The color of the carriage element
+    Carriage_Height: int = 30  # The height of the carriage element.
+    Carriage_Width: int = 50  # The width of the carriage element.
     Needle_Stroke_Color: str = "black"  # The color of the lines surrounding needle squares.
     Needle_Stroke_Width: int = 1  # The width of lines surrounding needle squares.
     Loop_Stroke_Width: int = 1  # The width of the circle-strokes for loops.
@@ -29,6 +32,7 @@ class Diagram_Settings:
     render_right_labels: bool = True  # If True, render labels to the right of the needle bed.
     render_empty_sliders: bool = False  # If True, render sliders regardless whether there are active slider loops.
     render_carriers: bool = True  # If True, render the active carrier positions.
+    render_carriage: bool = True  # If True, render the carriage.
     Yarn_Fill_Lightening_Factor: float = 0.3  # The amount to lighten yarn colors for fill of loops and carrier shapes.
 
     @property

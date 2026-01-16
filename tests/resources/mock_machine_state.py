@@ -1,7 +1,10 @@
+"""A mock machine state used for testing machine state diagrams without full knitout execution."""
+
 from typing import Sequence, overload
 
 from knit_graphs.Yarn import Yarn_Properties
 
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
@@ -19,7 +22,12 @@ class Mock_Machine_State(Knitting_Machine_State_Protocol):
         rack: int = 0,
         all_needle_rack: bool = False,
         hook_position: int | None = None,
+        carriage_is_transferring: bool = False,
+        carriage_needle_slot: int = 0,
+        carriage_direction: Carriage_Pass_Direction = Carriage_Pass_Direction.Leftward,
     ) -> None:
+        self._carriage_direction: Carriage_Pass_Direction = carriage_direction
+        self._transferring: bool = carriage_is_transferring
         self._hook_position: int | None = hook_position
         self._rack: int = rack
         self._all_needle_rack: bool = all_needle_rack
@@ -40,6 +48,34 @@ class Mock_Machine_State(Knitting_Machine_State_Protocol):
         ]
         self._leftmost_slot: int = int(min(active_needles)) if len(active_needles) > 0 else 0
         self._rightmost_slot: int = int(max(active_needles)) if len(active_needles) > 0 else 0
+        self._carriage_needle_slot: int = carriage_needle_slot
+
+    @property
+    def transferring(self) -> bool:
+        """Check if carriage is currently running transfers.
+
+        Returns:
+            bool: True if carriage is currently running transfers, False otherwise.
+        """
+        return self._transferring
+
+    @property
+    def current_needle_slot(self) -> int:
+        """Get the front bed aligned position of the carriage at this time.
+
+        Returns:
+            int: The current needle position of the carriage.
+        """
+        return self._carriage_needle_slot
+
+    @property
+    def last_direction(self) -> Carriage_Pass_Direction:
+        """Get the last direction the carriage moved in.
+
+        Returns:
+            Carriage_Pass_Direction: The last direction the carriage moved in.
+        """
+        return self._carriage_direction
 
     @property
     def hook_position(self) -> int | None:
