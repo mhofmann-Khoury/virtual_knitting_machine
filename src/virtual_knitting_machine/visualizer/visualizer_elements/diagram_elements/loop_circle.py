@@ -4,7 +4,7 @@ from typing import Any
 
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
-from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_group import Needle_Group
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_box import Needle_Box
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_shapes import Circle_Element
 
 
@@ -16,7 +16,7 @@ class Loop_Circle(Circle_Element):
     def __init__(
         self,
         loop: Machine_Knit_Loop,
-        needle_group: Needle_Group,
+        needle_box: Needle_Box,
         diagram_settings: Diagram_Settings,
         **shape_kwargs: Any,
     ):
@@ -30,11 +30,11 @@ class Loop_Circle(Circle_Element):
         """
         self.settings: Diagram_Settings = diagram_settings
         self._loop: Machine_Knit_Loop = loop
-        self._needle_group: Needle_Group = needle_group
+        self._needle_box: Needle_Box = needle_box
         super().__init__(
             radius=self.settings.loop_radius,
-            x=needle_group.global_x_position(self.settings.Needle_Width // 2),
-            y=needle_group.global_y_position(self.settings.Needle_Height // 2),
+            x=needle_box.global_x_position(self.settings.Needle_Width // 2),
+            y=needle_box.global_y_position(self.settings.Needle_Height // 2),
             name=self.loop_unique_id,
             stroke_width=self.settings.Loop_Stroke_Width,
             fill=self.settings.Yarn_Fill_Lightening_Factor,

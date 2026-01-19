@@ -285,7 +285,7 @@ class Circle_Element(Visualizer_Shape):
 
     def __init__(
         self,
-        radius: int,
+        radius: float,
         x: int,
         y: int,
         name: str,
@@ -308,7 +308,7 @@ class Circle_Element(Visualizer_Shape):
             **shape_kwargs (Any): Additional keyword arguments to pass to the shape.
         """
         super().__init__(x, y, name, stroke_width, fill, stroke, **shape_kwargs)
-        self.radius: int = radius
+        self.radius: float = radius
 
     def _build_svg_element(self) -> Circle:
         return Circle(center=(self.global_x, self.global_y), id=self.name, r=self.radius, **self._element_kwargs)

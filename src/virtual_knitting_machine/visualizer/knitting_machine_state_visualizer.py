@@ -76,6 +76,7 @@ class Knitting_Machine_State_Visualizer:
             self.rightmost_slot,
             self.machine_state.rack,
             self.machine_state.all_needle_rack,
+            self.machine_state.last_direction,
             show_sliders,
             self.settings,
         )

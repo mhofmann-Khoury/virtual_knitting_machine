@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 
 
@@ -10,22 +11,38 @@ from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier im
 class Diagram_Settings:
     """A data class containing the settings for a virtual knitting machine visualization."""
 
+    # Fixed sizes
     Drawing_Width: int = 400  # The width of the diagram in pixels.
     Drawing_Height: int = 400  # The height of the diagram in pixels.
     Needle_Height: int = 20  # A constant value for the height of needle squares in the visualization.
     Needle_Width: int = 20  # A constant value for the Width of needle squares in the visualization.
-    Loop_Buffer: int = 6  # The padding from the edge of loop circles to the edge of the needle box.
-    Slider_Background_Color: str = "lightgrey"  # The background color of slider needles.
-    Carriage_Color: str = "grey"  # The color of the carriage element
     Carriage_Height: int = 30  # The height of the carriage element.
     Carriage_Width: int = 50  # The width of the carriage element.
+    Label_Height: int = 15  # The height of text in a label.
+    Side_Label_Width: int = 25  # The width of space reserved for the Needle bed side labels.
+    Label_Char_Width: int = 15  # The width allocated to each char in a label.
+
+    # Size Proportions
+    Loop_Portion_Of_Needle: float = 0.6  # The proportion of the needle boxes taken up by a loop.
+
+    # Fill Colors
+    Slider_Background_Color: str = "lightgrey"  # The background color of slider needles.
+    Carriage_Color: str = "grey"  # The color of the carriage element
+    Yarn_Fill_Lightening_Factor: float = 0.3  # The amount to lighten yarn colors for fill of loops and carrier shapes.
+
+    # Stroke Colors
     Needle_Stroke_Color: str = "black"  # The color of the lines surrounding needle squares.
+
+    # Stroke Widths
     Needle_Stroke_Width: int = 1  # The width of lines surrounding needle squares.
     Loop_Stroke_Width: int = 1  # The width of the circle-strokes for loops.
     Carrier_Stroke_Width: int = 1  # The width of triangle carrier outline.
+
     Left_Needle_Buffer: int = 0  # The number of empty slots to show on the left side of the diagram.
     Right_Needle_Buffer: int = 0  # The number of empty slots to show on the right side of the diagram.
     Label_Padding: int = 5  # The padding between labels and needle squares.
+
+    # Rendering Options
     render_front_labels: bool = True  # If True, renders the indices of each needle on the front bed.
     render_back_labels: bool = True  # If True, renders the indices of each needle on the back bed.
     render_left_labels: bool = True  # If True, renders the labels to the left of the needle bed.
@@ -33,15 +50,48 @@ class Diagram_Settings:
     render_empty_sliders: bool = False  # If True, render sliders regardless whether there are active slider loops.
     render_carriers: bool = True  # If True, render the active carrier positions.
     render_carriage: bool = True  # If True, render the carriage.
-    Yarn_Fill_Lightening_Factor: float = 0.3  # The amount to lighten yarn colors for fill of loops and carrier shapes.
 
     @property
-    def loop_radius(self) -> int:
+    def front_bed_x_start(self) -> int:
         """
         Returns:
-            int: The radius of loop circles based on the padding from the needle box walls.
+            int: The fixed x-coordinate at the start of the front-beds.
+
+        Notes:
+            Always reserves spaces for all-needle racking shift of the back bed.
+            Automatically adds space for optional left-side labels.
         """
-        return int((min(self.Needle_Height, self.Needle_Width) - self.Loop_Buffer) / 2)
+        return (self.Needle_Width // 2) + (self.Side_Label_Width if self.render_left_labels else 0)
+
+    def all_needle_shift(self, is_all_needle_rack: bool, carriage_direction: Carriage_Pass_Direction) -> int:
+        """
+        Args:
+            is_all_needle_rack (bool): If True, the back beds are shifted to align with the carriage direction.
+            carriage_direction (Carriage_Pass_Direction): Direction of the carriage.
+
+        Returns:
+            int: The amount to shift back bed x coordinates for a given all needle shift
+
+        Notes:
+            If not all needle racking, this is the same as the front-bed's x-coordinate.
+            In a leftward all needle alignment, the bed is shifted leftward.
+            In a rightward all needle alignment, the bed is shifted rightward
+        """
+        if is_all_needle_rack:
+            if carriage_direction is Carriage_Pass_Direction.Leftward:
+                return -1 * (self.Needle_Width // 2)
+            else:
+                return self.Needle_Width // 2
+        else:
+            return 0
+
+    @property
+    def loop_radius(self) -> float:
+        """
+        Returns:
+            float: The radius of loop circles based on their proportion of a needle box.
+        """
+        return min(self.Needle_Height, self.Needle_Width) * (self.Loop_Portion_Of_Needle / 2)
 
     @property
     def carrier_size(self) -> int:
@@ -56,8 +106,14 @@ class Diagram_Settings:
         """
         Returns:
             int: The y position of back-needles in the diagram.
+
+        Notes:
+            Reserves a needle height of padding above the bed diagram.
+            This space accounts for labels and carriers.
         """
-        return self.Needle_Height + self.Label_Padding if self.render_back_labels else 0
+        if not self.render_back_labels and not self.render_carriers:
+            return 0
+        return self.Needle_Height
 
     @property
     def back_label_y(self) -> int:
@@ -68,7 +124,7 @@ class Diagram_Settings:
         Notes:
             The labels are shifted down to provide space for the
         """
-        return self.Needle_Height
+        return self.Label_Height
 
     @property
     def back_slider_y(self) -> int:
@@ -114,7 +170,17 @@ class Diagram_Settings:
         Returns:
             int: The x coordinate position of the left side of the needle slot in the diagram.
         """
-        return (needle_index * self.Needle_Width) + (self.Needle_Width if self.render_left_labels else 0)
+        return needle_index * self.Needle_Width
+
+    def label_width(self, label: str) -> int:
+        """
+        Args:
+            label (str): The text of the label.
+
+        Returns:
+            int: The width needed to pad a given label's text.
+        """
+        return len(label) * self.Label_Char_Width
 
 
 class Carrier_Yarn_Color_Defaults(Enum):

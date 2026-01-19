@@ -35,7 +35,7 @@ class Yarn_Inserting_Hook_Block(Rect_Element):
         super().__init__(
             width=width,
             height=self.settings.Needle_Height,
-            x=self.settings.x_of_needle(hook_index),
+            x=self.settings.x_of_needle(hook_index) + self.settings.front_bed_x_start,
             y=y,
             name="Yarn_Inserting_Hook",
             stroke_width=self.settings.Needle_Stroke_Width,

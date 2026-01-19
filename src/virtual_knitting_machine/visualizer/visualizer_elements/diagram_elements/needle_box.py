@@ -2,45 +2,44 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
-from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_group import Visualizer_Group
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_shapes import Rect_Element
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_slot import Needle_Slot
+    from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_bed_element import (
+        Needle_Bed_Element,
+    )
 
 
-class Needle_Group(Visualizer_Group):
+class Needle_Box(Rect_Element):
 
-    def __init__(self, needle: Needle, slot: Needle_Slot):
+    def __init__(self, needle: Needle, bed_element: Needle_Bed_Element, **shape_kwargs: Any):
         self.needle: Needle = needle
-        self.slot: Needle_Slot = slot
-        if self.slot.slot_number != self.slot_number:
-            raise ValueError(f"{needle} does not belong to slot {slot}")
-        super().__init__(self._x_from_settings(), self._y_from_settings(), name=str(needle))
-        fill = self.settings.Slider_Background_Color if self.is_slider else "none"
-        self._needle_box: Rect_Element = Rect_Element(
+        self.bed: Needle_Bed_Element = bed_element
+        super().__init__(
             width=self.settings.Needle_Width,
             height=self.settings.Needle_Height,
-            x=0,
+            x=self._x_from_settings,
             y=0,
-            name=f"{self.name}_box",
+            name=f"{self.needle}",
             stroke_width=self.settings.Needle_Stroke_Width,
-            fill=fill,
-            stroke=self.settings.Needle_Stroke_Color,
+            stroke="black",
+            fill=self.settings.Slider_Background_Color if self.is_slider else "none",
+            **shape_kwargs,
         )
-        self.add_child(self._needle_box)
 
+    @property
     def _x_from_settings(self) -> int:
         """
         Returns:
             int: The x position of the needle based on the needle type and the slot.
         """
-        return 0 if self.is_back or not self.all_needle_rack else int(self.settings.Needle_Width / 2)
+        return self.settings.x_of_needle(self.bed.index_of_needle(self.needle))
 
+    @property
     def _y_from_settings(self) -> int:
         """
         Returns:
@@ -50,18 +49,10 @@ class Needle_Group(Visualizer_Group):
             return (
                 self.settings.front_slider_y
                 if self.is_slider
-                else self.settings.front_needle_y(self.slot.render_sliders)
+                else self.settings.front_needle_y(self.bed.render_sliders)
             )
         else:
             return self.settings.back_slider_y if self.is_slider else self.settings.back_needle_y
-
-    @property
-    def needle_box(self) -> Rect_Element:
-        """
-        Returns:
-            Rect_Element: The rectangle element that represents this needle.
-        """
-        return self._needle_box
 
     @property
     def is_front(self) -> bool:
@@ -95,9 +86,10 @@ class Needle_Group(Visualizer_Group):
         """
         return self.needle.position
 
-    @property
-    def slot_number(self) -> int:
+    def slot_number(self, rack: int) -> int:
         """
+        Args:
+            rack (int): The racking alignment to access the slot number form.
         Returns:
             int: The slot number (front bed alignment) of this needle.
         Notes:
@@ -106,7 +98,7 @@ class Needle_Group(Visualizer_Group):
             * F = R + B
             * B = F - R.
         """
-        return self.position + (0 if self.is_front else self.rack)
+        return self.needle.slot_number(rack)
 
     @property
     def all_needle_rack(self) -> bool:
@@ -114,15 +106,7 @@ class Needle_Group(Visualizer_Group):
         Returns:
             bool: True if the needle bed is set for all needle racking.
         """
-        return self.slot.all_needle_rack
-
-    @property
-    def rack(self) -> int:
-        """
-        Returns:
-            int: The racking alignment of the needle bed.
-        """
-        return self.slot.rack
+        return self.bed.all_needle_rack
 
     @property
     def settings(self) -> Diagram_Settings:
@@ -130,4 +114,4 @@ class Needle_Group(Visualizer_Group):
         Returns:
             Diagram_Settings: The settings of the diagram.
         """
-        return self.slot.settings
+        return self.bed.settings

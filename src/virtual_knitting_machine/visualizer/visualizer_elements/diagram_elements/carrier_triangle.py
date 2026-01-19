@@ -33,7 +33,7 @@ class Carrier_Triangle(Triangle_Element):
             needle_index += 1
         super().__init__(
             side_length=self.settings.carrier_size,
-            x=self.settings.x_of_needle(needle_index),
+            x=self.settings.x_of_needle(needle_index) + self.settings.front_bed_x_start,
             y=self.settings.back_needle_y - self.settings.Label_Padding,
             name=f"c{self.carrier_id}",
             stroke_width=self.settings.Carrier_Stroke_Width,

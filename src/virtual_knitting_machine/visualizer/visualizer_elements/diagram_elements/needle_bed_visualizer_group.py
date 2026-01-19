@@ -2,10 +2,13 @@
 
 from typing import overload
 
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
-from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_group import Needle_Group
-from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_slot import Needle_Slot
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_bed_element import (
+    Needle_Bed_Element,
+)
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_box import Needle_Box
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import Text_Element, Visualizer_Element
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_group import Visualizer_Group
 
@@ -21,7 +24,6 @@ class Needle_Bed_Group(Visualizer_Group):
         rack (int): The racking alignment of the needle beds.
         all_needle_rack (bool): The all needle rack setting to render.
         settings (Diagram_Settings): The machine diagram settings.
-        slots (dict[int, Needle_Slot]): A mapping from slot indies to the rendered needle slots.
         left_label: Visualizer_Group | None: The optional label on the left side of the diagram.
         right_label: Visualizer_Group | None: The optional label on the right side of the diagram.
     """
@@ -32,11 +34,9 @@ class Needle_Bed_Group(Visualizer_Group):
         rightmost_slot: int,
         rack: int,
         all_needle_rack: bool,
+        carriage_direction: Carriage_Pass_Direction,
         render_sliders: bool,
         diagram_settings: Diagram_Settings,
-        x: int = 0,
-        y: int = 0,
-        name: str = "NeedleBed",
     ):
         """
         Constructor for the Needle Bed Group class.
@@ -45,47 +45,127 @@ class Needle_Bed_Group(Visualizer_Group):
             rightmost_slot (int): The rightmost needle slot to render to.
             rack (int): The racking alignment of the needle beds.
             all_needle_rack (bool): The all needle rack setting to render.
+            carriage_direction (Carriage_Pass_Direction): The direction the carriage is moving in. Used to orient the back bed when all-needle racked.
             render_sliders (bool): True if the slider beds are rendered, False otherwise.
             diagram_settings (Diagram_Settings): The machine diagram settings.
-            x (int): The x coordinate to orient the needle bed around.
-            y (int): The y coordinate to orient the needle bed around.
-            name (str, optional): The name id of the Needle Bed Group. Defaults to "NeedleBed".
         """
-        super().__init__(x, y, name)
         self.render_sliders: bool = render_sliders
         self.leftmost_slot: int = leftmost_slot
         self.rightmost_slot: int = rightmost_slot
         self.rack: int = rack
         self.all_needle_rack: bool = all_needle_rack
+        self.carriage_direction: Carriage_Pass_Direction = carriage_direction
         self.settings: Diagram_Settings = diagram_settings
+        super().__init__(x=self.settings.front_bed_x_start, y=self.settings.back_needle_y, name="NeedleBed")
+        self.back_bed: Needle_Bed_Element = Needle_Bed_Element(
+            is_front=False,
+            is_slider=False,
+            leftmost_needle=self.back_leftmost,
+            rightmost_needle=self.back_rightmost,
+            all_needle_rack=self.all_needle_rack,
+            carriage_direction=self.carriage_direction,
+            render_sliders=self.render_sliders,
+            diagram_setting=self.settings,
+        )
+        self.add_child(self.back_bed)
+        self.front_bed: Needle_Bed_Element = Needle_Bed_Element(
+            is_front=True,
+            is_slider=False,
+            leftmost_needle=self.leftmost_slot,
+            rightmost_needle=self.rightmost_slot,
+            all_needle_rack=self.all_needle_rack,
+            carriage_direction=self.carriage_direction,
+            render_sliders=self.render_sliders,
+            diagram_setting=self.settings,
+        )
+        self.add_child(self.front_bed)
+        self.back_slider_bed: Needle_Bed_Element | None = (
+            Needle_Bed_Element(
+                is_front=False,
+                is_slider=True,
+                leftmost_needle=self.leftmost_slot,
+                rightmost_needle=self.rightmost_slot,
+                all_needle_rack=self.all_needle_rack,
+                carriage_direction=self.carriage_direction,
+                render_sliders=self.render_sliders,
+                diagram_setting=self.settings,
+            )
+            if self.render_sliders
+            else None
+        )
+        if self.back_slider_bed is not None:
+            self.add_child(self.back_slider_bed)
+        self.front_slider_bed: Needle_Bed_Element | None = (
+            Needle_Bed_Element(
+                is_front=True,
+                is_slider=True,
+                leftmost_needle=self.back_leftmost,
+                rightmost_needle=self.back_rightmost,
+                all_needle_rack=self.all_needle_rack,
+                carriage_direction=self.carriage_direction,
+                render_sliders=self.render_sliders,
+                diagram_setting=self.settings,
+            )
+            if self.render_sliders
+            else None
+        )
+        if self.front_slider_bed is not None:
+            self.add_child(self.front_slider_bed)
+
         self.left_label: Visualizer_Group | None = None
         if self.settings.render_left_labels:
-            self.left_label = Visualizer_Group(x=0, y=0, name="Left_Bed_Labels")
+            self.left_label = Visualizer_Group(
+                x=-1 * (self.settings.Side_Label_Width // 2), y=0, name="Left_Bed_Labels"
+            )
             self._add_side_labels(self.left_label)
             self.add_child(self.left_label)
-        self.slots: dict[int, Needle_Slot] = {}
         self.right_label: Visualizer_Group | None = None
-        self._build_slots()
-
-    def _build_slots(self) -> None:
-        right_most_slot = None
-        for x_index, slot_number in enumerate(range(self.leftmost_slot, self.rightmost_slot + 1)):
-            slot = Needle_Slot(
-                x_index, slot_number, self.rack, self.all_needle_rack, self.settings, self.render_sliders
-            )
-            self.slots[slot_number] = slot
-            self.add_child(slot)
-            right_most_slot = slot
-
         if self.settings.render_right_labels:
-            assert right_most_slot is not None
             self.right_label = Visualizer_Group(
-                x=right_most_slot.x + self.settings.Needle_Width + self.settings.Label_Padding,
+                x=self.settings.x_of_needle(self.slot_count + 1) + self.settings.Side_Label_Width // 2,
                 y=0,
                 name="Right_Bed_Labels",
             )
             self._add_side_labels(self.right_label)
             self.add_child(self.right_label)
+
+    @property
+    def back_leftmost(self) -> int:
+        """
+        Returns:
+            int: The leftmost position on the back bed.
+
+        Notes:
+            Racking Calculations:
+            * R = F - B
+            * F = R + B
+            * B = F - R.
+        """
+        return self.leftmost_slot - self.rack
+
+    @property
+    def back_rightmost(self) -> int:
+        """
+        Returns:
+            int: The rightmost position on the back bed.
+
+        Notes:
+            Racking Calculations:
+            * R = F - B
+            * F = R + B
+            * B = F - R.
+        """
+        return self.rightmost_slot - self.rack
+
+    @property
+    def slot_count(self) -> int:
+        """
+        Returns:
+            int: The slot count for the needle beds.
+        Returns:
+
+        """
+        return self.rightmost_slot - self.leftmost_slot
 
     def _add_side_labels(self, label_group: Visualizer_Group) -> None:
         """
@@ -94,39 +174,42 @@ class Needle_Bed_Group(Visualizer_Group):
             label_group (Visualizer_Group): The group for either the left or right labels of the needle bed.
         """
 
-        all_needle_alignment = int(self.settings.Needle_Width / 2) if self.all_needle_rack else 0
-        y_value = (
-            self.settings.Needle_Height + int(self.settings.Needle_Height / 2) + self.settings.Label_Padding
-            if self.settings.render_back_labels
-            else 0
-        )
+        b_shift = self.settings.all_needle_shift(self.all_needle_rack, self.carriage_direction)
+
+        def _y(row: int) -> int:
+            """
+            Args:
+                row (int): The index of row that represents the needle bed.
+
+            Returns:
+                int: The y value for the label on the given bed-row.
+            """
+            return (self.settings.Needle_Height * row) + self.settings.Needle_Height // 2
+
         b_label = Text_Element(
-            0, y_value, "B", f"B_{label_group.name}", text_anchor="start", alignment_baseline="middle"
+            b_shift, _y(0), "B", f"B_{label_group.name}", text_anchor="middle", alignment_baseline="middle"
         )
-        y_value += self.settings.Needle_Height
         label_group.add_child(b_label)
         if self.render_sliders:
             bs_label = Text_Element(
-                0, y_value, "BS", f"B_{self.settings.Label_Padding}", text_anchor="start", alignment_baseline="middle"
+                b_shift, _y(1), "BS", f"BS_{label_group.name}", text_anchor="middle", alignment_baseline="middle"
             )
-            y_value += self.settings.Needle_Height
             label_group.add_child(bs_label)
             fs_label = Text_Element(
-                0 + all_needle_alignment,
-                y_value,
+                0,
+                _y(2),
                 "FS",
-                f"FS_{self.settings.Label_Padding}",
-                text_anchor="start",
+                f"FS_{label_group.name}",
+                text_anchor="middle",
                 alignment_baseline="middle",
             )
-            y_value += self.settings.Needle_Height
             label_group.add_child(fs_label)
         f_label = Text_Element(
-            0 + all_needle_alignment,
-            y_value,
+            0,
+            _y(3 if self.render_sliders else 1),
             "F",
-            f"F_{self.settings.Label_Padding}",
-            text_anchor="start",
+            f"F_{label_group.name}",
+            text_anchor="middle",
             alignment_baseline="middle",
         )
         label_group.add_child(f_label)
@@ -134,53 +217,52 @@ class Needle_Bed_Group(Visualizer_Group):
     def has_slot(self, slot: int) -> bool:
         """
         Args:
-            slot (int): A slot index to find in the rendered needle bed.
+            slot (int): The slot index of the needle bed.
 
         Returns:
-            bool: True if the slot is in this rendering. False, otherwise
+            bool: True if that slot exists on the needle bed. False, otherwise.
         """
-        return slot in self.slots
-
-    def get_slot(self, slot: int) -> Needle_Slot:
-        """
-        Args:
-            slot (int): A slot index to find in the rendered needle bed.
-
-        Returns:
-            Needle_Slot: The slot at that index.
-
-        Raises:
-            KeyError: If the slot is in this rendering.
-        """
-        return self.slots[slot]
+        return self.leftmost_slot <= slot <= self.rightmost_slot
 
     def has_needle(self, needle: Needle) -> bool:
         """
         Args:
-            needle (Needle): A needle to find in this rendering.
+            needle (Needle): The needle to find in the bed group.
 
         Returns:
-            bool: True if the slot is in this rendering. False, otherwise.
+            bool: True if the needle is rendered. False, otherwise.
         """
-        if needle.is_slider and (not self.render_sliders):
+        if not self.has_slot(needle.slot_number(self.rack)):
             return False
-        return self.has_slot(needle.slot_number(self.rack))
+        if needle.is_slider:
+            return self.render_sliders
+        else:
+            return True
 
-    def get_needle_group(self, needle: Needle) -> Needle_Group:
+    def get_needle_box(self, needle: Needle) -> Needle_Box:
         """
         Args:
-            needle (Needle): A needle to find in this rendering.
+            needle (Needle): The needle to source in the needle bed.
 
         Returns:
-            Needle_Group: The needle group representing that needle in the diagram.
+            Needle_Box: The needle box on the needle bed.
 
         Raises:
-            KeyError: If the needle is not in the rendering.
+            KeyError: The needle is not in the needle bed.
         """
         if not self.has_needle(needle):
-            raise KeyError(f"{needle} is not in this rendered slots {list(self.slots.keys())}.")
-        slot = self.get_slot(needle.slot_number(self.rack))
-        return slot[needle]
+            raise KeyError(f"{needle} is not rendered")
+        elif needle.is_front:
+            if needle.is_slider:
+                assert self.front_slider_bed is not None
+                return self.front_slider_bed[needle]
+            else:
+                return self.front_bed[needle]
+        elif needle.is_slider:
+            assert self.back_slider_bed is not None
+            return self.back_slider_bed[needle]
+        else:
+            return self.back_bed[needle]
 
     def __contains__(self, item: int | Needle | str) -> bool:
         if isinstance(item, Needle):
@@ -191,18 +273,13 @@ class Needle_Bed_Group(Visualizer_Group):
             return super().__contains__(item)
 
     @overload
-    def __getitem__(self, item: int) -> Needle_Slot: ...
-
-    @overload
-    def __getitem__(self, item: Needle) -> Needle_Group: ...
+    def __getitem__(self, item: Needle) -> Needle_Box: ...
 
     @overload
     def __getitem__(self, item: str) -> Visualizer_Element: ...
 
-    def __getitem__(self, item: int | Needle | str) -> Needle_Slot | Needle_Group | Visualizer_Element:
+    def __getitem__(self, item: Needle | str) -> Needle_Box | Visualizer_Element:
         if isinstance(item, Needle):
-            return self.get_needle_group(item)
-        elif isinstance(item, int):
-            return self.get_slot(item)
+            return self.get_needle_box(item)
         else:
             return super().__getitem__(item)
