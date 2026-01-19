@@ -22,7 +22,7 @@ class Needle_Box(Rect_Element):
         super().__init__(
             width=self.settings.Needle_Width,
             height=self.settings.Needle_Height,
-            x=self._x_from_settings,
+            x=self.settings.x_of_needle(self.bed.index_of_needle(self.needle)),
             y=0,
             name=f"{self.needle}",
             stroke_width=self.settings.Needle_Stroke_Width,
@@ -30,29 +30,6 @@ class Needle_Box(Rect_Element):
             fill=self.settings.Slider_Background_Color if self.is_slider else "none",
             **shape_kwargs,
         )
-
-    @property
-    def _x_from_settings(self) -> int:
-        """
-        Returns:
-            int: The x position of the needle based on the needle type and the slot.
-        """
-        return self.settings.x_of_needle(self.bed.index_of_needle(self.needle))
-
-    @property
-    def _y_from_settings(self) -> int:
-        """
-        Returns:
-            int: The y position of this needle based on the needle type and the slot.
-        """
-        if self.is_front:
-            return (
-                self.settings.front_slider_y
-                if self.is_slider
-                else self.settings.front_needle_y(self.bed.render_sliders)
-            )
-        else:
-            return self.settings.back_slider_y if self.is_slider else self.settings.back_needle_y
 
     @property
     def is_front(self) -> bool:

@@ -28,14 +28,14 @@ class Yarn_Inserting_Hook_Block(Rect_Element):
             **shape_kwargs (Any): Additional keyword arguments used to render the block.
         """
         self.settings: Diagram_Settings = diagram_settings
-        y = self.settings.front_slider_y if rendered_sliders else self.settings.front_needle_y(with_sliders=False)
+        y = self.settings.Needle_Height * 2 if rendered_sliders else self.settings.Needle_Height
         y -= self.settings.Needle_Height // 2
         needle_width = needle_count_on_bed - hook_index
         width = self.settings.Needle_Width * needle_width
         super().__init__(
             width=width,
             height=self.settings.Needle_Height,
-            x=self.settings.x_of_needle(hook_index) + self.settings.front_bed_x_start,
+            x=self.settings.x_of_needle(hook_index),
             y=y,
             name="Yarn_Inserting_Hook",
             stroke_width=self.settings.Needle_Stroke_Width,

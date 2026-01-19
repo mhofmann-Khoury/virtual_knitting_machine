@@ -12,15 +12,13 @@ class Diagram_Settings:
     """A data class containing the settings for a virtual knitting machine visualization."""
 
     # Fixed sizes
-    Drawing_Width: int = 400  # The width of the diagram in pixels.
-    Drawing_Height: int = 400  # The height of the diagram in pixels.
     Needle_Height: int = 20  # A constant value for the height of needle squares in the visualization.
     Needle_Width: int = 20  # A constant value for the Width of needle squares in the visualization.
     Carriage_Height: int = 30  # The height of the carriage element.
     Carriage_Width: int = 50  # The width of the carriage element.
     Label_Height: int = 15  # The height of text in a label.
-    Side_Label_Width: int = 25  # The width of space reserved for the Needle bed side labels.
-    Label_Char_Width: int = 15  # The width allocated to each char in a label.
+    Side_Label_Width: int = 10  # The width of space reserved for the Needle bed side labels.
+    Label_Char_Width: int = 10  # The width allocated to each char in a label.
 
     # Size Proportions
     Loop_Portion_Of_Needle: float = 0.6  # The proportion of the needle boxes taken up by a loop.
@@ -50,18 +48,6 @@ class Diagram_Settings:
     render_empty_sliders: bool = False  # If True, render sliders regardless whether there are active slider loops.
     render_carriers: bool = True  # If True, render the active carrier positions.
     render_carriage: bool = True  # If True, render the carriage.
-
-    @property
-    def front_bed_x_start(self) -> int:
-        """
-        Returns:
-            int: The fixed x-coordinate at the start of the front-beds.
-
-        Notes:
-            Always reserves spaces for all-needle racking shift of the back bed.
-            Automatically adds space for optional left-side labels.
-        """
-        return (self.Needle_Width // 2) + (self.Side_Label_Width if self.render_left_labels else 0)
 
     def all_needle_shift(self, is_all_needle_rack: bool, carriage_direction: Carriage_Pass_Direction) -> int:
         """
@@ -101,67 +87,6 @@ class Diagram_Settings:
         """
         return self.Needle_Width // 3
 
-    @property
-    def back_needle_y(self) -> int:
-        """
-        Returns:
-            int: The y position of back-needles in the diagram.
-
-        Notes:
-            Reserves a needle height of padding above the bed diagram.
-            This space accounts for labels and carriers.
-        """
-        if not self.render_back_labels and not self.render_carriers:
-            return 0
-        return self.Needle_Height
-
-    @property
-    def back_label_y(self) -> int:
-        """
-        Returns:
-            int: The Y position of back-bed labels in the diagram.
-
-        Notes:
-            The labels are shifted down to provide space for the
-        """
-        return self.Label_Height
-
-    @property
-    def back_slider_y(self) -> int:
-        """
-        Returns:
-            int: The Y position of back-bed sliders in the diagram.
-        """
-        return self.back_needle_y + self.Needle_Height
-
-    @property
-    def front_slider_y(self) -> int:
-        """
-        Returns:
-            int: The Y position of front-bed sliders in the diagram.
-        """
-        return self.back_slider_y + self.Needle_Height
-
-    def front_needle_y(self, with_sliders: bool) -> int:
-        """
-        Args:
-            with_sliders (bool): If True, add the height of both sliders to this position. Otherwise, only include height of the back needle.
-
-        Returns:
-            int: The y position of front-needle in the diagram.
-        """
-        return self.Needle_Height + (self.front_slider_y if with_sliders else self.back_needle_y)
-
-    def front_label_y(self, with_sliders: bool) -> int:
-        """
-        Args:
-            with_sliders (bool): If True, add the height of both sliders to this position. Otherwise, only include height of the back needle.
-
-        Returns:
-            int: The y position of front-bed label in the diagram.
-        """
-        return self.Label_Padding + self.front_needle_y(with_sliders) + self.Needle_Height
-
     def x_of_needle(self, needle_index: int) -> int:
         """
         Args:
@@ -171,16 +96,6 @@ class Diagram_Settings:
             int: The x coordinate position of the left side of the needle slot in the diagram.
         """
         return needle_index * self.Needle_Width
-
-    def label_width(self, label: str) -> int:
-        """
-        Args:
-            label (str): The text of the label.
-
-        Returns:
-            int: The width needed to pad a given label's text.
-        """
-        return len(label) * self.Label_Char_Width
 
 
 class Carrier_Yarn_Color_Defaults(Enum):

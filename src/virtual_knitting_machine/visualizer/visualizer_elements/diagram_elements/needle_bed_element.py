@@ -38,6 +38,37 @@ class Needle_Bed_Element(Visualizer_Group):
         self.needle_boxes: dict[int, Needle_Box] = {}
         self.labels: dict[int, Text_Element] = {}
         self._build_needles()
+        self.left_label: Text_Element | None = (
+            Text_Element(
+                -1 * self.settings.Label_Padding,
+                self.settings.Needle_Height // 2,
+                self.bed_label,
+                f"{self.bed_label}_left_label",
+                text_anchor="end",
+                alignment_baseline="middle",
+            )
+            if self.settings.render_left_labels
+            else None
+        )
+        if self.left_label is not None:
+            self.add_child(self.left_label)
+
+        self.right_label: Text_Element | None = (
+            Text_Element(
+                self.settings.Label_Padding
+                + (self.settings.Needle_Width * self.needle_count)
+                + self.settings.Needle_Width,
+                self.settings.Needle_Width // 2,
+                self.bed_label,
+                f"{self.bed_label}_right_label",
+                text_anchor="start",
+                alignment_baseline="middle",
+            )
+            if self.settings.render_right_labels
+            else None
+        )
+        if self.right_label is not None:
+            self.add_child(self.right_label)
 
     @property
     def needle_count(self) -> int:
@@ -157,6 +188,22 @@ class Needle_Bed_Element(Visualizer_Group):
             return "BS_Bed"
         else:
             return "B_Bed"
+
+    @property
+    def bed_label(self) -> str:
+        """
+        Returns:
+            str: The unique name of the bed element.
+        """
+        if self.is_front:
+            if self.is_slider:
+                return "FS"
+            else:
+                return "F"
+        elif self.is_slider:
+            return "BS"
+        else:
+            return "B"
 
     @property
     def bed_row(self) -> int:

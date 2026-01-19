@@ -70,14 +70,14 @@ class Knitting_Machine_State_Visualizer:
         ls, rs = self._get_bed_slots()
         self.leftmost_slot: int = ls
         self.rightmost_slot: int = rs
-        show_sliders = self.settings.render_empty_sliders or not self.machine_state.sliders_are_clear
+        self.shows_sliders: bool = self.settings.render_empty_sliders or not self.machine_state.sliders_are_clear
         self.needle_bed_group: Needle_Bed_Group = Needle_Bed_Group(
             self.leftmost_slot,
             self.rightmost_slot,
             self.machine_state.rack,
             self.machine_state.all_needle_rack,
             self.machine_state.last_direction,
-            show_sliders,
+            self.shows_sliders,
             self.settings,
         )
         self.loops: dict[Machine_Knit_Loop, Loop_Circle] = {}
@@ -89,7 +89,10 @@ class Knitting_Machine_State_Visualizer:
             self._add_active_carriers()
         self.yarn_inserting_hook_block: Yarn_Inserting_Hook_Block | None = (
             Yarn_Inserting_Hook_Block(
-                show_sliders, self.machine_state.hook_position - self.leftmost_slot, self.needle_count, self.settings
+                self.shows_sliders,
+                self.machine_state.hook_position - self.leftmost_slot,
+                self.needle_count,
+                self.settings,
             )
             if self.machine_state.hook_position is not None
             else None
@@ -100,7 +103,7 @@ class Knitting_Machine_State_Visualizer:
                 self.machine_state.last_direction,
                 self.machine_state.transferring,
                 self.machine_state.current_needle_slot - self.leftmost_slot,
-                show_sliders,
+                self.shows_sliders,
                 self.settings,
             )
             if self.settings.render_carriage and carriage_on_diagram
@@ -114,6 +117,34 @@ class Knitting_Machine_State_Visualizer:
             int: The number of needle slots rendered on this diagram.
         """
         return self.rightmost_slot + 1 - self.leftmost_slot
+
+    @property
+    def size(self) -> tuple[float, float]:
+        """
+        Returns:
+            tuple[float, float]: The size of this diagram by its width and height.
+        """
+        width = self.settings.Needle_Width * self.needle_count + abs(
+            self.settings.all_needle_shift(self.machine_state.all_needle_rack, self.machine_state.last_direction)
+        )
+        if self.settings.render_left_labels:
+            width += self.settings.Side_Label_Width + self.settings.Label_Padding
+            if self.shows_sliders:
+                width += self.settings.Side_Label_Width
+        if self.settings.render_right_labels:
+            width += self.settings.Side_Label_Width + self.settings.Label_Padding
+            if self.shows_sliders:
+                width += self.settings.Side_Label_Width
+        height = 2.0 * self.settings.Needle_Height
+        if self.settings.render_back_labels or len(self.carriers) > 0:
+            height += self.settings.Needle_Height
+        if self.settings.render_front_labels:
+            height += self.settings.Needle_Height
+        if self.shows_sliders:
+            height += self.settings.Needle_Height * 2.0
+        if self.carriage_block is not None:
+            height += self.settings.Carriage_Height
+        return width, height
 
     def _get_bed_slots(self) -> tuple[int, int]:
         """
@@ -235,7 +266,18 @@ class Knitting_Machine_State_Visualizer:
         """
         Returns:
             Drawing: An empty drawing sized for the diagram."""
+        width, height = self.size
+        min_x = self.settings.all_needle_shift(self.machine_state.all_needle_rack, self.machine_state.last_direction)
+        if self.settings.render_left_labels:
+            min_x -= self.settings.Side_Label_Width + self.settings.Label_Padding
+            if self.shows_sliders:
+                min_x -= self.settings.Side_Label_Width
+        min_y = 0
+        if self.settings.render_back_labels:
+            min_y -= self.settings.Label_Height + self.settings.Label_Padding
+        elif len(self.carriers) > 0:
+            min_y -= self.settings.carrier_size - self.settings.Label_Padding
         return Drawing(
-            size=(f"{self.settings.Drawing_Width}px", f"{self.settings.Drawing_Height}px"),
-            viewBox=f"0 0 {self.settings.Drawing_Width} {self.settings.Drawing_Height}",
+            size=(f"{width}px", f"{height}px"),
+            viewBox=f"{min_x} {min_y} {width} {height}",
         )

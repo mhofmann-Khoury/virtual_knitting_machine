@@ -55,14 +55,12 @@ class Carriage_Element(Polygon_Element):
             When transferring, the carriage is shown as a box with ambiguous direction.
             When not transferring, the carriage is shown as an arrow with origin as the point of the direction it is moving.
         """
-        x = self.settings.x_of_needle(self._needle_index) + self.settings.front_bed_x_start
+        x = self.settings.x_of_needle(self._needle_index)
         y = 2.0 * self.settings.Needle_Height
         if not self._transferring:
             y += self.settings.Carriage_Height / 2
         if self._render_sliders:
             y += 2.0 * self.settings.Needle_Height
-        if self.settings.render_back_labels:
-            y += self.settings.Needle_Height
         if self.settings.render_front_labels:
             y += self.settings.Needle_Height
 

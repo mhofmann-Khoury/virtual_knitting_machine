@@ -24,8 +24,6 @@ class Needle_Bed_Group(Visualizer_Group):
         rack (int): The racking alignment of the needle beds.
         all_needle_rack (bool): The all needle rack setting to render.
         settings (Diagram_Settings): The machine diagram settings.
-        left_label: Visualizer_Group | None: The optional label on the left side of the diagram.
-        right_label: Visualizer_Group | None: The optional label on the right side of the diagram.
     """
 
     def __init__(
@@ -56,7 +54,7 @@ class Needle_Bed_Group(Visualizer_Group):
         self.all_needle_rack: bool = all_needle_rack
         self.carriage_direction: Carriage_Pass_Direction = carriage_direction
         self.settings: Diagram_Settings = diagram_settings
-        super().__init__(x=self.settings.front_bed_x_start, y=self.settings.back_needle_y, name="NeedleBed")
+        super().__init__(x=0, y=0, name="NeedleBed")
         self.back_bed: Needle_Bed_Element = Needle_Bed_Element(
             is_front=False,
             is_slider=False,
@@ -111,23 +109,6 @@ class Needle_Bed_Group(Visualizer_Group):
         )
         if self.front_slider_bed is not None:
             self.add_child(self.front_slider_bed)
-
-        self.left_label: Visualizer_Group | None = None
-        if self.settings.render_left_labels:
-            self.left_label = Visualizer_Group(
-                x=-1 * (self.settings.Side_Label_Width // 2), y=0, name="Left_Bed_Labels"
-            )
-            self._add_side_labels(self.left_label)
-            self.add_child(self.left_label)
-        self.right_label: Visualizer_Group | None = None
-        if self.settings.render_right_labels:
-            self.right_label = Visualizer_Group(
-                x=self.settings.x_of_needle(self.slot_count + 1) + self.settings.Side_Label_Width // 2,
-                y=0,
-                name="Right_Bed_Labels",
-            )
-            self._add_side_labels(self.right_label)
-            self.add_child(self.right_label)
 
     @property
     def back_leftmost(self) -> int:
