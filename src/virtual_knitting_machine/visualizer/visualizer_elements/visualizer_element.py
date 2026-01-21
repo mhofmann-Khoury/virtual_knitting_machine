@@ -16,10 +16,10 @@ class Visualizer_Element:
         parent (Visualizer_Element | None): The optional parent element of this element used to find global coordinate position.
     """
 
-    def __init__(self, x: int, y: int, name: str, **element_kwargs: Any):
+    def __init__(self, x: float, y: float, name: str, **element_kwargs: Any):
         self._svg_element: BaseElement | None = None
-        self._x: int = x
-        self._y: int = y
+        self._x: float = x
+        self._y: float = y
         self._name: str = name
         self.parent: Visualizer_Element | None = None
         self._element_kwargs: dict[str, Any] = element_kwargs
@@ -33,26 +33,26 @@ class Visualizer_Element:
         return self._name
 
     @property
-    def x(self) -> int:
+    def x(self) -> float:
         """
         Returns:
-            int: The x coordinate of this element relative to its parent (or globally).
+            float: The x coordinate of this element relative to its parent (or globally).
         """
         return self._x
 
     @property
-    def y(self) -> int:
+    def y(self) -> float:
         """
         Returns:
-            int: THe y coordinate of this element relative to its parent (or globally).
+            float: The y coordinate of this element relative to its parent (or globally).
         """
         return self._y
 
     @property
-    def global_x(self) -> int:
+    def global_x(self) -> float:
         """
         Returns:
-            int: The global x coordinate of this element based on its parent's coordinates.
+            float: The global x coordinate of this element based on its parent's coordinates.
         """
         if self.parent is None:
             return self.x
@@ -60,33 +60,33 @@ class Visualizer_Element:
             return self.parent.global_x + self.x
 
     @property
-    def global_y(self) -> int:
+    def global_y(self) -> float:
         """
         Returns:
-            int: The global y coordinate of this element based on its parent's coordinates.
+            float: The global y coordinate of this element based on its parent's coordinates.
         """
         if self.parent is None:
             return self.y
         else:
             return self.parent.global_y + self.y
 
-    def global_x_position(self, x: int) -> int:
+    def global_x_position(self, x: float) -> float:
         """
         Args:
-            x (int): An X-coordinate position relative to this element's coordinate system.
+            x (float): An X-coordinate position relative to this element's coordinate system.
 
         Returns:
-            int: The x-coordinate adjusted to the global coordinate system.
+            float: The x-coordinate adjusted to the global coordinate system.
         """
         return self.global_x + x
 
-    def global_y_position(self, y: int) -> int:
+    def global_y_position(self, y: float) -> float:
         """
         Args:
-            y (int): An Y-coordinate position relative to this element's coordinate system.
+            y (float): An Y-coordinate position relative to this element's coordinate system.
 
         Returns:
-            int: The y-coordinate adjusted to the global coordinate system.
+            float: The y-coordinate adjusted to the global coordinate system.
         """
         return self.global_y + y
 
@@ -220,12 +220,12 @@ class Text_Element(Visualizer_Element):
     Wrapper class for Text SVG elements.
     """
 
-    def __init__(self, x: int, y: int, label: str, name: str | None = None, **element_kwargs: Any) -> None:
+    def __init__(self, x: float, y: float, label: str, name: str | None = None, **element_kwargs: Any) -> None:
         """
         Initialize the text element.
         Args:
-            x (int): The x coordinate of this element relative to its parent (or globally).
-            y (int): The y coordinate of this element relative to its parent (or globally).
+            x (float): The x coordinate of this element relative to its parent (or globally).
+            y (float): The y coordinate of this element relative to its parent (or globally).
             label (str): The value of the text label.
             name (str, optional): The id name of this element defaults to "label_<label>".
             **element_kwargs (Any): Keyword arguments used to configure the svg text element.

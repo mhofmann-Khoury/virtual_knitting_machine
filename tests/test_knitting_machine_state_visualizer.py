@@ -40,6 +40,50 @@ class TestKnitting_Machine_State_Visualizer(TestCase):
         visualizer = Knitting_Machine_State_Visualizer(state)
         self.render_and_save(visualizer)
 
+    def test_loop_stacks_front(self):
+        state = Mock_Machine_State(
+            {
+                1: [Needle(is_front=True, position=n) for n in range(2, 4)],
+                2: [Needle(is_front=True, position=n) for n in range(3, 7)],
+                3: [Needle(is_front=True, position=n) for n in range(2, 5)],
+            }
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_loop_stacks_back(self):
+        state = Mock_Machine_State(
+            {
+                1: [Needle(is_front=False, position=n) for n in range(2, 4)],
+                2: [Needle(is_front=False, position=n) for n in range(3, 7)],
+                3: [Needle(is_front=False, position=n) for n in range(2, 5)],
+            }
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_loop_stacks_front_sliders(self):
+        state = Mock_Machine_State(
+            {
+                1: [Slider_Needle(is_front=True, position=n) for n in range(2, 4)],
+                2: [Slider_Needle(is_front=True, position=n) for n in range(3, 7)],
+                3: [Slider_Needle(is_front=True, position=n) for n in range(2, 5)],
+            }
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
+    def test_loop_stacks_back_sliders(self):
+        state = Mock_Machine_State(
+            {
+                1: [Slider_Needle(is_front=False, position=n) for n in range(2, 4)],
+                2: [Slider_Needle(is_front=False, position=n) for n in range(3, 7)],
+                3: [Slider_Needle(is_front=False, position=n) for n in range(2, 5)],
+            }
+        )
+        visualizer = Knitting_Machine_State_Visualizer(state)
+        self.render_and_save(visualizer)
+
     def test_mix_sliders(self):
         state = Mock_Machine_State(
             {

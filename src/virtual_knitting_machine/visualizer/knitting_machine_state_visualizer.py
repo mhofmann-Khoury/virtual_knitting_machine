@@ -4,6 +4,7 @@ Contains the Knitting Visualizer class.
 
 from svgwrite import Drawing
 
+from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.machine_state_protocol import Knitting_Machine_State_Protocol
@@ -13,7 +14,7 @@ from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.fl
     Float_Orientation_To_Neighbors,
     Float_Path,
 )
-from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.loop_circle import Loop_Circle
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.loop_circle import Loop_Circle, Loop_Stack
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_bed_visualizer_group import (
     Needle_Bed_Group,
 )
@@ -80,6 +81,7 @@ class Knitting_Machine_State_Visualizer:
             self.shows_sliders,
             self.settings,
         )
+        self.loop_stacks: dict[Needle, Loop_Stack] = {}
         self.loops: dict[Machine_Knit_Loop, Loop_Circle] = {}
         self._add_active_loops()
         self.floats: set[Float_Path] = set()
@@ -200,10 +202,12 @@ class Knitting_Machine_State_Visualizer:
         """
         Renders the loop-circles for each active loop on the diagram.
         """
-        for loop in sorted(self.machine_state.active_loops):
-            needle = loop.holding_needle
-            assert needle is not None
-            self.loops[loop] = Loop_Circle(loop, self.needle_bed_group[needle], self.settings)
+        for needle in self.machine_state.all_loops():
+            self.loop_stacks[needle] = Loop_Stack(needle.held_loops, self.needle_bed_group[needle], self.settings)
+        for needle in self.machine_state.all_slider_loops():
+            self.loop_stacks[needle] = Loop_Stack(needle.held_loops, self.needle_bed_group[needle], self.settings)
+        for loop_stack in self.loop_stacks.values():
+            self.loops.update({l.loop: l for l in loop_stack.loop_circles})
 
     def _add_active_carriers(self) -> None:
         """
@@ -230,8 +234,8 @@ class Knitting_Machine_State_Visualizer:
         self.needle_bed_group.add_to_drawing(drawing)
         for float_line in self.floats:
             float_line.add_to_drawing(drawing)
-        for loop_circle in self.loops.values():
-            loop_circle.add_to_drawing(drawing)
+        for loop_stack in self.loop_stacks.values():
+            loop_stack.add_to_drawing(drawing)
         for carrier_triangle in self.carriers:
             carrier_triangle.add_to_drawing(drawing)
         if self.yarn_inserting_hook_block is not None:

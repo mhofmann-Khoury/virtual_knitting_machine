@@ -15,7 +15,7 @@ class Visualizer_Group(Visualizer_Element):
         children (set[Visualizer_Element]): A list of Visualizer_Element objects that are children of the group.
     """
 
-    def __init__(self, x: int, y: int, name: str):
+    def __init__(self, x: float, y: float, name: str):
         super().__init__(x, y, name)
         self.children: list[Visualizer_Element] = []
 

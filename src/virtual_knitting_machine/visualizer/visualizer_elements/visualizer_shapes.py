@@ -14,8 +14,8 @@ class Visualizer_Shape(Visualizer_Element):
 
     def __init__(
         self,
-        x: int,
-        y: int,
+        x: float,
+        y: float,
         name: str,
         stroke_width: int,
         fill: str | float = "none",
@@ -60,7 +60,7 @@ class Polygon_Element(Visualizer_Shape):
         points: list[tuple[float, float]],
         name: str,
         stroke_width: int,
-        orientation: int | tuple[int, int] = 0,
+        orientation: int | tuple[float, float] = 0,
         fill: str | float = "none",
         stroke: str | float = 0.7,
         **shape_kwargs: Any,
@@ -83,7 +83,7 @@ class Polygon_Element(Visualizer_Shape):
             x, y = orientation
             exclude_index = -1
         else:
-            x, y = int(self[orientation][0]), int(self[orientation][1])
+            x, y = self[orientation][0], self[orientation][1]
             exclude_index = orientation
         super().__init__(x, y, name, stroke_width, fill, stroke, **shape_kwargs)
         self._orient_from_origin(exclude_index)
@@ -164,9 +164,9 @@ class Triangle_Element(Polygon_Element):
 
     def __init__(
         self,
-        side_length: int,
-        x: int,
-        y: int,
+        side_length: float,
+        x: float,
+        y: float,
         name: str,
         stroke_width: int,
         fill: str | float = "none",
@@ -177,16 +177,16 @@ class Triangle_Element(Polygon_Element):
         Initialize the Triangle SVG element.
 
         Args:
-            side_length (int): The length of the side of the equilateral triangle.
-            x (int): The x coordinate of the bottom vertex of the triangle.
-            y (int): The y coordinate of the top vertex of the triangle.
+            side_length (float): The length of the side of the equilateral triangle.
+            x (float): The x coordinate of the bottom vertex of the triangle.
+            y (float): The y coordinate of the top vertex of the triangle.
             name (str): The name-id of the shape.
             stroke_width (int): The width of the outline of the shape.
             fill (str | int, optional): The fill color of the shape or the factor to lighten the stroke color by. Defaults to no fill color.
             stroke (str | float, optional): The color of the outline of the shape or the factor to darken the fill color by. Defaults to darkening the fill color by a factor of 0.7.
             **shape_kwargs (Any): Additional keyword arguments to pass to the shape.
         """
-        self.side_length: int = side_length
+        self.side_length: float = side_length
         super().__init__(
             points=[(x, y), self.top_left_vertex, self.top_right_vertex],
             orientation=0,
@@ -222,10 +222,10 @@ class Triangle_Element(Polygon_Element):
         return self.side_length / 2, -1 * self.height
 
     @property
-    def bottom_vertex(self) -> tuple[int, int]:
+    def bottom_vertex(self) -> tuple[float, float]:
         """
         Returns:
-            tuple[int, int]: The bottom vertex of the equilateral triangle pointing downward.
+            tuple[float, float]: The bottom vertex of the equilateral triangle pointing downward.
         """
         return self.x, self.y
 
@@ -235,16 +235,16 @@ class Rect_Element(Visualizer_Shape):
     Wrapper class for Rectangle SVG elements.
 
     Attributes:
-        width (int): The width of the rectangle.
-        height (int): The height of the rectangle.
+        width (float): The width of the rectangle.
+        height (float): The height of the rectangle.
     """
 
     def __init__(
         self,
-        width: int,
-        height: int,
-        x: int,
-        y: int,
+        width: float,
+        height: float,
+        x: float,
+        y: float,
         name: str,
         stroke_width: int,
         fill: str | float = "none",
@@ -255,10 +255,10 @@ class Rect_Element(Visualizer_Shape):
         Initialize the Rectangle SVG element.
 
         Args:
-            width (int): The width of the rectangle in pixels.
-            height (int): The height of the rectangle in pixels.
-            x (int): The x coordinate of the rectangle's top left corner.
-            y (int): The y coordinate of the rectangle's top left corner.
+            width (float): The width of the rectangle in pixels.
+            height (float): The height of the rectangle in pixels.
+            x (float): The x coordinate of the rectangle's top left corner.
+            y (float): The y coordinate of the rectangle's top left corner.
             name (str): The name-id of the shape.
             stroke_width (int): The width of the outline of the shape.
             fill (str | int, optional): The fill color of the shape or the factor to lighten the stroke color by. Defaults to no fill color.
@@ -266,8 +266,8 @@ class Rect_Element(Visualizer_Shape):
             **shape_kwargs (Any): Additional keyword arguments to pass to the shape.
         """
         super().__init__(x, y, name, stroke_width, fill, stroke, **shape_kwargs)
-        self.width: int = width
-        self.height: int = height
+        self.width: float = width
+        self.height: float = height
 
     def _build_svg_element(self) -> Rect:
         return Rect(
@@ -286,8 +286,8 @@ class Circle_Element(Visualizer_Shape):
     def __init__(
         self,
         radius: float,
-        x: int,
-        y: int,
+        x: float,
+        y: float,
         name: str,
         stroke_width: int,
         fill: str | float = "none",
@@ -309,6 +309,14 @@ class Circle_Element(Visualizer_Shape):
         """
         super().__init__(x, y, name, stroke_width, fill, stroke, **shape_kwargs)
         self.radius: float = radius
+
+    @property
+    def diameter(self) -> float:
+        """
+        Returns:
+            float: The diameter of the circle.
+        """
+        return self.radius * 2.0
 
     def _build_svg_element(self) -> Circle:
         return Circle(center=(self.global_x, self.global_y), id=self.name, r=self.radius, **self._element_kwargs)

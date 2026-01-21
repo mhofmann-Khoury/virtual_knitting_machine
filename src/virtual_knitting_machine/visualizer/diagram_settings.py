@@ -22,6 +22,13 @@ class Diagram_Settings:
 
     # Size Proportions
     Loop_Portion_Of_Needle: float = 0.6  # The proportion of the needle boxes taken up by a loop.
+    Max_Loop_Portion_Of_Needle: float = (
+        0.6  # The maximum portion of a needle that a loop stack can take up. This allows for some padding around the loops for clear visibility.
+    )
+    Loop_Stack_Overlap: float = 0.6  # The proportion of a loop circle covered by the loop on top of it in the stack.
+    Minimum_Loop_Portion_of_Needle: float = (
+        0.3  # The minimum proportion of a needle that a loop can take up when shrunk to fit a stack.
+    )
 
     # Fill Colors
     Slider_Background_Color: str = "lightgrey"  # The background color of slider needles.
@@ -72,12 +79,69 @@ class Diagram_Settings:
             return 0
 
     @property
+    def minimum_needle_size(self) -> int:
+        """
+        Returns:
+            int: The smallest dimension of a needle box.
+        """
+        return min(self.Needle_Height, self.Needle_Width)
+
+    @property
+    def loop_diameter(self) -> float:
+        """
+        Returns:
+            float: The diameter of a solo-loop on a needle box.
+        """
+        return self.minimum_needle_size * self.Loop_Portion_Of_Needle
+
+    @property
+    def minimum_loop_diameter(self) -> float:
+        """
+        Returns:
+            float: The minimum diameter to render a loop on a needle box.
+        """
+        return self.minimum_needle_size * self.Minimum_Loop_Portion_of_Needle
+
+    @property
     def loop_radius(self) -> float:
         """
         Returns:
             float: The radius of loop circles based on their proportion of a needle box.
         """
-        return min(self.Needle_Height, self.Needle_Width) * (self.Loop_Portion_Of_Needle / 2)
+        return self.loop_diameter / 2
+
+    @property
+    def loop_stack_shift_portion(self) -> float:
+        """
+        Returns:
+            float: The portion of a loops diameter to shift by when stacking multiple loops on a single needle box.
+        """
+        return 1.0 - self.Loop_Stack_Overlap
+
+    @property
+    def loop_stack_top(self) -> float:
+        """
+        Returns:
+            float: The distance from the top edge of the needle to the top of the top loop in a stack of loops that takes up the maximum spacing of loop stacks in the needle box.
+        """
+        return (self.Needle_Height * (1.0 - self.Max_Loop_Portion_Of_Needle)) / 2
+
+    def stacked_loop_diameter(self, loop_count: int) -> float:
+        """
+        Args:
+            loop_count (int): The number of loops to stack on a needle box.
+
+        Returns:
+            float: The diameter of the stacked loops adjusted for the number overlapping loops in the stack.
+
+        Notes:
+            The diameter is based on the number of loops in a stack, however a minimum diameter is set to ensure that loops are clearly rendered.
+        """
+        if loop_count == 1:
+            return self.loop_diameter
+        stack_size = self.minimum_needle_size * self.Max_Loop_Portion_Of_Needle
+        loops_in_stack = 1.0 + (self.loop_stack_shift_portion * (loop_count - 1))
+        return max(stack_size / loops_in_stack, self.minimum_loop_diameter)
 
     @property
     def carrier_size(self) -> int:

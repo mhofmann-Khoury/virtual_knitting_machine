@@ -1,3 +1,5 @@
+"""Module containing the components of Float Paths in machine state diagrams."""
+
 from enum import Enum
 from typing import Any
 

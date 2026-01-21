@@ -32,10 +32,10 @@ class Path_Element(Visualizer_Element):
 
     def __init__(
         self,
-        start_x: int,
-        start_y: int,
-        end_x: int,
-        end_y: int,
+        start_x: float,
+        start_y: float,
+        end_x: float,
+        end_y: float,
         name: str,
         stroke: str,
         stroke_width: int,
@@ -47,10 +47,10 @@ class Path_Element(Visualizer_Element):
         Initialize the Path SVG element.
 
         Args:
-            start_x (int): The x coordinate of the path's starting point relative to its parent.
-            start_y (int): The y coordinate of the path's starting point relative to its parent.
-            end_x (int): The x coordinate of the path's ending point relative to its parent.
-            end_y (int): The y coordinate of the path's ending point relative to its parent.
+            start_x (float): The x coordinate of the path's starting point relative to its parent.
+            start_y (float): The y coordinate of the path's starting point relative to its parent.
+            end_x (float): The x coordinate of the path's ending point relative to its parent.
+            end_y (float): The y coordinate of the path's ending point relative to its parent.
             name (str): The name of the path element used as the element id.
             stroke (str): The name of the stroke color used for this path.
             stroke_width (int): The width of the path line.
@@ -60,8 +60,8 @@ class Path_Element(Visualizer_Element):
             **element_kwargs (Any): Keyword arguments to configure the Path SVG element. Usually includes "stroke_width".
         """
         super().__init__(start_x, start_y, name, **element_kwargs)
-        self._end_x: int = end_x
-        self._end_y: int = end_y
+        self._end_x: float = end_x
+        self._end_y: float = end_y
         self._path_type: Path_Type = path_type
         self.control_points: list[tuple[float, float]] = [] if control_points is None else control_points
         self.stroke: str = stroke
@@ -81,50 +81,50 @@ class Path_Element(Visualizer_Element):
             return self.line_path_data
 
     @property
-    def start_x(self) -> int:
+    def start_x(self) -> float:
         """
         Returns:
-            int: The x coordinate of the path's starting point relative to its parent.
+            float: The x coordinate of the path's starting point relative to its parent.
         """
         return self.global_x
 
     @property
-    def start_y(self) -> int:
+    def start_y(self) -> float:
         """
         Returns:
-            int: The y coordinate of the path's starting point relative to its parent.
+            float: The y coordinate of the path's starting point relative to its parent.
         """
         return self.global_y
 
     @property
-    def end_x(self) -> int:
+    def end_x(self) -> float:
         """
         Returns:
-            int: The end x coordinate of the path.
+            float: The end x coordinate of the path.
         """
         return self._end_x
 
     @property
-    def end_y(self) -> int:
+    def end_y(self) -> float:
         """
         Returns:
-            int: The end y coordinate of the path.
+            float: The end y coordinate of the path.
         """
         return self._end_y
 
     @property
-    def x_dist(self) -> int:
+    def x_dist(self) -> float:
         """
         Returns:
-            int: The distance between the x coordinates at the start and end of the path.
+            float: The distance between the x coordinates at the start and end of the path.
         """
         return abs(self.start_x - self.end_x)
 
     @property
-    def y_dist(self) -> int:
+    def y_dist(self) -> float:
         """
         Returns:
-            int: The distance between the y coordinates at the start and end of the path.
+            float: The distance between the y coordinates at the start and end of the path.
         """
         return abs(self.start_y - self.end_y)
 

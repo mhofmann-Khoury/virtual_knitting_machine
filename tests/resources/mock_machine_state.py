@@ -18,7 +18,7 @@ class Mock_Machine_State(Knitting_Machine_State_Protocol):
 
     def __init__(
         self,
-        carriers_to_active_needles: dict[int, list[Needle]],
+        carriers_to_active_needles: dict[int, Sequence[Needle]],
         rack: int = 0,
         all_needle_rack: bool = False,
         hook_position: int | None = None,
@@ -32,10 +32,13 @@ class Mock_Machine_State(Knitting_Machine_State_Protocol):
         self._rack: int = rack
         self._all_needle_rack: bool = all_needle_rack
         self.carriers: dict[int, Yarn_Carrier] = {}
-        active_needles = set()
+        active_needles: dict[Needle, Needle] = {}
         for cid, needles in carriers_to_active_needles.items():
-            active_needles.update(needles)
             for n in needles:
+                if n in active_needles:
+                    n = active_needles[n]
+                else:
+                    active_needles[n] = n
                 self.form_loop_on_needle(cid, n)
         assert not any(len(n.held_loops) == 0 for n in active_needles)
         self.active_front_needles: list[Needle] = [n for n in active_needles if n.is_front and not n.is_slider]
