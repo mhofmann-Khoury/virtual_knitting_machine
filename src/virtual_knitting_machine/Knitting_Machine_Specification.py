@@ -78,7 +78,7 @@ class Knitting_Position(Enum):
         return hash(str(self))
 
 
-@dataclass
+@dataclass(frozen=True)
 class Knitting_Machine_Specification:
     """The complete specification of a knitting machine including machine type, physical constraints, and operational parameters.
 
@@ -86,12 +86,47 @@ class Knitting_Machine_Specification:
     limitations, and behavior during knitting operations.
     """
 
-    machine: Knitting_Machine_Type = Knitting_Machine_Type.SWG091N2  #: The type of knitting machine being represented
-    gauge: int = 15  #: The gauge of the knitting machine needles
-    position: Knitting_Position = Knitting_Position.Right  #: The positioning configuration for knitting operations
-    carrier_count: int = 10  #: Number of yarn carriers available on the machine
-    needle_count: int = 540  #: Total number of needles on each bed of the machine
-    maximum_rack: int = 4  #: Maximum racking distance the machine can achieve
-    maximum_float: int = 20  #: Maximum float length allowed (for future long float warnings)
-    maximum_loop_hold: int = 4  #: Maximum number of loops a single needle can hold
-    hook_size: int = 5  #: Size of the yarn insertion hook in needle positions
+    machine: Knitting_Machine_Type = (
+        Knitting_Machine_Type.SWG091N2
+    )  # Knitting_Machine_Type: The type of knitting machine being represented
+    gauge: int = 15  # int: The gauge of the knitting machine needles
+    position: Knitting_Position = (
+        Knitting_Position.Right
+    )  # Knitting_Position: The positioning configuration for knitting operations
+    carrier_count: int = 10  # int: Number of yarn carriers available on the machine
+    needle_count: int = 540  # int: Total number of needles on each bed of the machine
+    maximum_rack: int = 4  # int: Maximum racking distance the machine can achieve
+    maximum_float: int = 20  # int: Maximum float length allowed (for future long float warnings)
+    maximum_loop_hold: int = 4  # int: Maximum number of loops a single needle can hold
+    hook_size: int = 5  # int: Size of the yarn insertion hook in needle positions
+    carrier_colors: tuple[str, ...] = (
+        "firebrick",
+        "navy",
+        "darkgreen",
+        "indigo",
+        "darkgoldenrod",
+        "saddlebrown",
+        "darkcyan",
+        "purple",
+        "darkorange",
+        "darkslateblue",
+    )
+    """tuple[str, ...]: A tuple containing the default names of colors to assign to yarns based on the carrier id."""
+
+    def get_yarn_color(self, carrier_id: int) -> str:
+        """
+        Args:
+            carrier_id (int): The carrier id of the carrier.
+
+        Returns:
+            str: A string for a color to assign to the yarn of a carrier.
+
+        Notes:
+            If the carrier id is greater than the given number of carrier colors, black will be the carrier color.
+        """
+        if carrier_id > 0:
+            carrier_id -= 1
+        if carrier_id < len(self.carrier_colors):
+            return self.carrier_colors[carrier_id]
+        else:
+            return "black"

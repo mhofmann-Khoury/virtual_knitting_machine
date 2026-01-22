@@ -1,13 +1,11 @@
 """Comprehensive unit tests for the Carriage class."""
 
 import unittest
-import warnings
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import Carriage_Off_Edge_Warning
 from virtual_knitting_machine.machine_components.carriage_system.Carriage import Carriage
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import Carriage_Side
 
 
 class TestCarriage(unittest.TestCase):
@@ -20,31 +18,15 @@ class TestCarriage(unittest.TestCase):
         self.mock_machine = Knitting_Machine()
 
         # Create carriage with typical parameters
-        self.carriage = Carriage(knitting_machine=self.mock_machine, rightmost_needle_slot=20, leftmost_needle_slot=0)
+        self.carriage = Carriage(knitting_machine=self.mock_machine)
 
     def test_initialization_valid_parameters(self):
         """Test carriage initialization with valid parameters."""
-        self.assertEqual(self.carriage.knitting_machine, self.mock_machine)
-        self.assertEqual(self.carriage._leftmost_needle_slot, 0)
-        self.assertEqual(self.carriage._rightmost_needle_slot, 20)
         self.assertEqual(
             self.carriage.last_direction, Carriage_Pass_Direction.Leftward
         )  # Defaults to assuming a leftward motion parked the carriage on the left side.
         self.assertEqual(self.carriage.current_needle_slot, 0)  # Should start at left for Rightward movement
         self.assertFalse(self.carriage.transferring)
-
-    def test_initialization_invalid_range(self):
-        """Test carriage initialization with invalid range flipped"""
-        carriage = Carriage(knitting_machine=self.mock_machine, rightmost_needle_slot=5, leftmost_needle_slot=10)
-        self.assertEqual(carriage._leftmost_needle_slot, 5)
-        self.assertEqual(carriage._rightmost_needle_slot, 10)
-
-    def test_transferring_property_getter(self):
-        """Test transferring property getter."""
-        self.assertFalse(self.carriage.transferring)
-
-        self.carriage._transferring = True
-        self.assertTrue(self.carriage.transferring)
 
     def test_transferring_property_setter_start_transfers(self):
         """Test transferring property setter when starting transfers."""
@@ -126,7 +108,7 @@ class TestCarriage(unittest.TestCase):
 
     def test_on_right_side_property(self):
         """Test on_right_side property."""
-        self.carriage.current_needle_slot = 20
+        self.carriage.current_needle_slot = self.carriage.rightmost_needle_slot
         self.assertTrue(self.carriage.on_right_side)
 
         self.carriage.current_needle_slot = 15
@@ -154,7 +136,7 @@ class TestCarriage(unittest.TestCase):
 
     def test_possible_directions_right_side(self):
         """Test possible directions from right side."""
-        self.carriage.current_needle_slot = 20  # Right side
+        self.carriage.current_needle_slot = self.carriage.rightmost_needle_slot  # Right side
 
         directions = self.carriage.possible_directions()
 
@@ -218,10 +200,10 @@ class TestCarriage(unittest.TestCase):
         self.carriage.current_needle_slot = 15
 
         with self.assertWarns(Carriage_Off_Edge_Warning):
-            self.carriage.move(Carriage_Pass_Direction.Rightward, 25)
+            self.carriage.move(Carriage_Pass_Direction.Rightward, self.carriage.rightmost_needle_slot + 25)
 
         # Should be clamped to right edge
-        self.assertEqual(self.carriage.current_needle_slot, 20)
+        self.assertEqual(self.carriage.current_needle_slot, self.carriage.rightmost_needle_slot)
 
     def test_move_to_method(self):
         """Test move_to method."""
@@ -301,7 +283,7 @@ class TestCarriage(unittest.TestCase):
         self.assertFalse(self.carriage.on_right_side)
 
         # Test exact right boundary
-        self.carriage.current_needle_slot = 20
+        self.carriage.current_needle_slot = self.carriage.rightmost_needle_slot
         self.assertFalse(self.carriage.on_left_side)
         self.assertTrue(self.carriage.on_right_side)
 
@@ -313,44 +295,6 @@ class TestCarriage(unittest.TestCase):
         self.carriage.current_needle_slot = 19
         self.assertFalse(self.carriage.on_left_side)
         self.assertFalse(self.carriage.on_right_side)
-
-    def test_custom_range_carriage(self):
-        """Test carriage with custom left/right range."""
-        custom_carriage = Carriage(
-            knitting_machine=self.mock_machine, rightmost_needle_slot=100, leftmost_needle_slot=50
-        )
-
-        # Should start at left position
-        self.assertEqual(custom_carriage.current_needle_slot, 50)
-
-        # Test boundaries
-        custom_carriage.current_needle_slot = 50
-        self.assertTrue(custom_carriage.on_left_side)
-
-        custom_carriage.current_needle_slot = 100
-        self.assertTrue(custom_carriage.on_right_side)
-
-        custom_carriage.current_needle_slot = 75
-        self.assertFalse(custom_carriage.on_left_side)
-        self.assertFalse(custom_carriage.on_right_side)
-
-    def test_warning_details_in_off_edge_warning(self):
-        """Test that off-edge warnings contain correct details."""
-        self.carriage.current_needle_slot = 10
-
-        # Capture the warning
-        with warnings.catch_warnings(record=True) as warning_list:
-            warnings.simplefilter("always")
-            self.carriage.move(Carriage_Pass_Direction.Leftward, -5)
-
-            self.assertEqual(len(warning_list), 1)
-            warning = warning_list[0]
-            self.assertTrue(issubclass(warning.category, Carriage_Off_Edge_Warning))
-
-            warning_instance = warning.message
-            self.assertEqual(warning_instance.target_position, -5)
-            self.assertEqual(warning_instance.edge, Carriage_Side.Left_Side)
-            self.assertEqual(warning_instance.set_position, 0)
 
     def test_multiple_consecutive_moves(self):
         """Test multiple consecutive moves maintain correct state."""

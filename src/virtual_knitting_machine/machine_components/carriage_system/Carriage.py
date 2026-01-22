@@ -4,7 +4,7 @@ This module provides functionality for tracking carriage position, validating mo
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from virtual_knitting_machine.knitting_machine_warnings.Carriage_Warning import Carriage_Off_Edge_Warning
 from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
@@ -14,47 +14,193 @@ from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_D
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Side import Carriage_Side
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
+    from virtual_knitting_machine.Knitting_Machine import Knitting_Machine, Knitting_Machine_State
 
 
-class Carriage:
+class Carriage_State(Protocol):
+    """Protocol defining readable attributes of carriages."""
+
+    @property
+    def knitting_machine(self) -> Knitting_Machine_State:
+        """
+        Returns:
+            Knitting_Machine_State: The knitting machine that owns this carriage.
+        """
+        ...
+
+    @property
+    def transferring(self) -> bool:
+        """
+        Returns:
+            bool: True if carriage is currently running transfers, False otherwise.
+        """
+        ...
+
+    @property
+    def current_needle_slot(self) -> int:
+        """
+        Returns:
+            int: The current needle position of the carriage.
+        """
+        ...
+
+    @property
+    def slot_prior_to_transfers(self) -> int:
+        """
+        Returns:
+            int: The needle-slot of the carriage prior to its current transfer pass.
+        """
+        ...
+
+    @property
+    def last_direction(self) -> Carriage_Pass_Direction:
+        """Get the last direction the carriage moved in.
+
+        Returns:
+            Carriage_Pass_Direction: The last direction the carriage moved in.
+        """
+        ...
+
+    @property
+    def direction_prior_to_transfers(self) -> Carriage_Pass_Direction:
+        """
+        Returns:
+            Carriage_Pass_Direction: The direction the carriage was moving prior to the current transfer pass.
+        """
+        ...
+
+    @property
+    def reverse_of_last_direction(self) -> Carriage_Pass_Direction:
+        """Get the reverse of the last direction the carriage moved in.
+
+        Returns:
+            Carriage_Pass_Direction: The opposite direction of the last carriage movement.
+        """
+        return self.last_direction.opposite()
+
+    @property
+    def leftmost_needle_slot(self) -> int:
+        """
+        Returns:
+            int: The leftmost slot of needles that the carriage can move to.
+        """
+        return 0
+
+    @property
+    def rightmost_needle_slot(self) -> int:
+        """
+        Returns:
+            int: The rightmost slot of needles that the carriage can move to.
+        """
+        return self.knitting_machine.needle_count - 1
+
+    @property
+    def on_left_side(self) -> bool:
+        """Check if carriage is positioned on the very left side of the machine.
+
+        Returns:
+            bool: True if positioned on very left side of machine, False otherwise.
+        """
+        return self.current_needle_slot == self.leftmost_needle_slot
+
+    @property
+    def on_right_side(self) -> bool:
+        """Check if carriage is positioned on the very right side of the machine.
+
+        Returns:
+            bool: True if positioned on very right side of machine, False otherwise.
+        """
+        return self.current_needle_slot == self.rightmost_needle_slot
+
+    def possible_directions(self) -> list[Carriage_Pass_Direction]:
+        """
+        Returns:
+            list[Carriage_Pass_Direction]: List of possible directions the carriage can move from this position.
+        """
+        directions = []
+        if not self.on_left_side:
+            directions.append(Carriage_Pass_Direction.Leftward)
+        if not self.on_right_side:
+            directions.append(Carriage_Pass_Direction.Rightward)
+        assert len(directions) > 0, "Carriage must have at least 1 direction option."
+        return directions
+
+    def left_of(self, needle_slot: int) -> bool:
+        """
+        Args:
+            needle_slot (int): Needle slot to compare to.
+
+        Returns:
+            bool: True if the current carriage position is to the left of the given needle_position, False otherwise.
+        """
+        return self.current_needle_slot < needle_slot
+
+    def right_of(self, needle_slot: int) -> bool:
+        """
+        Args:
+            needle_slot (int): Needle slot to compare to.
+
+        Returns:
+            bool: True if the current carriage position is to the right of the given needle_position, False otherwise.
+        """
+        return needle_slot < self.current_needle_slot
+
+    def on_slot(self, needle_slot: int) -> bool:
+        """
+        Args:
+            needle_slot (int): Needle slot to compare to.
+
+        Returns:
+            bool: True if this carriage position is on the given needle_position, False otherwise.
+        """
+        return needle_slot == self.current_needle_slot
+
+    def direction_to(self, needle_slot: int) -> Carriage_Pass_Direction | None:
+        """
+        Args:
+            needle_slot (int): Needle slot to target the direction towards.
+
+        Returns:
+            Carriage_Pass_Direction | None: Direction to move from current position to given needle_position or None if on given position.
+        """
+        if self.left_of(needle_slot):
+            return Carriage_Pass_Direction.Rightward
+        elif self.right_of(needle_slot):
+            return Carriage_Pass_Direction.Leftward
+        else:
+            return None
+
+
+class Carriage(Carriage_State):
     """A class for tracking the carriage's position and managing possible movements on a knitting machine.
 
     The carriage is responsible for moving across the needle bed and performing knitting operations.
     This class manages position validation, movement direction tracking, and transfer operation states.
 
-    Attributes:
-        knitting_machine (Knitting_Machine): The Knitting machine this carriage belongs to.
-
     """
 
-    def __init__(
-        self, knitting_machine: Knitting_Machine, rightmost_needle_slot: int, leftmost_needle_slot: int = 0
-    ) -> None:
+    def __init__(self, knitting_machine: Knitting_Machine) -> None:
         """Initialize a new carriage with specified position range and starting direction.
 
         Args:
             knitting_machine (Knitting_Machine): The knitting machine this carriage belongs to.
-            rightmost_needle_slot (int): The rightmost needle position the carriage can reach.
-            leftmost_needle_slot (int, optional): The leftmost needle position the carriage can reach. Defaults to 0.
-
-        Raises:
-            AssertionError: If left_needle_position is not less than right_needle_position.
         """
-        self.knitting_machine: Knitting_Machine = knitting_machine
-        if leftmost_needle_slot > rightmost_needle_slot:  # Swaps positions if they are not in the right order.
-            hold_r = rightmost_needle_slot
-            rightmost_needle_slot = leftmost_needle_slot
-            leftmost_needle_slot = hold_r
-        self._leftmost_needle_slot: int = leftmost_needle_slot
-        self._rightmost_needle_slot: int = rightmost_needle_slot
+        self._knitting_machine: Knitting_Machine = knitting_machine
         self._last_direction: Carriage_Pass_Direction = Carriage_Pass_Direction.Leftward
-        self._current_needle_slot: int = self._leftmost_needle_slot
+        self._current_needle_slot: int = self.leftmost_needle_slot
         self._transferring: bool = False
         self._slot_prior_to_transfers: int = self.current_needle_slot
         self._direction_prior_to_transfers: Carriage_Pass_Direction = self.last_direction
         if self.last_direction is Carriage_Pass_Direction.Rightward:
-            self.current_needle_slot = self._rightmost_needle_slot
+            self.current_needle_slot = self.rightmost_needle_slot
+
+    @property
+    def knitting_machine(self) -> Knitting_Machine:
+        """
+        Returns:
+            Knitting_Machine: The knitting machine that owns this carriage.
+        """
+        return self._knitting_machine
 
     @property
     def transferring(self) -> bool:
@@ -126,102 +272,12 @@ class Carriage:
             self._direction_prior_to_transfers = new_direction
 
     @property
-    def reverse_of_last_direction(self) -> Carriage_Pass_Direction:
-        """Get the reverse of the last direction the carriage moved in.
-
-        Returns:
-            Carriage_Pass_Direction: The opposite direction of the last carriage movement.
-        """
-        return self.last_direction.opposite()
-
-    @property
     def direction_prior_to_transfers(self) -> Carriage_Pass_Direction:
         """
         Returns:
             Carriage_Pass_Direction: The direction the carriage was moving prior to the current transfer pass.
         """
         return self._direction_prior_to_transfers
-
-    @property
-    def on_left_side(self) -> bool:
-        """Check if carriage is positioned on the very left side of the machine.
-
-        Returns:
-            bool: True if positioned on very left side of machine, False otherwise.
-        """
-        return self.current_needle_slot == self._leftmost_needle_slot
-
-    @property
-    def on_right_side(self) -> bool:
-        """Check if carriage is positioned on the very right side of the machine.
-
-        Returns:
-            bool: True if positioned on very right side of machine, False otherwise.
-        """
-        return self.current_needle_slot == self._rightmost_needle_slot
-
-    def possible_directions(self) -> list[Carriage_Pass_Direction]:
-        """Get list of possible directions the carriage can move from this position.
-
-        Returns:
-            list[Carriage_Pass_Direction]: List of possible directions the carriage can move from this position.
-        """
-        directions = []
-        if not self.on_left_side:
-            directions.append(Carriage_Pass_Direction.Leftward)
-        if not self.on_right_side:
-            directions.append(Carriage_Pass_Direction.Rightward)
-        assert len(directions) > 0, "Carriage must have at least 1 direction option."
-        return directions
-
-    def left_of(self, needle_slot: int) -> bool:
-        """Check if the current carriage position is to the left of the given needle position.
-
-        Args:
-            needle_slot (int): Needle slot to compare to.
-
-        Returns:
-            bool: True if the current carriage position is to the left of the given needle_position, False otherwise.
-        """
-        return self.current_needle_slot < needle_slot
-
-    def right_of(self, needle_slot: int) -> bool:
-        """Check if the current carriage position is to the right of the given needle position.
-
-        Args:
-            needle_slot (int): Needle slot to compare to.
-
-        Returns:
-            bool: True if the current carriage position is to the right of the given needle_position, False otherwise.
-        """
-        return needle_slot < self.current_needle_slot
-
-    def on_slot(self, needle_slot: int) -> bool:
-        """Check if the carriage position is exactly on the given needle position.
-
-        Args:
-            needle_slot (int): Needle slot to compare to.
-
-        Returns:
-            bool: True if this carriage position is on the given needle_position, False otherwise.
-        """
-        return needle_slot == self.current_needle_slot
-
-    def direction_to(self, needle_slot: int) -> Carriage_Pass_Direction | None:
-        """Get the direction needed to move from current position to given needle position.
-
-        Args:
-            needle_slot (int): Needle slot to target the direction towards.
-
-        Returns:
-            Carriage_Pass_Direction | None: Direction to move from current position to given needle_position or None if on given position.
-        """
-        if self.left_of(needle_slot):
-            return Carriage_Pass_Direction.Rightward
-        elif self.right_of(needle_slot):
-            return Carriage_Pass_Direction.Leftward
-        else:
-            return None
 
     def move(self, direction: Carriage_Pass_Direction, end_slot: int) -> None:
         """Update current needle position based on given target and direction with validation.
@@ -236,22 +292,22 @@ class Carriage:
         direction_to_position = self.direction_to(end_slot)
         if (direction_to_position is not direction) and (direction_to_position is not None):
             self.move_to(end_slot)
-        if end_slot < self._leftmost_needle_slot:
+        if end_slot < self.leftmost_needle_slot:
             warnings.warn(
                 Carriage_Off_Edge_Warning(
-                    end_slot, Carriage_Side.Left_Side, self._leftmost_needle_slot, self._rightmost_needle_slot
+                    end_slot, Carriage_Side.Left_Side, self.leftmost_needle_slot, self.rightmost_needle_slot
                 ),
                 stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
             )
-            end_slot = self._leftmost_needle_slot
-        elif end_slot > self._rightmost_needle_slot:
+            end_slot = self.leftmost_needle_slot
+        elif end_slot > self.rightmost_needle_slot:
             warnings.warn(
                 Carriage_Off_Edge_Warning(
-                    end_slot, Carriage_Side.Right_Side, self._leftmost_needle_slot, self._rightmost_needle_slot
+                    end_slot, Carriage_Side.Right_Side, self.leftmost_needle_slot, self.rightmost_needle_slot
                 ),
                 stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
             )
-            end_slot = self._rightmost_needle_slot
+            end_slot = self.rightmost_needle_slot
         self.current_needle_slot = end_slot
         self.last_direction = direction
 

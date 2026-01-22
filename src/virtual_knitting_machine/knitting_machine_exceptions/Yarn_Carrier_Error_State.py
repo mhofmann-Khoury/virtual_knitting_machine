@@ -2,12 +2,15 @@
 This module provides comprehensive exception classes for various yarn carrier issues including
 hook conflicts, inactive carrier usage, yarn cutting errors, and carrier system modifications that would cause critical operational failures."""
 
-from typing import TYPE_CHECKING, Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import Knitting_Machine_Exception
+from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier_State
 
 
 class Yarn_Carrier_Exception(Knitting_Machine_Exception):
@@ -15,14 +18,14 @@ class Yarn_Carrier_Exception(Knitting_Machine_Exception):
     This class provides a foundation for all yarn carrier-specific exceptions and includes
     the carrier ID reference for detailed error reporting and debugging of carrier-related operational failures."""
 
-    def __init__(self, carrier_id: Any, message: str) -> None:
+    def __init__(self, carrier_id: int | Yarn_Carrier_State, message: str) -> None:
         """Initialize a yarn carrier-specific exception.
 
         Args:
             carrier_id (int | Yarn_Carrier): The carrier ID or carrier object involved in the exception condition.
             message (str): The descriptive error message about the carrier state or operation failure.
         """
-        self.carrier_id: Yarn_Carrier | int = carrier_id
+        self.carrier_id: Yarn_Carrier_State | int = carrier_id
         super().__init__(message)
 
 
@@ -31,7 +34,7 @@ class Hooked_Carrier_Exception(Yarn_Carrier_Exception):
     This exception occurs when trying to perform an operation that requires the carrier to not be on the insertion hook,
     such as an outhook operation, when the carrier is currently connected to the hook."""
 
-    def __init__(self, carrier_id: Any) -> None:
+    def __init__(self, carrier_id: int | Yarn_Carrier_State) -> None:
         """Initialize a hooked carrier operation exception.
 
         Args:
@@ -41,11 +44,10 @@ class Hooked_Carrier_Exception(Yarn_Carrier_Exception):
 
 
 class Blocked_by_Yarn_Inserting_Hook_Exception(Yarn_Carrier_Exception):
-    def __init__(self, carrier_id: Any, slot: int) -> None:
-        self._slot: int = slot
+    def __init__(self, carrier_id: int | Yarn_Carrier_State, needle: Needle) -> None:
         super().__init__(
             carrier_id,
-            f"Cannot use carrier {carrier_id} on needle slot {slot} because it is blocked by the yarn inserting hook.",
+            f"Cannot use carrier {carrier_id} on needle {needle} because it is blocked by the yarn inserting hook.",
         )
 
 
@@ -54,7 +56,7 @@ class Inserting_Hook_In_Use_Exception(Yarn_Carrier_Exception):
     This exception occurs when trying to perform hook operations while the insertion hook is already in use by a different carrier, preventing conflicts in hook operations.
     """
 
-    def __init__(self, carrier_id: Any) -> None:
+    def __init__(self, carrier_id: int | Yarn_Carrier_State) -> None:
         """Initialize an inserting hook in use exception.
 
         Args:
@@ -70,7 +72,7 @@ class Use_Inactive_Carrier_Exception(Yarn_Carrier_Exception):
     This exception occurs when trying to perform knitting operations with a carrier that is not active (still on grippers or otherwise unavailable),
     which would result in no yarn being fed to the needles."""
 
-    def __init__(self, carrier_id: Any) -> None:
+    def __init__(self, carrier_id: int | Yarn_Carrier_State) -> None:
         """Initialize an inactive carrier usage exception.
 
         Args:
@@ -84,7 +86,7 @@ class Use_Cut_Yarn_Exception(Use_Inactive_Carrier_Exception):
     This exception occurs when trying to perform knitting operations with yarn that has been severed from its carrier,
     making it impossible to continue yarn operations as the yarn is no longer connected to the carrier system."""
 
-    def __init__(self, carrier_id: Any) -> None:
+    def __init__(self, carrier_id: int | Yarn_Carrier_State) -> None:
         """Initialize a cut yarn usage exception.
 
         Args:
@@ -98,7 +100,7 @@ class Change_Active_Yarn_Exception(Yarn_Carrier_Exception):
     This exception occurs when trying to modify yarn properties or reassign yarn to a carrier that is actively being used for knitting operations, which could cause yarn consistency issues.
     """
 
-    def __init__(self, carrier_id: Any) -> None:
+    def __init__(self, carrier_id: int | Yarn_Carrier_State) -> None:
         """Initialize a change active yarn exception.
 
         Args:

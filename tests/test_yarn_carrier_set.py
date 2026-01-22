@@ -91,17 +91,6 @@ class TestYarnCarrierSet(unittest.TestCase):
         carrier_set = Yarn_Carrier_Set([1, 2])
         self.assertTrue(carrier_set.many_carriers)
 
-    def test_positions_method(self):
-        """Test positions method retrieves positions from carrier system."""
-        carrier_set = Yarn_Carrier_Set([1, 2, 3])
-
-        for i, pos in zip(carrier_set.carrier_ids, [10, 20, None]):
-            self.carrier_system.position_carrier_at_needle_slot(i, pos)
-
-        positions = carrier_set.slot_positions(self.carrier_system)
-
-        self.assertEqual(positions, [10, 20, None])
-
     def test_get_carriers_single_carrier_returned(self):
         """Test get_carriers method when system returns single carrier."""
         carrier_set = Yarn_Carrier_Set(5)

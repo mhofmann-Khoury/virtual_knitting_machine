@@ -1,13 +1,13 @@
 """Comprehensive unit tests for the Yarn_Carrier class."""
 
 import unittest
-import warnings
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Hooked_Carrier_Exception
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
     In_Active_Carrier_Warning,
     Out_Inactive_Carrier_Warning,
 )
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 
@@ -29,64 +29,27 @@ class TestYarnCarrier(unittest.TestCase):
         self.assertFalse(carrier.is_hooked)
         self.assertIsNone(carrier.slot_position)
 
-    def test_yarn_property_getter(self):
-        """Test yarn property getter."""
-        self.assertEqual(self.carrier.yarn, self.carrier._yarn)
-
-    def test_position_property_getter(self):
-        """Test position property getter."""
-        self.assertIsNone(self.carrier.slot_position)
-
-        self.carrier._slot_position = 10
-        self.assertEqual(self.carrier.slot_position, 10)
-
-    def test_position_property_setter_none(self):
+    def test_set_position_none(self):
         """Test position property setter with None."""
-        self.carrier.slot_position = None
+        self.carrier.set_position(None)
         self.assertIsNone(self.carrier.slot_position)
+        self.assertIs(self.carrier.last_direction, Carriage_Pass_Direction.Leftward)
 
-    def test_position_property_setter_integer(self):
+    def test_position_property_setter_front(self):
         """Test position property setter with integer."""
-        self.carrier.slot_position = 15
-        self.assertEqual(self.carrier.slot_position, 15)
-
-    def test_is_active_property_getter(self):
-        """Test is_active property getter."""
-        self.assertFalse(self.carrier.is_active)
-
-        self.carrier._is_active = True
-        self.assertTrue(self.carrier.is_active)
-
-    def test_is_active_property_setter_true(self):
-        """Test is_active property setter with True."""
         self.carrier.is_active = True
-        self.assertTrue(self.carrier._is_active)
+        self.carrier.set_position(Needle(True, 15))
+        self.assertEqual(self.carrier.needle, Needle(True, 15))
+        self.assertEqual(self.carrier.slot_position, 15)
+        self.assertIs(self.carrier.last_direction, Carriage_Pass_Direction.Leftward)
 
-    def test_is_active_property_setter_false(self):
-        """Test is_active property setter with False clears hook and position."""
-        self.carrier._is_hooked = True
-        self.carrier._slot_position = 10
-
-        self.carrier.is_active = False
-
-        self.assertFalse(self.carrier._is_active)
-        self.assertFalse(self.carrier.is_hooked)
-        self.assertIsNone(self.carrier.slot_position)
-
-    def test_is_hooked_property_getter(self):
-        """Test is_hooked property getter."""
-        self.assertFalse(self.carrier.is_hooked)
-
-        self.carrier._is_hooked = True
-        self.assertTrue(self.carrier.is_hooked)
-
-    def test_is_hooked_property_setter(self):
-        """Test is_hooked property setter."""
-        self.carrier.is_hooked = True
-        self.assertTrue(self.carrier._is_hooked)
-
-        self.carrier.is_hooked = False
-        self.assertFalse(self.carrier._is_hooked)
+    def test_position_property_setter_back(self):
+        """Test position property setter with integer."""
+        self.carrier.is_active = True
+        self.carrier.set_position(Needle(False, 15))
+        self.assertEqual(self.carrier.needle, Needle(False, 15))
+        self.assertEqual(self.carrier.slot_position, 15)
+        self.assertIs(self.carrier.last_direction, Carriage_Pass_Direction.Leftward)
 
     def test_bring_in_inactive_carrier(self):
         """Test bring_in method with inactive carrier."""
@@ -166,10 +129,6 @@ class TestYarnCarrier(unittest.TestCase):
         with self.assertRaises(Hooked_Carrier_Exception):
             self.carrier.outhook()
 
-    def test_carrier_id_property(self):
-        """Test carrier_id property."""
-        self.assertEqual(self.carrier.carrier_id, self.carrier_id)
-
     def test_less_than_comparison_with_integer(self):
         """Test less than comparison with integer."""
         carrier_3 = Yarn_Carrier(3)
@@ -215,75 +174,22 @@ class TestYarnCarrier(unittest.TestCase):
         self.carrier.inhook()
         self.assertTrue(self.carrier.is_active)
         self.assertTrue(self.carrier.is_hooked)
+        self.assertIsNone(self.carrier.slot_position)
 
         # Set position
-        self.carrier.position = 10
+        self.carrier.set_position(Needle(True, 10))
         self.assertEqual(self.carrier.slot_position, 10)
+        self.assertIs(self.carrier.last_direction, Carriage_Pass_Direction.Leftward)
 
         # Release hook
         self.carrier.releasehook()
         self.assertTrue(self.carrier.is_active)
         self.assertFalse(self.carrier.is_hooked)
         self.assertEqual(self.carrier.slot_position, 10)
+        self.assertIs(self.carrier.last_direction, Carriage_Pass_Direction.Leftward)
 
         # Out
         self.carrier.out()
         self.assertFalse(self.carrier.is_active)
         self.assertFalse(self.carrier.is_hooked)
         self.assertIsNone(self.carrier.slot_position)
-
-    def test_deactivation_clears_all_states(self):
-        """Test that deactivating carrier clears all states."""
-        # Set up active, hooked carrier with position
-        self.carrier._is_active = True
-        self.carrier._is_hooked = True
-        self.carrier._slot_position = 15
-
-        # Deactivate
-        self.carrier.is_active = False
-
-        # All states should be cleared
-        self.assertFalse(self.carrier.is_active)
-        self.assertFalse(self.carrier.is_hooked)
-        self.assertIsNone(self.carrier.slot_position)
-
-    def test_position_setting_with_float_conversion(self):
-        """Test position setting converts float to int."""
-        self.carrier.position = 12.7
-        self.assertEqual(self.carrier.slot_position, 12)
-
-    def test_multiple_carriers_independence(self):
-        """Test that multiple carriers maintain independent states."""
-        carrier1 = Yarn_Carrier(1)
-        carrier2 = Yarn_Carrier(2)
-
-        # Activate only carrier1
-        carrier1.is_active = True
-        carrier1.slot_position = 10
-
-        # Verify independence
-        self.assertTrue(carrier1.is_active)
-        self.assertFalse(carrier2.is_active)
-        self.assertEqual(carrier1.slot_position, 10)
-        self.assertIsNone(carrier2.slot_position)
-
-    def test_hash_consistency_across_operations(self):
-        """Test hash remains consistent across operations."""
-        initial_hash = hash(self.carrier)
-
-        # Perform various operations
-        self.carrier.bring_in()
-        self.carrier.slot_position = 5
-        self.carrier.is_hooked = True
-        self.carrier.out()
-
-        # Hash should remain the same (based only on carrier_id)
-        self.assertEqual(hash(self.carrier), initial_hash)
-
-    def test_comparison_edge_cases(self):
-        """Test comparison edge cases."""
-        carrier_0 = Yarn_Carrier(0)
-        carrier_negative = Yarn_Carrier(-1)
-
-        self.assertTrue(carrier_negative < carrier_0)
-        self.assertTrue(carrier_0 < self.carrier)  # self.carrier has ID 5

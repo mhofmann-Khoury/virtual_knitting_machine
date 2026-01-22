@@ -1,10 +1,8 @@
 """Module containing the Diagram_Settings class."""
 
 from dataclasses import dataclass
-from enum import Enum
 
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 
 
 @dataclass(frozen=True)
@@ -160,33 +158,3 @@ class Diagram_Settings:
             int: The x coordinate position of the left side of the needle slot in the diagram.
         """
         return needle_index * self.Needle_Width
-
-
-class Carrier_Yarn_Color_Defaults(Enum):
-    """An enumeration of default yarn colors assigned to carriers"""
-
-    c1 = "firebrick"  # str: The color of carrier 1 (brick red)
-    c2 = "navy"  # str: The color of carrier 2 (dark navy blue)
-    c3 = "darkgreen"  # str: The color of carrier 3 (deep green)
-    c4 = "indigo"  # str: The color of carrier 4 (dark indigo)
-    c5 = "darkgoldenrod"  # str: The color of carrier 5 (deep gold)
-    c6 = "saddlebrown"  # str: The color of carrier 6 (saddle brown)
-    c7 = "darkcyan"  # str: The color of carrier 7 (deep cyan)
-    c8 = "purple"  # str: The color of carrier 8 (deep purple)
-    c9 = "darkorange"  # str: The color of carrier 9 (dark orange)
-    c10 = "darkslateblue"  # str: The color of carrier 10 (dark slate blue)
-
-    @staticmethod
-    def get_color_by_carrier_number(carrier_id: int | Yarn_Carrier) -> str:
-        """
-        Args:
-            carrier_id (int | Yarn_Carrier): The carrier id or yarn-carrier to source a color for.
-
-        Returns:
-            str: The color name that is default for the given carrier.
-
-        Raises:
-            KeyError: If there is no default color for the given carrier.
-        """
-        c_name = f"c{carrier_id}" if isinstance(carrier_id, int) else str(carrier_id)
-        return Carrier_Yarn_Color_Defaults[c_name].value

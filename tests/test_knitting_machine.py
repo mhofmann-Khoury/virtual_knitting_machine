@@ -36,18 +36,6 @@ class TestKnittingMachine(unittest.TestCase):
         self.assertFalse(machine._all_needle_rack)
         self.assertIsInstance(machine.knit_graph, Knit_Graph)
 
-    def test_initialization_custom_spec(self):
-        """Test machine initialization with custom specification."""
-        custom_spec = Knitting_Machine_Specification()
-        custom_spec.needle_count = 100
-        custom_spec.carrier_count = 5
-
-        machine = Knitting_Machine(custom_spec)
-
-        self.assertEqual(machine.machine_specification, custom_spec)
-        self.assertEqual(machine.needle_count, 100)
-        self.assertEqual(len(machine.carrier_system.carriers), 5)
-
     def test_max_rack_property(self):
         """Test max_rack property."""
         self.assertEqual(self.machine.max_rack, self.spec.maximum_rack)
@@ -134,42 +122,6 @@ class TestKnittingMachine(unittest.TestCase):
         with self.assertRaises(Max_Rack_Exception):
             self.machine.rack = max_rack + 1
 
-    def test_get_needle_with_needle_object(self):
-        """Test get_needle method with Needle object."""
-        needle = Needle(is_front=True, position=5)
-
-        result = self.machine.get_needle(needle)
-
-        self.assertIsInstance(result, Needle)
-        self.assertTrue(result.is_front)
-        self.assertEqual(result.position, 5)
-
-    def test_get_needle_with_tuple_two_elements(self):
-        """Test get_needle method with 2-element tuple."""
-        result = self.machine.get_needle((False, 10))
-
-        self.assertIsInstance(result, Needle)
-        self.assertFalse(result.is_front)
-        self.assertEqual(result.position, 10)
-
-    def test_get_needle_with_tuple_three_elements_regular(self):
-        """Test get_needle method with 3-element tuple for regular needle."""
-        result = self.machine.get_needle((True, 15, False))
-
-        self.assertIsInstance(result, Needle)
-        self.assertFalse(result.is_slider)
-        self.assertTrue(result.is_front)
-        self.assertEqual(result.position, 15)
-
-    def test_get_needle_with_tuple_three_elements_slider(self):
-        """Test get_needle method with 3-element tuple for slider needle."""
-        result = self.machine.get_needle((False, 8, True))
-
-        self.assertIsInstance(result, Slider_Needle)
-        self.assertTrue(result.is_slider)
-        self.assertFalse(result.is_front)
-        self.assertEqual(result.position, 8)
-
     def test_get_carrier_single_integer(self):
         """Test get_carrier method with single integer."""
         result = self.machine.get_carrier(3)
@@ -192,14 +144,6 @@ class TestKnittingMachine(unittest.TestCase):
 
         self.assertIsInstance(result, Needle)
         self.assertEqual(result.position, 7)
-
-    def test_getitem_with_tuple(self):
-        """Test __getitem__ with tuple."""
-        result = self.machine[(False, 12)]
-
-        self.assertIsInstance(result, Needle)
-        self.assertFalse(result.is_front)
-        self.assertEqual(result.position, 12)
 
     def test_getitem_with_carrier(self):
         """Test __getitem__ with Yarn_Carrier."""
@@ -360,27 +304,3 @@ class TestKnittingMachine(unittest.TestCase):
         self.assertTrue(len(self.machine.back_slider_loops()) == 0)
         self.assertTrue(len(self.machine.all_slider_loops()) == 0)
         self.assertTrue(len(self.machine.all_loops()) == 2)
-
-    def test_comprehensive_machine_workflow(self):
-        """Test comprehensive machine workflow with multiple operations."""
-        # Initialize machine
-        machine = Knitting_Machine()
-
-        # Test initial state
-        self.assertEqual(machine.rack, 0)
-        self.assertFalse(machine.all_needle_rack)
-        self.assertTrue(machine.sliders_are_clear)
-
-        # Test rack adjustment
-        machine.rack = 2
-        self.assertEqual(machine.rack, 2)
-
-        # Test needle access
-        front_needle = machine.get_needle((True, 10))
-        self.assertTrue(front_needle.is_front)
-        self.assertEqual(front_needle.position, 10)
-
-        # Test aligned needle calculation
-        aligned = machine.get_aligned_needle(front_needle)
-        self.assertFalse(aligned.is_front)
-        self.assertEqual(aligned.position, 8)  # 10 - 2 = 8

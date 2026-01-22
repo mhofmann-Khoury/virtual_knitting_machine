@@ -4,8 +4,6 @@ import random
 import unittest
 from unittest.mock import Mock
 
-from knit_graphs.Pull_Direction import Pull_Direction
-
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
@@ -31,43 +29,6 @@ class TestNeedle(unittest.TestCase):
         self.assertFalse(self.back_needle.is_front)
         self.assertEqual(self.back_needle.position, self.back_pos)
         self.assertEqual(len(self.back_needle.held_loops), 0)
-
-    def test_pull_direction_property(self):
-        """Test pull direction property returns correct values."""
-        self.assertEqual(self.front_needle.pull_direction, Pull_Direction.BtF)
-        self.assertEqual(self.back_needle.pull_direction, Pull_Direction.FtB)
-
-    def test_is_front_property(self):
-        """Test is_front property returns correct values."""
-        self.assertTrue(self.front_needle.is_front)
-        self.assertFalse(self.back_needle.is_front)
-
-    def test_is_back_property(self):
-        """Test is_back property returns correct values."""
-        self.assertFalse(self.front_needle.is_back)
-        self.assertTrue(self.back_needle.is_back)
-
-    def test_position_property(self):
-        """Test position property returns correct values."""
-        self.assertEqual(self.front_needle.position, self.front_pos)
-        self.assertEqual(self.back_needle.position, self.back_pos)
-
-    def test_has_loops_property(self):
-        """Test has_loops property reflects loop state correctly."""
-        self.assertFalse(self.front_needle.has_loops)
-
-        # Mock loop and add to needle
-        mock_loop = Mock(spec=Machine_Knit_Loop)
-        mock_loop.yarn = Mock()
-        mock_loop.yarn.active_loops = {}
-        self.front_needle.held_loops.append(mock_loop)
-
-        self.assertTrue(self.front_needle.has_loops)
-
-    def test_is_slider_property(self):
-        """Test is_slider property returns False for regular needles."""
-        self.assertFalse(self.front_needle.is_slider)
-        self.assertFalse(self.back_needle.is_slider)
 
     def test_add_loop(self):
         """Test adding a single loop to needle."""

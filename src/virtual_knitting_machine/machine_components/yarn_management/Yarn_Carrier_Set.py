@@ -13,10 +13,14 @@ from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning
 )
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Duplicate_Carriers_In_Set
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier_State
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import (
+        Yarn_Insertion_System,
+        Yarn_Insertion_System_State,
+    )
 
 
 class Yarn_Carrier_Set(Sequence[int]):
@@ -25,11 +29,16 @@ class Yarn_Carrier_Set(Sequence[int]):
     It provides methods for accessing carrier positions, managing duplicates, and converting to various representation formats.
     """
 
-    def __init__(self, carrier_ids: Sequence[int | Yarn_Carrier] | int | Yarn_Carrier) -> None:
+    def __init__(
+        self,
+        carrier_ids: (
+            Sequence[int | Yarn_Carrier_State] | Sequence[int] | Sequence[Yarn_Carrier_State] | int | Yarn_Carrier_State
+        ),
+    ) -> None:
         """Initialize a yarn carrier set with one or more carrier identifiers.
 
         Args:
-            carrier_ids (Sequence[int | Yarn_Carrier] | int | Yarn_Carrier): The carrier IDs for this yarn carrier set, can be a single carrier or list of carriers.
+            carrier_ids (Sequence[int | Yarn_Carrier_State] | int | Yarn_Carrier_State): The carrier IDs for this yarn carrier set, can be a single carrier or list of carriers.
 
         Warns:
             Duplicate_Carriers_In_Set: If duplicate carrier IDs are found in the input list.
@@ -50,33 +59,7 @@ class Yarn_Carrier_Set(Sequence[int]):
         else:
             self._carrier_ids: list[int] = [int(carrier_ids)]
 
-    def positions(self, carrier_system: Yarn_Insertion_System) -> list[int | None]:
-        """
-        Args:
-            carrier_system (Yarn_Insertion_System): The carrier system to reference position data from.
-
-        Returns:
-            list[None | int]: The list of slot-positions of each carrier in the carrier set.
-
-        Warns:
-            PendingDeprecationWarning: Switch to using slot_positions before this method is deprecated.
-        """
-        warnings.warn(
-            PendingDeprecationWarning("Positions will be renamed to slot_positions in future release"), stacklevel=0
-        )
-        return self.slot_positions(carrier_system)
-
-    def slot_positions(self, carrier_system: Yarn_Insertion_System) -> list[int | None]:
-        """
-        Args:
-            carrier_system (Yarn_Insertion_System): The carrier system to reference position data from.
-
-        Returns:
-            list[None | int]: The list of slot-positions of each carrier in the carrier set.
-        """
-        return [c.slot_position for c in self.get_carriers(carrier_system)]
-
-    def get_carriers(self, carrier_system: Yarn_Insertion_System) -> list[Yarn_Carrier]:
+    def get_carriers(self, carrier_system: Yarn_Insertion_System_State) -> list[Yarn_Carrier_State]:
         """Get the actual carrier objects that correspond to the IDs in this carrier set.
 
         Args:
@@ -86,25 +69,23 @@ class Yarn_Carrier_Set(Sequence[int]):
             list[Yarn_Carrier]: Carriers that correspond to the ids in the carrier set.
         """
         carriers = carrier_system[self]
-        if isinstance(carriers, Yarn_Carrier):
-            carriers = [carriers]
         return carriers
 
-    def position_carriers_at_needle_slot(
+    def position_carriers_at_needle(
         self,
         carrier_system: Yarn_Insertion_System,
-        slot_position: int | None,
+        needle: Needle | None,
         direction: Carriage_Pass_Direction | None = None,
     ) -> None:
         """Set the position of all involved carriers to the given position.
 
         Args:
             carrier_system (Yarn_Insertion_System): Carrier system referenced by set.
-            slot_position (int | None): The needle-slot to move the carrier set to, if None this means the carrier is not active.
+            needle (int | None): The needle to move the carrier set to, if None this means the carrier is not active.
             direction (Carriage_Pass_Direction, optional): The direction of the carrier movement. If this is not provided, the direction will be inferred.
         """
         for cid in self:
-            carrier_system.position_carrier_at_needle_slot(cid, slot_position, direction)
+            carrier_system.position_carrier_at_needle(cid, needle, direction)
 
     @property
     def carrier_ids(self) -> list[int]:
@@ -165,7 +146,7 @@ class Yarn_Carrier_Set(Sequence[int]):
         """
         if other is None:
             return False
-        elif isinstance(other, (Yarn_Carrier, int)):
+        elif isinstance(other, (Yarn_Carrier_State, int)):
             if len(self.carrier_ids) != 1:
                 return False
             return self.carrier_ids[0] == int(other)
@@ -213,14 +194,14 @@ class Yarn_Carrier_Set(Sequence[int]):
         """Check if a carrier ID is contained in this set.
 
         Args:
-            carrier_id (int | Yarn_Carrier | Sequence[int | Yarn_Carrier]): Carrier ID to check for membership. If a sequence is provided, all members are checked for.
+            carrier_id (int | Yarn_Carrier_State | Sequence[int | Yarn_Carrier_State]): Carrier ID to check for membership. If a sequence is provided, all members are checked for.
 
         Returns:
             bool: True if carrier ID(s) is in this set, False otherwise.
         """
         if isinstance(carrier_id, Sequence):
             return all(c in self for c in carrier_id)
-        elif isinstance(carrier_id, (int, Yarn_Carrier)):
+        elif isinstance(carrier_id, (int, Yarn_Carrier_State)):
             return int(carrier_id) in self.carrier_ids
         else:
             return False

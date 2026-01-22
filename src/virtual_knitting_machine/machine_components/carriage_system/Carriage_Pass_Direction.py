@@ -113,6 +113,29 @@ class Carriage_Pass_Direction(Enum):
         """
         return int(first_needle.at_racking_comparison(second_needle, rack, all_needle_rack))
 
+    @staticmethod
+    def get_direction_between_needles(
+        first_needle: Needle, second_needle: Needle, rack: int = 0
+    ) -> Carriage_Pass_Direction | None:
+        """
+
+        Args:
+            first_needle (Needle): The first needle.
+            second_needle (Needle): The second needle.
+            rack (int, optional): Rack value of machine. Defaults to 0.
+
+        Returns:
+            Carriage_Pass_Direction | None: The direction from the first to the second needle or None if they are at the same slot position in the current racking alignment.
+        """
+        first_slot = first_needle.slot_number(rack)
+        second_slot = second_needle.slot_number(rack)
+        if first_slot == second_slot:
+            return None
+        elif first_slot < second_slot:
+            return Carriage_Pass_Direction.Rightward
+        else:
+            return Carriage_Pass_Direction.Leftward
+
     def needle_direction_comparison(
         self, first_needle: Needle, second_needle: Needle, rack: int = 0, all_needle_rack: bool = False
     ) -> int:

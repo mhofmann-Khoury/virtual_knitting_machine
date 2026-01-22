@@ -1,23 +1,36 @@
 """A module containing the Carriage Snapshot Class"""
 
-from virtual_knitting_machine.machine_components.carriage_system.Carriage import Carriage
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from virtual_knitting_machine.machine_components.carriage_system.Carriage import Carriage, Carriage_State
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 
+if TYPE_CHECKING:
+    from virtual_knitting_machine.Knitting_Machine_Snapshot import Knitting_Machine_Snapshot
 
-class Carriage_Snapshot:
+
+class Carriage_Snapshot(Carriage_State):
     """
     A class used to represent a snapshot of the state of the given carriage at the time of instantiation.
     """
 
-    def __init__(self, carriage: Carriage):
-        self._carriage: Carriage = carriage
-        self._left_needle_position: int = self._carriage.knitting_machine.needle_count - 1
-        self._right_needle_position: int = 0
+    def __init__(self, carriage: Carriage, machine_snapshot: Knitting_Machine_Snapshot):
+        self._machine_snapshot: Knitting_Machine_Snapshot = machine_snapshot
         self._transferring: bool = carriage.transferring
         self._last_direction: Carriage_Pass_Direction = carriage.last_direction
         self._current_needle_position: int = carriage.current_needle_slot
         self._position_prior_to_transfers: int = carriage.slot_prior_to_transfers
         self._direction_prior_to_transfers: Carriage_Pass_Direction = carriage.direction_prior_to_transfers
+
+    @property
+    def knitting_machine(self) -> Knitting_Machine_Snapshot:
+        """
+        Returns:
+            Knitting_Machine_Snapshot: The knitting machine snapshot that owns this carriage.
+        """
+        return self._machine_snapshot
 
     @property
     def transferring(self) -> bool:
@@ -28,15 +41,15 @@ class Carriage_Snapshot:
         return self._transferring
 
     @property
-    def current_needle_position(self) -> int:
+    def current_needle_slot(self) -> int:
         """
         Returns:
-            int: The  needle position of the carriage at the time of the snapshot.
+            int: The needle position of the carriage at the time of the snapshot.
         """
         return self._current_needle_position
 
     @property
-    def position_prior_to_transfers(self) -> int:
+    def slot_prior_to_transfers(self) -> int:
         """
         Returns:
             int: The position of the carriage prior to its last transfer pass.
@@ -52,91 +65,9 @@ class Carriage_Snapshot:
         return self._last_direction
 
     @property
-    def reverse_of_last_direction(self) -> Carriage_Pass_Direction:
-        """
-        Returns:
-            Carriage_Pass_Direction: The opposite direction of the last carriage movement.
-        """
-        return self.last_direction.opposite()
-
-    @property
     def direction_prior_to_transfers(self) -> Carriage_Pass_Direction:
         """
         Returns:
             Carriage_Pass_Direction: The direction the carriage was moving prior to the latest transfer pass.
         """
         return self._direction_prior_to_transfers
-
-    @property
-    def on_left_side(self) -> bool:
-        """
-        Returns:
-            bool: True if positioned on very left side of machine, False otherwise.
-        """
-        return self.current_needle_position == self._left_needle_position
-
-    @property
-    def on_right_side(self) -> bool:
-        """
-        Returns:
-            bool: True if positioned on very right side of machine, False otherwise.
-        """
-        return self.current_needle_position == self._right_needle_position
-
-    def possible_directions(self) -> list[Carriage_Pass_Direction]:
-        """
-        Returns:
-            list[Carriage_Pass_Direction]: List of possible directions the carriage could move from this position.
-        """
-        directions = []
-        if not self.on_left_side:
-            directions.append(Carriage_Pass_Direction.Leftward)
-        if not self.on_right_side:
-            directions.append(Carriage_Pass_Direction.Rightward)
-        assert len(directions) > 0, "Carriage must have at least 1 direction option."
-        return directions
-
-    def left_of(self, needle_position: int) -> bool:
-        """
-        Args:
-            needle_position (int): Position to compare to.
-
-        Returns:
-            bool: True if the snapshot carriage position is to the left of the given needle_position, False otherwise.
-        """
-        return self.current_needle_position < needle_position
-
-    def right_of(self, needle_position: int) -> bool:
-        """
-        Args:
-            needle_position (int): Position to compare to.
-
-        Returns:
-            bool: True if the snapshot carriage position is to the right of the given needle_position, False otherwise.
-        """
-        return needle_position < self.current_needle_position
-
-    def on_position(self, needle_position: int) -> bool:
-        """
-        Args:
-            needle_position (int): Position to compare to.
-
-        Returns:
-            bool: True if this snapshot carriage position is on the given needle_position, False otherwise.
-        """
-        return needle_position == self.current_needle_position
-
-    def direction_to(self, needle_position: int) -> Carriage_Pass_Direction | None:
-        """
-        Args:
-            needle_position (int): Needle position to target the direction towards.
-
-        Returns:
-            Carriage_Pass_Direction | None: Direction to move from snapshot position to given needle_position or None if on given position.
-        """
-        if self.left_of(needle_position):
-            return Carriage_Pass_Direction.Rightward
-        elif self.right_of(needle_position):
-            return Carriage_Pass_Direction.Leftward
-        else:
-            return None

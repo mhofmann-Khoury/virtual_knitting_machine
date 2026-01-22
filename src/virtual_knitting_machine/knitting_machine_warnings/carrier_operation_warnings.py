@@ -2,7 +2,7 @@
 This module provides warning classes for carrier operation mismatches and hook state inconsistencies during yarn insertion and release operations on knitting machines."""
 
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Yarn_Carrier_Warning
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier_State
 
 
 class Mismatched_Releasehook_Warning(Yarn_Carrier_Warning):
@@ -10,7 +10,7 @@ class Mismatched_Releasehook_Warning(Yarn_Carrier_Warning):
     This warning occurs when a release hook operation is requested for a carrier that is not currently connected to the insertion hook, and the system releases the actually hooked yarn instead.
     """
 
-    def __init__(self, carrier_id: int | Yarn_Carrier) -> None:
+    def __init__(self, carrier_id: int | Yarn_Carrier_State) -> None:
         """Initialize a mismatched release hook warning.
 
         Args:

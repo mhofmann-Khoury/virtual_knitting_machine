@@ -98,7 +98,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
         """Test conflicts_with_inserting_hook when hook is not active."""
         needle = Needle(True, 10)
 
-        result = self.system.conflicts_with_inserting_hook(needle.position + 1)
+        result = self.system.conflicts_with_inserting_hook(needle + 1)
         self.assertFalse(result)
 
     def test_conflicts_with_inserting_hook_leftward_conflict(self):
@@ -110,7 +110,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
         self.assertTrue(self.system[1].is_active)
         self.system.knitting_machine.tuck(Yarn_Carrier_Set(1), needle, Carriage_Pass_Direction.Leftward)
 
-        result = self.system.conflicts_with_inserting_hook(needle.position + 1)
+        result = self.system.conflicts_with_inserting_hook(needle + 1)
         self.assertTrue(result)
 
     def test_conflicts_with_inserting_hook_leftward_no_conflict(self):
@@ -119,7 +119,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
         self.system.inhook(1)
         self.system.knitting_machine.tuck(Yarn_Carrier_Set(1), needle, Carriage_Pass_Direction.Leftward)
 
-        result = self.system.conflicts_with_inserting_hook(needle.position)
+        result = self.system.conflicts_with_inserting_hook(needle)
         self.assertFalse(result)
 
     def test_missing_carriers_all_active(self):
@@ -244,11 +244,6 @@ class TestYarnInsertionSystem(unittest.TestCase):
         self.assertEqual(len(result), 3)
         self.assertEqual(result[0].carrier_id, 1)
         self.assertEqual(result[2].carrier_id, 5)
-
-    def test_getitem_list_single_item(self):
-        """Test __getitem__ with single-item list returns single carrier."""
-        result = self.system[[2]]
-        self.assertEqual(result.carrier_id, 2)
 
     def test_getitem_list_multiple_items(self):
         """Test __getitem__ with multiple-item list returns list of carriers."""

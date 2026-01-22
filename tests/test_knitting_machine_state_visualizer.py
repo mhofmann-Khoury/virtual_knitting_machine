@@ -1,256 +1,197 @@
 from unittest import TestCase
 
-from resources.mock_machine_state import Mock_Machine_State
-
+from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
+from virtual_knitting_machine.Knitting_Machine_Snapshot import Knitting_Machine_Snapshot
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.visualizer.knitting_machine_state_visualizer import Knitting_Machine_State_Visualizer
 
 
 class TestKnitting_Machine_State_Visualizer(TestCase):
 
-    @staticmethod
-    def render_and_save(visualizer: Knitting_Machine_State_Visualizer, save_file: str = "test_diagram.svg"):
+    def setUp(self):
+        self.machine = Knitting_Machine()
+
+    def render_and_save(self, save_file: str = "test_diagram.svg"):
         """
         Renders the given visualizer and outputs to a svg file.
         Args:
-            visualizer (Knitting_Machine_State_Visualizer): The visualizer to render.
             save_file (str, optional): A path to a file to save the rendered svg file. Defaults to "test_diagram.svg".
         """
-        visualizer.save(save_file)
+        Knitting_Machine_State_Visualizer(self.machine).save(save_file)
+
+    def tuck_needles(
+        self,
+        needle_range: slice | int,
+        is_front: bool = True,
+        carrier_id: int = 1,
+        direction: Carriage_Pass_Direction = Carriage_Pass_Direction.Leftward,
+    ) -> None:
+        """
+        Tuck loops on the specified needles with the specified carrier and direction.
+        Args:
+            needle_range (int | slice): The range of needles to tuck.
+            is_front (bool, optional): If True, tucks on front bed, otherwise on back bed. Defaults to True.
+            carrier_id (int, optional): The carrier id to tuck with. Defaults to 1.
+            direction (Carriage_Pass_Direction, optional): The direction to tuck in. Defaults to Leftward
+        """
+        if isinstance(needle_range, int):
+            self.machine.tuck(Yarn_Carrier_Set(carrier_id), Needle(is_front, needle_range), direction)
+        else:
+            for n in range(
+                needle_range.start, needle_range.stop, needle_range.step if needle_range.step is not None else 1
+            ):
+                self.machine.tuck(Yarn_Carrier_Set(carrier_id), Needle(is_front, n), direction)
+
+    def xfer_to_sliders(self, start_front: bool = True):
+        loops = self.machine.front_loops() if start_front else self.machine.back_loops()
+        for n in loops:
+            self.machine.xfer(n, to_slider=True)
 
     def test_render_front_needles(self):
-        state = Mock_Machine_State({1: [Needle(is_front=True, position=n) for n in range(2, 3)]})
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.machine.in_hook(1)
+        self.tuck_needles(2)
+        self.machine.release_hook()
+        self.render_and_save()
 
     def test_render_back_needles(self):
-        state = Mock_Machine_State({1: [Needle(is_front=False, position=n) for n in range(4, 6)]})
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.machine.in_hook(2)
+        self.tuck_needles(slice(7, 4, -1), is_front=False, carrier_id=2)
+        self.machine.release_hook()
+        self.render_and_save()
 
     def test_mix_no_sliders(self):
-        state = Mock_Machine_State(
-            {
-                1: [Needle(is_front=True, position=n) for n in range(3, 4)],
-                2: [Needle(is_front=False, position=n) for n in range(7, 10)],
-            }
+
+        self.machine.in_hook(1)
+        self.tuck_needles(
+            slice(7, 4, -1),
+            is_front=False,
         )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.machine.release_hook()
+
+        self.tuck_needles(slice(1, 3), is_front=True, direction=Carriage_Pass_Direction.Rightward)
+        self.render_and_save()
 
     def test_loop_stacks_front(self):
-        state = Mock_Machine_State(
-            {
-                1: [Needle(is_front=True, position=n) for n in range(2, 4)],
-                2: [Needle(is_front=True, position=n) for n in range(3, 7)],
-                3: [Needle(is_front=True, position=n) for n in range(2, 5)],
-            }
+        self.machine.in_hook(1)
+        self.tuck_needles(
+            slice(7, 4, -1),
+            is_front=True,
         )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.machine.release_hook()
 
-    def test_loop_stacks_back(self):
-        state = Mock_Machine_State(
-            {
-                1: [Needle(is_front=False, position=n) for n in range(2, 4)],
-                2: [Needle(is_front=False, position=n) for n in range(3, 7)],
-                3: [Needle(is_front=False, position=n) for n in range(2, 5)],
-            }
+        self.tuck_needles(slice(4, 7), is_front=True, direction=Carriage_Pass_Direction.Rightward)
+        self.tuck_needles(
+            6,
+            is_front=True,
         )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
-
-    def test_loop_stacks_front_sliders(self):
-        state = Mock_Machine_State(
-            {
-                1: [Slider_Needle(is_front=True, position=n) for n in range(2, 4)],
-                2: [Slider_Needle(is_front=True, position=n) for n in range(3, 7)],
-                3: [Slider_Needle(is_front=True, position=n) for n in range(2, 5)],
-            }
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.render_and_save()
 
     def test_loop_stacks_back_sliders(self):
-        state = Mock_Machine_State(
-            {
-                1: [Slider_Needle(is_front=False, position=n) for n in range(2, 4)],
-                2: [Slider_Needle(is_front=False, position=n) for n in range(3, 7)],
-                3: [Slider_Needle(is_front=False, position=n) for n in range(2, 5)],
-            }
+        self.machine.in_hook(1)
+        self.tuck_needles(
+            slice(7, 4, -1),
         )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.machine.release_hook()
+
+        self.tuck_needles(slice(4, 7), direction=Carriage_Pass_Direction.Rightward)
+        self.tuck_needles(
+            6,
+        )
+        self.xfer_to_sliders()
+        self.render_and_save()
 
     def test_mix_sliders(self):
-        state = Mock_Machine_State(
-            {
-                1: [Needle(is_front=True, position=n) for n in range(3, 5)],
-                2: [Slider_Needle(is_front=False, position=n) for n in range(7, 10)],
-            }
+        self.machine.in_hook(1)
+        self.tuck_needles(
+            slice(7, 4, -1),
         )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.tuck_needles(slice(4, 7), is_front=False, direction=Carriage_Pass_Direction.Rightward)
+        self.machine.release_hook()
+        self.xfer_to_sliders()
+        self.render_and_save()
 
+    #
     def test_just_sliders(self):
-        state = Mock_Machine_State({1: [Slider_Needle(is_front=True, position=n) for n in range(7, 10)]})
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.machine.in_hook(1)
+        self.tuck_needles(slice(7, 4, -1), is_front=False)
+        self.machine.release_hook()
+        self.xfer_to_sliders(start_front=False)
+        self.render_and_save()
 
-    def test_all_needle_rack(self):
-        state = Mock_Machine_State({1: [Needle(is_front=True, position=n) for n in range(2, 3)]}, all_needle_rack=True)
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+    def test_all_needle_rack_left(self):
+        self.machine.rack = 0.25
+        self.machine.in_hook(1)
+        self.tuck_needles(2)
+        self.machine.release_hook()
+        self.render_and_save()
 
-    def test_mix_sliders_all_needle(self):
-        state = Mock_Machine_State(
-            {
-                1: [Needle(is_front=True, position=n) for n in range(3, 4)],
-                2: [Slider_Needle(is_front=False, position=n) for n in range(7, 10)],
-            },
-            all_needle_rack=True,
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+    def test_all_needle_rack_right(self):
+        self.machine.rack = 0.25
+        self.machine.in_hook(1)
+        self.tuck_needles(2)
+        self.tuck_needles(2, is_front=False, direction=Carriage_Pass_Direction.Rightward)
+        self.machine.release_hook()
+        self.render_and_save()
 
     def test_positive_rack(self):
-        state = Mock_Machine_State(
-            {
-                1: [Needle(is_front=False, position=n) for n in range(2, 3)],
-                2: [Needle(is_front=True, position=n) for n in range(2, 3)],
-            },
-            rack=2,
+        self.machine.in_hook(1)
+        self.tuck_needles(
+            slice(7, 4, -1),
+            is_front=False,
         )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.machine.release_hook()
+
+        self.tuck_needles(slice(1, 3), is_front=True, direction=Carriage_Pass_Direction.Rightward)
+        self.machine.rack = 2
+        self.render_and_save()
 
     def test_negative_rack(self):
-        state = Mock_Machine_State(
-            {
-                1: [Needle(is_front=False, position=n) for n in range(2, 3)],
-                2: [Needle(is_front=True, position=n) for n in range(2, 3)],
-            },
-            rack=-1,
+        self.machine.in_hook(1)
+        self.tuck_needles(
+            slice(7, 4, -1),
+            is_front=False,
         )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.machine.release_hook()
 
-    def test_positive_rack_all_needle(self):
-        state = Mock_Machine_State(
-            {
-                1: [Needle(is_front=False, position=n) for n in range(2, 3)],
-                2: [Needle(is_front=True, position=n) for n in range(2, 3)],
-            },
-            rack=2,
-            all_needle_rack=True,
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
-
-    def test_negative_rack_all_needle(self):
-        state = Mock_Machine_State(
-            {
-                1: [Needle(is_front=False, position=n) for n in range(2, 3)],
-                2: [Needle(is_front=True, position=n) for n in range(2, 3)],
-            },
-            rack=-1,
-            all_needle_rack=True,
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
-
-    def test_cross_bed(self):
-        state = Mock_Machine_State(
-            {1: [Needle(is_front=False, position=2), Needle(is_front=True, position=3)]},
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.tuck_needles(slice(1, 3), is_front=True, direction=Carriage_Pass_Direction.Rightward)
+        self.machine.rack = -1
+        self.render_and_save()
 
     def test_hook_position_no_sliders(self):
-        state = Mock_Machine_State({1: [Needle(is_front=True, position=n) for n in range(2, 6)]}, hook_position=3)
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
-
-    def test_hook_position_sliders(self):
-        state = Mock_Machine_State(
-            {1: [Slider_Needle(is_front=True, position=n) for n in range(2, 6)]}, hook_position=4
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
-
-    def test_longer_same_bed_floats(self):
-        state = Mock_Machine_State(
-            {
-                1: [Needle(is_front=True, position=n) for n in range(2, 6, 2)],
-                2: [Needle(is_front=False, position=n) for n in range(1, 6, 2)],
-            }
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.machine.in_hook(1)
+        self.tuck_needles(slice(10, 1, -1), is_front=True, carrier_id=1)
+        self.machine.release_hook()
+        self.machine.in_hook(2)
+        self.tuck_needles(slice(7, 4, -1), is_front=False, carrier_id=2)
+        self.render_and_save()
 
     def test_complex_floats(self):
-        state = Mock_Machine_State(
-            {
-                1: [Needle(is_front=True, position=n) for n in range(2, 6, 2)],
-                2: [*(Needle(is_front=True, position=n) for n in range(1, 6, 2)), Needle(True, 6)],
-                3: [*(Needle(is_front=False, position=n) for n in range(1, 6, 2)), Needle(True, 7)],
-            }
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+        self.machine.in_hook(1)
+        self.tuck_needles(slice(10, 1, -2), is_front=True, carrier_id=1)
+        self.tuck_needles(slice(1, 10, 2), is_front=False, carrier_id=1, direction=Carriage_Pass_Direction.Rightward)
+        self.machine.release_hook()
+        self.machine.in_hook(2)
+        self.tuck_needles(slice(5, 1, -2), is_front=True, carrier_id=2)
+        self.machine.release_hook()
+        self.machine.in_hook(3)
+        self.tuck_needles(slice(10, 5, -2), is_front=False, carrier_id=3)
+        self.tuck_needles(slice(2, 0, -1), is_front=True, carrier_id=3)
+        self.machine.release_hook()
+        self.render_and_save()
 
-    def test_left_transferring_carriage(self):
-        state = Mock_Machine_State(
-            {1: [Needle(is_front=True, position=n) for n in range(1, 10)]},
-            carriage_is_transferring=True,
-            carriage_needle_slot=2,
-            carriage_direction=Carriage_Pass_Direction.Leftward,
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
-
-    def test_right_transferring_carriage(self):
-        state = Mock_Machine_State(
-            {1: [Needle(is_front=True, position=n) for n in range(1, 10)]},
-            carriage_is_transferring=True,
-            carriage_needle_slot=6,
-            carriage_direction=Carriage_Pass_Direction.Rightward,
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
-
-    def test_left_carriage(self):
-        state = Mock_Machine_State(
-            {1: [Needle(is_front=True, position=n) for n in range(1, 10)]},
-            carriage_is_transferring=False,
-            carriage_needle_slot=2,
-            carriage_direction=Carriage_Pass_Direction.Leftward,
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
-
-    def test_right_carriage(self):
-        state = Mock_Machine_State(
-            {1: [Needle(is_front=True, position=n) for n in range(1, 10)]},
-            carriage_is_transferring=False,
-            carriage_needle_slot=6,
-            carriage_direction=Carriage_Pass_Direction.Rightward,
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
-
-    def test_carriage_off_right(self):
-        state = Mock_Machine_State(
-            {1: [Needle(is_front=True, position=n) for n in range(1, 10)]}, carriage_needle_slot=11
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
-
-    def test_carriage_off_left(self):
-        state = Mock_Machine_State(
-            {1: [Needle(is_front=True, position=n) for n in range(4, 10)]}, carriage_needle_slot=2
-        )
-        visualizer = Knitting_Machine_State_Visualizer(state)
-        self.render_and_save(visualizer)
+    def test_complex_floats_snapshot(self):
+        self.machine.in_hook(1)
+        self.tuck_needles(slice(10, 1, -2), is_front=True, carrier_id=1)
+        self.tuck_needles(slice(1, 10, 2), is_front=False, carrier_id=1, direction=Carriage_Pass_Direction.Rightward)
+        self.machine.release_hook()
+        self.machine.in_hook(2)
+        self.tuck_needles(slice(5, 1, -2), is_front=True, carrier_id=2)
+        self.machine.release_hook()
+        self.machine.in_hook(3)
+        self.tuck_needles(slice(8, 5, -2), is_front=False, carrier_id=3)
+        self.tuck_needles(slice(2, 0, -1), is_front=True, carrier_id=3)
+        snapshot = Knitting_Machine_Snapshot(self.machine)
+        visualizer = Knitting_Machine_State_Visualizer(snapshot)
+        visualizer.save("test_snapshot.svg")

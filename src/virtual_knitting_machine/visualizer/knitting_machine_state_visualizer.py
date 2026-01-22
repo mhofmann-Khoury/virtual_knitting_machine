@@ -4,10 +4,10 @@ Contains the Knitting Visualizer class.
 
 from svgwrite import Drawing
 
+from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
-from virtual_knitting_machine.visualizer.machine_state_protocol import Knitting_Machine_State_Protocol
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carriage_element import Carriage_Element
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carrier_triangle import Carrier_Triangle
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.float_path import (
@@ -55,16 +55,16 @@ class Knitting_Machine_State_Visualizer:
 
     def __init__(
         self,
-        machine_state: Knitting_Machine_State_Protocol,
+        machine_state: Knitting_Machine_State,
         diagram_settings: Diagram_Settings | None = None,
     ) -> None:
         """
 
         Args:
-            machine_state (Knitting_Machine_State_Protocol): The machine state to render. Should be a Knitting_Machine or a snapshot.
+            machine_state (Knitting_Machine_State): The machine state to render. Should be a Knitting_Machine or a snapshot.
             diagram_settings (Diagram_Settings): The diagram settings for this rendering.
         """
-        self.machine_state: Knitting_Machine_State_Protocol = machine_state
+        self.machine_state: Knitting_Machine_State = machine_state
         if diagram_settings is None:
             diagram_settings = Diagram_Settings()
         self.settings: Diagram_Settings = diagram_settings
@@ -77,7 +77,7 @@ class Knitting_Machine_State_Visualizer:
             self.rightmost_slot,
             self.machine_state.rack,
             self.machine_state.all_needle_rack,
-            self.machine_state.last_direction,
+            self.machine_state.carriage.last_direction,
             self.shows_sliders,
             self.settings,
         )
@@ -92,19 +92,21 @@ class Knitting_Machine_State_Visualizer:
         self.yarn_inserting_hook_block: Yarn_Inserting_Hook_Block | None = (
             Yarn_Inserting_Hook_Block(
                 self.shows_sliders,
-                self.machine_state.hook_position - self.leftmost_slot,
+                self.machine_state.carrier_system.hook_position - self.leftmost_slot,
                 self.needle_count,
                 self.settings,
             )
-            if self.machine_state.hook_position is not None
+            if self.machine_state.carrier_system.hook_position is not None
             else None
         )
-        carriage_on_diagram = self.leftmost_slot <= self.machine_state.current_needle_slot < self.rightmost_slot
+        carriage_on_diagram = (
+            self.leftmost_slot <= self.machine_state.carriage.current_needle_slot < self.rightmost_slot
+        )
         self.carriage_block: Carriage_Element | None = (
             Carriage_Element(
-                self.machine_state.last_direction,
-                self.machine_state.transferring,
-                self.machine_state.current_needle_slot - self.leftmost_slot,
+                self.machine_state.carriage.last_direction,
+                self.machine_state.carriage.transferring,
+                self.machine_state.carriage.current_needle_slot - self.leftmost_slot,
                 self.shows_sliders,
                 self.settings,
             )
@@ -127,7 +129,9 @@ class Knitting_Machine_State_Visualizer:
             tuple[float, float]: The size of this diagram by its width and height.
         """
         width = self.settings.Needle_Width * self.needle_count + abs(
-            self.settings.all_needle_shift(self.machine_state.all_needle_rack, self.machine_state.last_direction)
+            self.settings.all_needle_shift(
+                self.machine_state.all_needle_rack, self.machine_state.carriage.last_direction
+            )
         )
         if self.settings.render_left_labels:
             width += self.settings.Side_Label_Width + self.settings.Label_Padding
@@ -157,16 +161,6 @@ class Knitting_Machine_State_Visualizer:
         left_most_slot -= self.settings.Left_Needle_Buffer
         right_most_slot += self.settings.Right_Needle_Buffer
         return left_most_slot, right_most_slot
-
-    def index_of_slot(self, slot: int) -> int:
-        """
-        Args:
-            slot (int): The slot to be indexed from the left side of the diagram.
-
-        Returns:
-            int: The index of the given slot based on the leftmost slot rendered in this diagram.
-        """
-        return slot - self.leftmost_slot
 
     def _add_active_floats(self) -> None:
         """
@@ -213,12 +207,20 @@ class Knitting_Machine_State_Visualizer:
         """
         Renders the carrier triangles for active carriers on the diagram.
         """
-        for carrier in self.machine_state.active_carriers:
-            assert carrier.slot_position is not None
+        for carrier in self.machine_state.carrier_system.active_carriers:
+            between_needles = carrier.between_needles
+            assert between_needles is not None
+            left_needle, right_needle = between_needles[0], between_needles[1]
+            if right_needle not in self.needle_bed_group:
+                if left_needle not in self.needle_bed_group:
+                    continue  # Carrier is not on the bed, skip it
+                needle_box = self.needle_bed_group[left_needle].global_x + self.settings.Needle_Width
+            else:
+                needle_box = self.needle_bed_group[right_needle]
             self.carriers.add(
                 Carrier_Triangle(
                     carrier=carrier,
-                    needle_index=self.index_of_slot(carrier.slot_position),
+                    needle_box=needle_box,
                     diagram_settings=self.settings,
                 )
             )
@@ -271,7 +273,9 @@ class Knitting_Machine_State_Visualizer:
         Returns:
             Drawing: An empty drawing sized for the diagram."""
         width, height = self.size
-        min_x = self.settings.all_needle_shift(self.machine_state.all_needle_rack, self.machine_state.last_direction)
+        min_x = self.settings.all_needle_shift(
+            self.machine_state.all_needle_rack, self.machine_state.carriage.last_direction
+        )
         if self.settings.render_left_labels:
             min_x -= self.settings.Side_Label_Width + self.settings.Label_Padding
             if self.shows_sliders:

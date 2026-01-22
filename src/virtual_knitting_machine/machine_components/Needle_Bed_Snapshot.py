@@ -1,64 +1,48 @@
 """A module containing the Needle_Bed_Snapshot class."""
 
-from typing import overload
+from __future__ import annotations
 
-from virtual_knitting_machine.machine_components.Needle_Bed import Needle_Bed
+from typing import TYPE_CHECKING, overload
+
+from virtual_knitting_machine.machine_components.Needle_Bed import Needle_Bed, Needle_Bed_State
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
+if TYPE_CHECKING:
+    from virtual_knitting_machine.Knitting_Machine_Snapshot import Knitting_Machine_Snapshot
 
-class Needle_Bed_Snapshot:
-    """A snapshot of the state of a knitting machine at the time an instance is created.
 
-    Attributes:
-        needle_bed (Needle_Bed): The needle bed this snapshot was taken from. The needle bed will continue to update after the snapshot is initialized.
-        active_needle_snapshots (dict[int, list[Machine_Knit_Loop]]): Mapping of needle indices on the bed that were actively holding loops at the snapshot time to the stack of loops at that time.
-        active_slider_snapshots (dict[int, list[Machine_Knit_Loop]]):
-            Mapping of slider indices on the bed that were actively holding loops at the snapshot time to the stack of loops at that time.
-    """
+class Needle_Bed_Snapshot(Needle_Bed_State):
+    """A snapshot of the state of a knitting machine at the time an instance is created."""
 
-    def __init__(self, needle_bed: Needle_Bed):
-        self.needle_bed: Needle_Bed = needle_bed
+    def __init__(self, needle_bed: Needle_Bed, machine_snapshot: Knitting_Machine_Snapshot):
+        self._machine_snapshot: Knitting_Machine_Snapshot = machine_snapshot
         self._is_front: bool = needle_bed.is_front
-        self.active_needle_snapshots: dict[int, list[Machine_Knit_Loop]] = {
-            n.position: list(n.held_loops) for n in self.needle_bed.loop_holding_needles()
-        }
-        self.active_slider_snapshots: dict[int, list[Machine_Knit_Loop]] = {
-            n.position: list(n.held_loops) for n in self.needle_bed.loop_holding_needles()
-        }
-        self.active_needles: set[Needle] = set()
-        self.active_sliders: set[Slider_Needle] = set()
-        self.loops_on_needles: dict[Machine_Knit_Loop, int] = {}
-        self.loops_on_sliders: dict[Machine_Knit_Loop, int] = {}
-        for n, loops in self.active_needle_snapshots.items():
-            needle = Needle(is_front=self.is_front, position=n)
-            needle.held_loops = loops
-            self.active_needles.add(needle)
-            self.loops_on_needles.update({l: n for l in loops})
-        for n, loops in self.active_slider_snapshots.items():
-            needle = Slider_Needle(is_front=self.is_front, position=n)
-            needle.held_loops = loops
-            self.active_sliders.add(needle)
-            self.loops_on_sliders.update({l: n for l in loops})
-        self._loop_history: dict[Machine_Knit_Loop, int] = {l: len(l.needle_history) for l in self.loops_on_needles}
-        self._loop_history.update({l: len(l.needle_history) for l in self.loops_on_sliders})
+        self._loops_to_needles: dict[Machine_Knit_Loop, Needle] = {}
+        self._active_needles: list[Needle] = []
+        for n in needle_bed.loop_holding_needles:
+            n_copy = Needle(n.is_front, n.position)
+            n_copy.held_loops.extend(n.held_loops)
+            self._active_needles.append(n_copy)
+            self._loops_to_needles.update({l: n_copy for l in n.held_loops})
+        self._active_needles_by_position: dict[int, Needle] = {n.position: n for n in self._active_needles}
+
+        self._active_sliders: list[Slider_Needle] = []
+        for n in needle_bed.loop_holding_sliders:
+            n_copy = Slider_Needle(n.is_front, n.position)
+            n_copy.held_loops.extend(n.held_loops)
+            self._active_sliders.append(n_copy)
+            self._loops_to_needles.update({l: n_copy for l in n.held_loops})
+        self._active_sliders_by_position: dict[int, Slider_Needle] = {n.position: n for n in self._active_sliders}
 
     @property
-    def active_needle_count(self) -> int:
+    def knitting_machine(self) -> Knitting_Machine_Snapshot:
         """
         Returns:
-            int: The number of active needles at the time of the snapshot.
+            Knitting_Machine_Snapshot: The knitting machine this bed belongs to.
         """
-        return len(self.active_needle_snapshots)
-
-    @property
-    def active_slider_count(self) -> int:
-        """
-        Returns:
-            int: The number of active sliders at the time of the snapshot.
-        """
-        return len(self.active_slider_snapshots)
+        return self._machine_snapshot
 
     @property
     def is_front(self) -> bool:
@@ -69,121 +53,103 @@ class Needle_Bed_Snapshot:
         return self._is_front
 
     @property
-    def is_back(self) -> bool:
+    def needles(self) -> list[Needle]:
         """
         Returns:
-            bool: True if this snapshot is the back bed of the knitting machine, False otherwise.
-        """
-        return not self.is_front
+            list[Needle]: The active needles ordered by their position on the knitting machine"""
+        return self._active_needles
 
     @property
-    def sliders_are_clear(self) -> bool:
+    def sliders(self) -> list[Slider_Needle]:
         """
         Returns:
-            bool: True if no loops are on the sliders at time of this snapshot, False otherwise.
+            list[Slider_Needle]: The active slider needles ordered by their position on the knitting machine"
         """
-        return self.active_slider_count == 0
+        return self._active_sliders
 
-    def slider_was_active(self, slider: int | Slider_Needle) -> bool:
+    @property
+    def loop_holding_needles(self) -> list[Needle]:
+        """
+        Returns:
+            list[Needle]: List of needles on bed that actively hold loops.
+        """
+        return self._active_needles
+
+    @property
+    def loop_holding_sliders(self) -> list[Slider_Needle]:
+        """
+        Returns:
+            list[Slider_Needle]: List of sliders on bed that actively hold loops.
+        """
+        return self._active_sliders
+
+    def get_needle_of_loop(self, loop: Machine_Knit_Loop) -> Needle | None:
+        """
+        Args:
+            loop (Machine_Knit_Loop): The loop being searched for.
+
+        Returns:
+            Needle | None: None if the bed does not hold the loop, otherwise the needle position that holds it.
+        """
+        return self._loops_to_needles.get(loop, None)
+
+    def slider_is_active(self, slider: int | Slider_Needle) -> bool:
         """
         Args:
             slider: The slider or index of a slider on this needle bed.
 
         Returns:
-            bool: True if the given slider actively held loops at the time of this snapshot, False otherwise.
-
-        Raises:
-            KeyError: If the given slider is not a slider or the given needle bed.
+            bool: True if the given slider is on this bed and holds at least one loop, False otherwise.
         """
         if isinstance(slider, Slider_Needle) and slider.is_front != self.is_front:
-            raise KeyError(f"{slider} does not belong to this {'Front' if self.is_front else 'Back'} needle bed")
-        return int(slider) in self.active_slider_snapshots
+            return False
+        else:
+            return int(slider) in self._active_sliders_by_position
 
-    def needle_was_active(self, needle: int | Needle) -> bool:
+    def needle_is_active(self, needle: int | Needle) -> bool:
         """
         Args:
             needle: THe needle or index of a needl on this needle bed.
 
         Returns:
-            bool: True if the given needle actively held loops at the time of this snapshot, False otherwise.
-
-        Raises:
-            KeyError: If the given needle is not a needle or the given needle bed.
+            bool: True if the given needle is on this bed and holds at least one loop, False otherwise.
         """
-        if isinstance(needle, Slider_Needle):
-            return self.slider_was_active(needle)
-        elif isinstance(needle, Needle) and needle.is_front != self.is_front:
-            raise KeyError(f"{needle} does not belong to this {'Front' if self.is_front else 'Back'} needle bed")
-        return int(needle) in self.active_needle_snapshots
+        if isinstance(needle, Needle) and needle.is_front != self.is_front:
+            return False
+        else:
+            return int(needle) in self._active_needles_by_position
 
-    def loop_was_active(self, loop: Machine_Knit_Loop) -> bool:
-        """
-
-        Args:
-            loop (Machine_Knit_Loop): The loop to check if it was on a needle at the time of this snapshot.
-
-        Returns:
-            bool: True if the given loop was held at the time of this snapshot, False otherwise.
-        """
-        return loop in self._loop_history
-
-    def loop_on_slider(self, loop: Machine_Knit_Loop) -> bool:
+    def __contains__(self, item: Machine_Knit_Loop | Needle | int) -> bool:
         """
         Args:
-            loop (Machine_Knit_Loop): The loop to check if it was on a slider at the time of the snapshot.
-
-        Returns:
-            bool: True if the loop was on a slider at the time of the snapshot. False, otherwise.
-        """
-        return loop in self.loops_on_sliders
-
-    def loop_on_needle(self, loop: Machine_Knit_Loop) -> bool:
-        """
-        Args:
-            loop (Machine_Knit_Loop): The loop to check if it was on a main-bed needle at the time of the snapshot.
-
-        Returns:
-            bool: True if the loop was on a main bed needle at the time of the snapshot. False, otherwise.
-        """
-        return loop in self.loops_on_needles
-
-    def needle_holding_loop(self, loop: Machine_Knit_Loop) -> Needle | None:
-        """
-        Args:
-            loop (Machine_Knit_Loop): The machine knit loop to find the holding needle of at the time of the snapshot.
-
-        Returns:
-            Needle | None: The needle that held the loop at the time of this snapshot or None if the loop was not actively held at the time of this snapshot.
-        """
-        if not self.loop_was_active(loop):
-            return None
-        return loop.needle_history[self._loop_history[loop]]
-
-    def __contains__(self, item: int | Needle | Machine_Knit_Loop) -> bool:
-        """
-        Args:
-            item (int | Needle | Machine_Knit_Loop):
+            item (Machine_Knit_Loop | Needle | int):
                 The active loop or needle to find in this snapshot. If item is an integer, the position is assumed to be a needle index, not a slider index or loop_id.
 
         Returns:
             bool: True if the given needle, needle position, or loop was active at the time of the snapshot, False otherwise.
         """
         if isinstance(item, Machine_Knit_Loop):
-            return self.loop_was_active(item)
+            return self.loop_is_active(item)
         elif isinstance(item, Needle) and item.is_front != self.is_front:
             return False
-        return self.needle_was_active(item)
+        elif isinstance(item, Slider_Needle):
+            return self.slider_is_active(item)
+        else:
+            return self.needle_is_active(item)
 
     @overload
-    def __getitem__(self, item: int | Needle) -> list[Machine_Knit_Loop]: ...
+    def __getitem__(self, item: Machine_Knit_Loop) -> Needle | None: ...
 
     @overload
-    def __getitem__(self, item: Machine_Knit_Loop) -> Needle: ...
+    def __getitem__(self, item: Needle | int) -> Needle: ...
 
-    def __getitem__(self, item: int | Needle | Machine_Knit_Loop) -> list[Machine_Knit_Loop] | Needle:
+    @overload
+    def __getitem__(self, item: slice) -> list[Needle]: ...
+
+    def __getitem__(self, item: Machine_Knit_Loop | Needle | slice | int) -> Needle | list[Needle] | None:
         """
         Args:
-            item (int | Needle | Machine_Knit_Loop):
+            item (Machine_Knit_Loop | Needle | slice | int):
                 The active needle or loop to find in this snapshot.
                 If item is an integer, the position is assumed to be a needle index, not a slider index or loop id.
 
@@ -193,22 +159,21 @@ class Needle_Bed_Snapshot:
         Raises:
             KeyError: If the given item is not an active needle, slider needle, or loop at the time of the snapshot.
         """
-        if item not in self:
-            if isinstance(item, int):
-                item = Needle(is_front=self.is_front, position=item)
-            raise KeyError(f"{item} was not active at the time of this snapshot")
-        if isinstance(item, Machine_Knit_Loop):
-            holding = self.needle_holding_loop(item)
-            assert isinstance(holding, Needle)
-            return holding
-        if isinstance(item, Slider_Needle):
-            return self.active_slider_snapshots[item.position]
+        if isinstance(item, slice):
+            return [self[n] for n in range(item.start, item.stop, item.step) if n in self._active_needles_by_position]
+        elif isinstance(item, int):
+            if item not in self._active_needles_by_position:
+                raise KeyError(f"{item} was not an active needle on {self} at the time of the snapshot.")
+            return self._active_needles_by_position[item]
+        elif isinstance(item, Machine_Knit_Loop):
+            if item not in self._loops_to_needles:
+                raise KeyError(f"{item} was not an active loop on {self} at the time of the snapshot.")
+            return self._loops_to_needles[item]
+        elif item.is_front != self.is_front:
+            raise KeyError(f"{item} is not on {self}")
+        elif isinstance(item, Slider_Needle):
+            if item.position not in self._active_sliders_by_position:
+                raise KeyError(f"{item} was not an active slider on {self} at the time of the snapshot.")
+            return self._active_sliders_by_position[item.position]
         else:
-            return self.active_needle_snapshots[int(item)]
-
-    def __len__(self) -> int:
-        """
-        Returns:
-            int: The number of active needles (excluding sliders) on this bed at the time of the snapshot.
-        """
-        return self.active_needle_count
+            return self[int(item)]
