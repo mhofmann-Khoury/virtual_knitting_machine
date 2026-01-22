@@ -2,10 +2,13 @@
 Contains the Knitting Visualizer class.
 """
 
+from typing import cast
+
 from svgwrite import Drawing
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier_State
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carriage_element import Carriage_Element
@@ -89,16 +92,16 @@ class Knitting_Machine_State_Visualizer:
         self.carriers: set[Carrier_Triangle] = set()
         if self.settings.render_carriers:
             self._add_active_carriers()
-        self.yarn_inserting_hook_block: Yarn_Inserting_Hook_Block | None = (
-            Yarn_Inserting_Hook_Block(
+        if self.machine_state.carrier_system.hook_position is None:
+            self.yarn_inserting_hook_block: Yarn_Inserting_Hook_Block | None = None
+        else:
+            self.yarn_inserting_hook_block = Yarn_Inserting_Hook_Block(
                 self.shows_sliders,
                 self.machine_state.carrier_system.hook_position - self.leftmost_slot,
+                cast(Yarn_Carrier_State, self.machine_state.carrier_system.hooked_carrier),
                 self.needle_count,
                 self.settings,
             )
-            if self.machine_state.carrier_system.hook_position is not None
-            else None
-        )
         carriage_on_diagram = (
             self.leftmost_slot <= self.machine_state.carriage.current_needle_slot < self.rightmost_slot
         )
@@ -225,13 +228,11 @@ class Knitting_Machine_State_Visualizer:
                 )
             )
 
-    def render(self, drawing: Drawing) -> None:
+    def render(self) -> Drawing:
         """
         Render the complete visualization by building all layers.
-
-        Args:
-            drawing (Drawing): The drawing to add teh diagram to.
         """
+        drawing = self._new_diagram_drawing()
         # Add layers to drawing in order (bottom to top)
         self.needle_bed_group.add_to_drawing(drawing)
         for float_line in self.floats:
@@ -244,6 +245,7 @@ class Knitting_Machine_State_Visualizer:
             self.yarn_inserting_hook_block.add_to_drawing(drawing)
         if self.carriage_block is not None:
             self.carriage_block.add_to_drawing(drawing)
+        return drawing
 
     def save(self, filename: str) -> None:
         """
@@ -252,23 +254,11 @@ class Knitting_Machine_State_Visualizer:
         Args:
             filename (str): Path to save the SVG file.
         """
-        drawing = self._new_drawing()
-        self.render(drawing)
+        drawing = self.render()
         drawing.saveas(filename)
         format_svg(filename)
 
-    def get_svg_string(self) -> str:
-        """
-        Get the SVG as a string (useful for displaying in notebooks or web).
-
-        Returns:
-            str: The SVG content as a string.
-        """
-        drawing = self._new_drawing()
-        self.render(drawing)
-        return str(drawing.tostring())
-
-    def _new_drawing(self) -> Drawing:
+    def _new_diagram_drawing(self) -> Drawing:
         """
         Returns:
             Drawing: An empty drawing sized for the diagram."""

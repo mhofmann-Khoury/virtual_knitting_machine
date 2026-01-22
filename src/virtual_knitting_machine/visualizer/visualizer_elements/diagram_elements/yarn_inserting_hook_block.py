@@ -4,6 +4,7 @@ Module containing the Yarn Inserting Hook Block class.
 
 from typing import Any
 
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier_State
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_shapes import Rect_Element
 
@@ -15,6 +16,7 @@ class Yarn_Inserting_Hook_Block(Rect_Element):
         self,
         rendered_sliders: bool,
         hook_index: int,
+        hooked_carrier: Yarn_Carrier_State,
         needle_count_on_bed: int,
         diagram_settings: Diagram_Settings,
         **shape_kwargs: Any,
@@ -39,7 +41,7 @@ class Yarn_Inserting_Hook_Block(Rect_Element):
             y=y,
             name="Yarn_Inserting_Hook",
             stroke_width=self.settings.Needle_Stroke_Width,
-            fill="black",
-            stroke="black",
+            fill=self.settings.Yarn_Fill_Lightening_Factor,
+            stroke=hooked_carrier.yarn.properties.color,
             **shape_kwargs,
         )
