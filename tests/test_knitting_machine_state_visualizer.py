@@ -5,6 +5,7 @@ from virtual_knitting_machine.Knitting_Machine_Snapshot import Knitting_Machine_
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
+from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.knitting_machine_state_visualizer import Knitting_Machine_State_Visualizer
 
 
@@ -12,6 +13,7 @@ class TestKnitting_Machine_State_Visualizer(TestCase):
 
     def setUp(self):
         self.machine = Knitting_Machine()
+        self.diagram_settings = Diagram_Settings()
 
     def render_and_save(self, save_file: str = "test_diagram.svg"):
         """
@@ -19,7 +21,7 @@ class TestKnitting_Machine_State_Visualizer(TestCase):
         Args:
             save_file (str, optional): A path to a file to save the rendered svg file. Defaults to "test_diagram.svg".
         """
-        Knitting_Machine_State_Visualizer(self.machine).save(save_file)
+        Knitting_Machine_State_Visualizer(self.machine, self.diagram_settings).save(save_file)
 
     def tuck_needles(
         self,

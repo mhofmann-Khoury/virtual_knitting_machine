@@ -35,7 +35,7 @@ class Diagram_Settings:
 
     # Stroke Widths
     Needle_Stroke_Width: int = 1  # The width of lines surrounding needle squares.
-    Loop_Stroke_Width: int = 1  # The width of the circle-strokes for loops.
+    Loop_Stroke_Width: int = 2  # The width of the circle-strokes for loops.
     Carrier_Stroke_Width: int = 1  # The width of triangle carrier outline.
 
     # Rendering Options
@@ -51,12 +51,12 @@ class Diagram_Settings:
     render_legend: bool = True  # If True, render the legend of carrier colors.
 
     @property
-    def carriage_height(self) -> int:
+    def carriage_height(self) -> float:
         """
         Returns:
-            int: The height of the carriage element.
+            float: The height of the carriage element.
         """
-        return int(self.Needle_Height * self.Carriage_Height_in_Needles)
+        return self.Needle_Height * self.Carriage_Height_in_Needles
 
     @property
     def carriage_width(self) -> int:

@@ -62,7 +62,7 @@ class Carriage_Element(Polygon_Element):
         if self._render_sliders:
             y += 2.0 * self.settings.Needle_Height
         if self.settings.render_front_labels:
-            y += self.settings.Needle_Height
+            y += self.settings.label_height
 
         return x, y
 
