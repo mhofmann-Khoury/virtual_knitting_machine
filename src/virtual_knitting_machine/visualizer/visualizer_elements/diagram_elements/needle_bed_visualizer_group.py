@@ -9,7 +9,7 @@ from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.ne
     Needle_Bed_Element,
 )
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_box import Needle_Box
-from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import Text_Element, Visualizer_Element
+from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import Visualizer_Element
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_group import Visualizer_Group
 
 
@@ -148,52 +148,34 @@ class Needle_Bed_Group(Visualizer_Group):
         """
         return self.rightmost_slot - self.leftmost_slot
 
-    def _add_side_labels(self, label_group: Visualizer_Group) -> None:
+    @property
+    def width(self) -> float:
         """
-        Add the text labels for a needle bed side label group.
-        Args:
-            label_group (Visualizer_Group): The group for either the left or right labels of the needle bed.
+        Returns:
+            float: The width of the needle bed element including any rendered labels.
         """
+        w = self.settings.Needle_Width * (self.slot_count + 1.0)
+        w += abs(self.settings.all_needle_shift(self.all_needle_rack, self.carriage_direction))
+        if self.settings.render_left_labels:
+            w += self.settings.side_label_width(self.render_sliders)
+        if self.settings.render_right_labels:
+            w += self.settings.side_label_width(self.render_sliders)
+        return w
 
-        b_shift = self.settings.all_needle_shift(self.all_needle_rack, self.carriage_direction)
-
-        def _y(row: int) -> int:
-            """
-            Args:
-                row (int): The index of row that represents the needle bed.
-
-            Returns:
-                int: The y value for the label on the given bed-row.
-            """
-            return (self.settings.Needle_Height * row) + self.settings.Needle_Height // 2
-
-        b_label = Text_Element(
-            b_shift, _y(0), "B", f"B_{label_group.name}", text_anchor="middle", alignment_baseline="middle"
-        )
-        label_group.add_child(b_label)
+    @property
+    def height(self) -> float:
+        """
+        Returns:
+            float: The height of the needle bed element including any rendered labels.
+        """
+        h = 2.0 * self.settings.Needle_Height
         if self.render_sliders:
-            bs_label = Text_Element(
-                b_shift, _y(1), "BS", f"BS_{label_group.name}", text_anchor="middle", alignment_baseline="middle"
-            )
-            label_group.add_child(bs_label)
-            fs_label = Text_Element(
-                0,
-                _y(2),
-                "FS",
-                f"FS_{label_group.name}",
-                text_anchor="middle",
-                alignment_baseline="middle",
-            )
-            label_group.add_child(fs_label)
-        f_label = Text_Element(
-            0,
-            _y(3 if self.render_sliders else 1),
-            "F",
-            f"F_{label_group.name}",
-            text_anchor="middle",
-            alignment_baseline="middle",
-        )
-        label_group.add_child(f_label)
+            h += 2.0 * self.settings.Needle_Height
+        if self.settings.render_front_labels:
+            h += self.settings.label_height
+        if self.settings.render_back_labels:
+            h += self.settings.label_height
+        return h
 
     def has_slot(self, slot: int) -> bool:
         """

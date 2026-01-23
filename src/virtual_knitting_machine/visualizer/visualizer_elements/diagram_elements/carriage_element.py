@@ -58,7 +58,7 @@ class Carriage_Element(Polygon_Element):
         x = self.settings.x_of_needle(self._needle_index)
         y = 2.0 * self.settings.Needle_Height
         if not self._transferring:
-            y += self.settings.Carriage_Height / 2
+            y += self.settings.carriage_height / 2
         if self._render_sliders:
             y += 2.0 * self.settings.Needle_Height
         if self.settings.render_front_labels:
@@ -77,31 +77,31 @@ class Carriage_Element(Polygon_Element):
             if self.leftward:
                 points.extend(
                     [
-                        (self.settings.Carriage_Width, 0),  # Left of origin
-                        (self.settings.Carriage_Width, self.settings.Carriage_Height),  # left and down from origin
-                        (0, self.settings.Carriage_Height),  # down from origin
+                        (self.settings.carriage_width, 0),  # Left of origin
+                        (self.settings.carriage_width, self.settings.carriage_height),  # left and down from origin
+                        (0, self.settings.carriage_height),  # down from origin
                     ]
                 )
             else:
                 points.extend(
                     [
-                        (-1 * self.settings.Carriage_Width, 0),  # right of origin
+                        (-1 * self.settings.carriage_width, 0),  # right of origin
                         (
-                            -1 * self.settings.Carriage_Width,
-                            self.settings.Carriage_Height,
+                            -1 * self.settings.carriage_width,
+                            self.settings.carriage_height,
                         ),  # right and down from origin
-                        (0, self.settings.Carriage_Height),  # down from origin
+                        (0, self.settings.carriage_height),  # down from origin
                     ]
                 )
         else:
-            point_width = (1 / 3) * self.settings.Carriage_Width
-            box_height = self.settings.Carriage_Height / 2
+            point_width = (1 / 3) * self.settings.carriage_width
+            box_height = self.settings.carriage_height / 2
             if self.leftward:
                 points.extend(
                     [
                         (point_width, -1 * box_height),  # Up half the height and left 1/3 of the width
-                        (self.settings.Carriage_Width, -1 * box_height),  # left and up half the height
-                        (self.settings.Carriage_Width, box_height),  # left and down half the height
+                        (self.settings.carriage_width, -1 * box_height),  # left and up half the height
+                        (self.settings.carriage_width, box_height),  # left and down half the height
                         (point_width, box_height),
                     ]
                 )  # left 1/3 of the width and down half the height
@@ -109,8 +109,8 @@ class Carriage_Element(Polygon_Element):
                 points.extend(
                     [
                         (-1 * point_width, -1 * box_height),  # right 1/3 of width and up half height
-                        (-1 * self.settings.Carriage_Width, -1 * box_height),  # right and up half height
-                        (-1 * self.settings.Carriage_Width, box_height),  # right and down half height
+                        (-1 * self.settings.carriage_width, -1 * box_height),  # right and up half height
+                        (-1 * self.settings.carriage_width, box_height),  # right and down half height
                         (-1 * point_width, box_height),  # right 1/3 of the width and up half the height
                     ]
                 )

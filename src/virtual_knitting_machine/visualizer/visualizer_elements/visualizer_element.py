@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import Any
 
 from svgwrite import Drawing
@@ -215,12 +216,48 @@ class Visualizer_Element:
         return f"#{r:02x}{g:02x}{b:02x}"
 
 
+class Text_Anchor(Enum):
+    """Enumeration of Text Anchoring options for text elements"""
+
+    start = "start"  # Text will render leftward from its x coordinate.
+    middle = "middle"  # Text will render centered on its x coordinate
+    end = "end"  # Text will render up to its x coordinate
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+
+class Text_Baseline(Enum):
+    """Enumeration of Text Anchoring options for text elements"""
+
+    baseline = "baseline"  # Text will render upward from its y coordinate.
+    middle = "middle"  # Text will render centered on its y coordinate
+    hanging = "hanging"  # Text will render downward from its y coordinate
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+
 class Text_Element(Visualizer_Element):
     """
     Wrapper class for Text SVG elements.
     """
 
-    def __init__(self, x: float, y: float, label: str, name: str | None = None, **element_kwargs: Any) -> None:
+    def __init__(
+        self,
+        x: float,
+        y: float,
+        label: str,
+        name: str | None = None,
+        font_family: str = "Arial",
+        font_size: int = 14,
+        is_bold: bool = False,
+        is_italic: bool = False,
+        text_anchor: Text_Anchor = Text_Anchor.middle,
+        alignment_baseline: Text_Baseline = Text_Baseline.middle,
+        font_color: str = "black",
+        **element_kwargs: Any,
+    ) -> None:
         """
         Initialize the text element.
         Args:
@@ -228,10 +265,67 @@ class Text_Element(Visualizer_Element):
             y (float): The y coordinate of this element relative to its parent (or globally).
             label (str): The value of the text label.
             name (str, optional): The id name of this element defaults to "label_<label>".
+            font_family (str, optional): The font family to render the text in. Defaults to "Arial".
+            font_size (int, optional): The font size to render the text in. Defaults to 14px height.
+            is_bold (bool, optional): Whether the text is bold. Defaults to False.
+            is_italic (bool, optional): Whether the text is italic. Defaults to False.
+            text_anchor (str, optional): The anchor to render the text in. Defaults to "middle".
             **element_kwargs (Any): Keyword arguments used to configure the svg text element.
         """
         super().__init__(x, y, name if name is not None else f"label_{label}", **element_kwargs)
         self.label: str = label
+        self.font_family: str = font_family
+        self.font_size: int = font_size
+        self.font_weight: str = "bold" if is_bold else "normal"
+        self.font_style: str = "italic" if is_italic else "normal"
+        self.text_anchor: Text_Anchor = text_anchor
+        self.alignment_baseline: Text_Baseline = alignment_baseline
+        self.font_color: str = font_color
+
+    @property
+    def approximate_label_width(self) -> float:
+        """
+        Returns:
+            float: The approximate width of the text label.
+
+        Notes:
+            Very rough estimate: ~0.6 * font_size per character for typical fonts.
+        """
+        return len(self) * self.font_size * 0.6
+
+    @staticmethod
+    def approximate_text_width(char_count: int, font_size: int = 14) -> float:
+        """
+        Args:
+            char_count (int): The total number of characters.
+            font_size (int, optional): The font size in pixels. Defaults to 14.
+
+        Returns:
+            float: The approximate width of the text based on the number of characters.
+
+        Notes:
+            Very rough estimate: ~0.6 * font_size per character for typical fonts.
+        """
+        return char_count * font_size * 0.6
 
     def _build_svg_element(self) -> Text:
-        return Text(self.label, insert=(self.global_x, self.global_y), id=self.name, **self._element_kwargs)
+        return Text(
+            self.label,
+            insert=(self.global_x, self.global_y),
+            id=self.name,
+            font_family=self.font_family,
+            font_size=self.font_size,
+            font_weight=self.font_weight,
+            font_style=self.font_style,
+            text_anchor=str(self.text_anchor),
+            alignment_baseline=str(self.alignment_baseline),
+            fill=self.font_color,
+            **self._element_kwargs,
+        )
+
+    def __len__(self) -> int:
+        """
+        Returns:
+            int: The number of characters in the label.
+        """
+        return len(self.label)

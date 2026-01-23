@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import Text_Element
 
 
 @dataclass(frozen=True)
@@ -12,21 +13,13 @@ class Diagram_Settings:
     # Fixed sizes
     Needle_Height: int = 20  # A constant value for the height of needle squares in the visualization.
     Needle_Width: int = 20  # A constant value for the Width of needle squares in the visualization.
-    Carriage_Height: int = 30  # The height of the carriage element.
-    Carriage_Width: int = 50  # The width of the carriage element.
-    Label_Height: int = 15  # The height of text in a label.
-    Side_Label_Width: int = 10  # The width of space reserved for the Needle bed side labels.
-    Label_Char_Width: int = 10  # The width allocated to each char in a label.
 
     # Size Proportions
-    Loop_Portion_Of_Needle: float = 0.6  # The proportion of the needle boxes taken up by a loop.
-    Max_Loop_Portion_Of_Needle: float = (
-        0.6  # The maximum portion of a needle that a loop stack can take up. This allows for some padding around the loops for clear visibility.
-    )
     Loop_Stack_Overlap: float = 0.6  # The proportion of a loop circle covered by the loop on top of it in the stack.
-    Minimum_Loop_Portion_of_Needle: float = (
-        0.3  # The minimum proportion of a needle that a loop can take up when shrunk to fit a stack.
-    )
+    White_Space_Padding_Proportional_to_Needle: float = 0.25  # The padding between labels and needle squares.
+    Minimum_Loop_Portion_of_Needle: float = 0.2  # The minimum size of loops proportional to needles.
+    Carriage_Height_in_Needles: float = 1.5  # The height of the carriage element relative to the height of needles.
+    Carriage_Width_in_Needles: float = 2.0  # The width of the carriage element relative to the width of needles.
 
     # Fill Colors
     Slider_Background_Color: str = "lightgrey"  # The background color of slider needles.
@@ -36,16 +29,18 @@ class Diagram_Settings:
     # Stroke Colors
     Needle_Stroke_Color: str = "black"  # The color of the lines surrounding needle squares.
 
+    # Font Parameters
+    font_family: str = "Arial"  # The font used throughout the diagram.
+    font_size: int = 14  # The font size (height in pixels of a tall character).
+
     # Stroke Widths
     Needle_Stroke_Width: int = 1  # The width of lines surrounding needle squares.
     Loop_Stroke_Width: int = 1  # The width of the circle-strokes for loops.
     Carrier_Stroke_Width: int = 1  # The width of triangle carrier outline.
 
+    # Rendering Options
     Left_Needle_Buffer: int = 0  # The number of empty slots to show on the left side of the diagram.
     Right_Needle_Buffer: int = 0  # The number of empty slots to show on the right side of the diagram.
-    Label_Padding: int = 5  # The padding between labels and needle squares.
-
-    # Rendering Options
     render_front_labels: bool = True  # If True, renders the indices of each needle on the front bed.
     render_back_labels: bool = True  # If True, renders the indices of each needle on the back bed.
     render_left_labels: bool = True  # If True, renders the labels to the left of the needle bed.
@@ -53,6 +48,52 @@ class Diagram_Settings:
     render_empty_sliders: bool = False  # If True, render sliders regardless whether there are active slider loops.
     render_carriers: bool = True  # If True, render the active carrier positions.
     render_carriage: bool = True  # If True, render the carriage.
+    render_legend: bool = True  # If True, render the legend of carrier colors.
+
+    @property
+    def carriage_height(self) -> int:
+        """
+        Returns:
+            int: The height of the carriage element.
+        """
+        return int(self.Needle_Height * self.Carriage_Height_in_Needles)
+
+    @property
+    def carriage_width(self) -> int:
+        """
+        Returns:
+            int: The width of the carriage element.
+        """
+        return int(self.Needle_Width * self.Carriage_Width_in_Needles)
+
+    @property
+    def white_space_padding(self) -> int:
+        """
+        Returns:
+            int: The required white space padding around elements.
+        """
+        return int(self.minimum_needle_size * self.White_Space_Padding_Proportional_to_Needle)
+
+    @property
+    def label_height(self) -> int:
+        """
+        Returns:
+            int: The reserved vertical spacing for a label including whitespace padding.
+        """
+        return self.font_size + self.white_space_padding
+
+    def side_label_width(self, has_sliders: bool) -> float:
+        """
+        Args:
+            has_sliders (bool): True if the sliders were rendered.
+
+        Returns:
+            float: The approximate width of the needle bed side labels based on the font size.
+        """
+        if self.render_empty_sliders or has_sliders:
+            return Text_Element.approximate_text_width(2, self.font_size) + 2 * self.white_space_padding
+        else:
+            return Text_Element.approximate_text_width(1, self.font_size) + 2 * self.white_space_padding
 
     def all_needle_shift(self, is_all_needle_rack: bool, carriage_direction: Carriage_Pass_Direction) -> int:
         """
@@ -85,12 +126,12 @@ class Diagram_Settings:
         return min(self.Needle_Height, self.Needle_Width)
 
     @property
-    def loop_diameter(self) -> float:
+    def loop_diameter(self) -> int:
         """
         Returns:
-            float: The diameter of a solo-loop on a needle box.
+            int: The diameter of a solo-loop on a needle box.
         """
-        return self.minimum_needle_size * self.Loop_Portion_Of_Needle
+        return self.minimum_needle_size - self.white_space_padding
 
     @property
     def minimum_loop_diameter(self) -> float:
@@ -120,9 +161,9 @@ class Diagram_Settings:
     def loop_stack_top(self) -> float:
         """
         Returns:
-            float: The distance from the top edge of the needle to the top of the top loop in a stack of loops that takes up the maximum spacing of loop stacks in the needle box.
+            float: The distance from the top edge of the needle to the top of the top loop stack.
         """
-        return (self.Needle_Height * (1.0 - self.Max_Loop_Portion_Of_Needle)) / 2
+        return self.white_space_padding / 2
 
     def stacked_loop_diameter(self, loop_count: int) -> float:
         """
@@ -137,9 +178,8 @@ class Diagram_Settings:
         """
         if loop_count == 1:
             return self.loop_diameter
-        stack_size = self.minimum_needle_size * self.Max_Loop_Portion_Of_Needle
         loops_in_stack = 1.0 + (self.loop_stack_shift_portion * (loop_count - 1))
-        return max(stack_size / loops_in_stack, self.minimum_loop_diameter)
+        return max(self.loop_diameter / loops_in_stack, self.minimum_loop_diameter)
 
     @property
     def carrier_size(self) -> int:

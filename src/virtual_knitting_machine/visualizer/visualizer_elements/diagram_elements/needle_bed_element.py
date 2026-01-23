@@ -9,7 +9,12 @@ from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_box import Needle_Box
-from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import Text_Element, Visualizer_Element
+from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import (
+    Text_Anchor,
+    Text_Baseline,
+    Text_Element,
+    Visualizer_Element,
+)
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_group import Visualizer_Group
 
 
@@ -40,12 +45,13 @@ class Needle_Bed_Element(Visualizer_Group):
         self._build_needles()
         self.left_label: Text_Element | None = (
             Text_Element(
-                -1 * self.settings.Label_Padding,
-                self.settings.Needle_Height // 2,
-                self.bed_label,
-                f"{self.bed_label}_left_label",
-                text_anchor="end",
-                alignment_baseline="middle",
+                x=-1 * self.settings.white_space_padding,
+                y=self.settings.Needle_Height // 2,
+                label=self.bed_label,
+                name=f"{self.bed_label}_left_label",
+                font_family=self.settings.font_family,
+                font_size=self.settings.font_size,
+                text_anchor=Text_Anchor.end,
             )
             if self.settings.render_left_labels
             else None
@@ -55,14 +61,15 @@ class Needle_Bed_Element(Visualizer_Group):
 
         self.right_label: Text_Element | None = (
             Text_Element(
-                self.settings.Label_Padding
+                x=self.settings.white_space_padding
                 + (self.settings.Needle_Width * self.needle_count)
                 + self.settings.Needle_Width,
-                self.settings.Needle_Width // 2,
-                self.bed_label,
-                f"{self.bed_label}_right_label",
-                text_anchor="start",
-                alignment_baseline="middle",
+                y=self.settings.Needle_Width // 2,
+                label=self.bed_label,
+                name=f"{self.bed_label}_right_label",
+                font_family=self.settings.font_family,
+                font_size=self.settings.font_size,
+                text_anchor=Text_Anchor.start,
             )
             if self.settings.render_right_labels
             else None
@@ -126,20 +133,22 @@ class Needle_Bed_Element(Visualizer_Group):
                 if self.is_back:
                     self.labels[needle_position] = Text_Element(
                         x=n_box.x + self.settings.Needle_Width // 2,
-                        y=-1 * self.settings.Label_Padding,
+                        y=-1 * self.settings.white_space_padding,
                         label=str(needle_position),
                         name=f"label_{needle}",
-                        text_anchor="middle",
-                        alignment_baseline="baseline",
+                        font_family=self.settings.font_family,
+                        font_size=self.settings.font_size,
+                        alignment_baseline=Text_Baseline.baseline,
                     )
                 else:
                     self.labels[needle_position] = Text_Element(
                         x=n_box.x + self.settings.Needle_Width // 2,
-                        y=self.settings.Needle_Height + self.settings.Label_Padding,
+                        y=self.settings.Needle_Height + self.settings.white_space_padding,
                         label=str(needle_position),
                         name=f"label_{needle}",
-                        text_anchor="middle",
-                        alignment_baseline="hanging",
+                        font_family=self.settings.font_family,
+                        font_size=self.settings.font_size,
+                        alignment_baseline=Text_Baseline.hanging,
                     )
 
         for nbox in self.needle_boxes.values():

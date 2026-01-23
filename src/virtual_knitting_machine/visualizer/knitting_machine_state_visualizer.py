@@ -7,11 +7,13 @@ from typing import cast
 from svgwrite import Drawing
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
+from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier_State
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carriage_element import Carriage_Element
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carrier_legend import Carrier_Legend
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carrier_triangle import Carrier_Triangle
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.float_path import (
     Float_Orientation_To_Neighbors,
@@ -75,6 +77,7 @@ class Knitting_Machine_State_Visualizer:
         self.leftmost_slot: int = ls
         self.rightmost_slot: int = rs
         self.shows_sliders: bool = self.settings.render_empty_sliders or not self.machine_state.sliders_are_clear
+        self.carriers_in_legend: set[Yarn_Carrier_State] = set()
         self.needle_bed_group: Needle_Bed_Group = Needle_Bed_Group(
             self.leftmost_slot,
             self.rightmost_slot,
@@ -92,6 +95,16 @@ class Knitting_Machine_State_Visualizer:
         self.carriers: set[Carrier_Triangle] = set()
         if self.settings.render_carriers:
             self._add_active_carriers()
+        self.legend: Carrier_Legend | None = (
+            Carrier_Legend(
+                x=self.needle_bed_group.width + self.min_x,
+                y=0,
+                diagram_settings=self.settings,
+                carriers=self.carriers_in_legend,
+            )
+            if self.settings.render_legend and len(self.carriers_in_legend) > 0
+            else None
+        )
         if self.machine_state.carrier_system.hook_position is None:
             self.yarn_inserting_hook_block: Yarn_Inserting_Hook_Block | None = None
         else:
@@ -131,28 +144,16 @@ class Knitting_Machine_State_Visualizer:
         Returns:
             tuple[float, float]: The size of this diagram by its width and height.
         """
-        width = self.settings.Needle_Width * self.needle_count + abs(
-            self.settings.all_needle_shift(
-                self.machine_state.all_needle_rack, self.machine_state.carriage.last_direction
-            )
-        )
-        if self.settings.render_left_labels:
-            width += self.settings.Side_Label_Width + self.settings.Label_Padding
-            if self.shows_sliders:
-                width += self.settings.Side_Label_Width
-        if self.settings.render_right_labels:
-            width += self.settings.Side_Label_Width + self.settings.Label_Padding
-            if self.shows_sliders:
-                width += self.settings.Side_Label_Width
-        height = 2.0 * self.settings.Needle_Height
-        if self.settings.render_back_labels or len(self.carriers) > 0:
-            height += self.settings.Needle_Height
-        if self.settings.render_front_labels:
-            height += self.settings.Needle_Height
-        if self.shows_sliders:
-            height += self.settings.Needle_Height * 2.0
+        width = self.needle_bed_group.width
+        if self.legend is not None:
+            width += self.legend.width()
+        height = self.needle_bed_group.height
+        if not self.settings.render_back_labels and len(self.carriers) > 0:
+            height += self.settings.carriage_height + self.settings.white_space_padding
         if self.carriage_block is not None:
-            height += self.settings.Carriage_Height
+            height += self.settings.carriage_height
+        if self.legend is not None:
+            height = max(height, self.legend.height())
         return width, height
 
     def _get_bed_slots(self) -> tuple[int, int]:
@@ -205,6 +206,7 @@ class Knitting_Machine_State_Visualizer:
             self.loop_stacks[needle] = Loop_Stack(needle.held_loops, self.needle_bed_group[needle], self.settings)
         for loop_stack in self.loop_stacks.values():
             self.loops.update({l.loop: l for l in loop_stack.loop_circles})
+            self.carriers_in_legend.update({l.loop.yarn.carrier for l in loop_stack.loop_circles})
 
     def _add_active_carriers(self) -> None:
         """
@@ -227,6 +229,7 @@ class Knitting_Machine_State_Visualizer:
                     diagram_settings=self.settings,
                 )
             )
+            self.carriers_in_legend.add(carrier)
 
     def render(self) -> Drawing:
         """
@@ -241,6 +244,8 @@ class Knitting_Machine_State_Visualizer:
             loop_stack.add_to_drawing(drawing)
         for carrier_triangle in self.carriers:
             carrier_triangle.add_to_drawing(drawing)
+        if self.legend is not None:
+            self.legend.add_to_drawing(drawing)
         if self.yarn_inserting_hook_block is not None:
             self.yarn_inserting_hook_block.add_to_drawing(drawing)
         if self.carriage_block is not None:
@@ -258,24 +263,35 @@ class Knitting_Machine_State_Visualizer:
         drawing.saveas(filename)
         format_svg(filename)
 
+    @property
+    def min_x(self) -> float:
+        """
+        Returns:
+            float: The minimum x-coordinate of the viewport.
+        """
+        min_x = 0.0
+        if (
+            self.machine_state.all_needle_rack
+            and self.machine_state.carriage.last_direction is Carriage_Pass_Direction.Leftward
+        ):
+            min_x = self.settings.all_needle_shift(
+                self.machine_state.all_needle_rack, self.machine_state.carriage.last_direction
+            )
+        if self.settings.render_left_labels:
+            min_x -= self.settings.side_label_width(self.shows_sliders)
+        return min_x
+
     def _new_diagram_drawing(self) -> Drawing:
         """
         Returns:
             Drawing: An empty drawing sized for the diagram."""
         width, height = self.size
-        min_x = self.settings.all_needle_shift(
-            self.machine_state.all_needle_rack, self.machine_state.carriage.last_direction
-        )
-        if self.settings.render_left_labels:
-            min_x -= self.settings.Side_Label_Width + self.settings.Label_Padding
-            if self.shows_sliders:
-                min_x -= self.settings.Side_Label_Width
         min_y = 0
         if self.settings.render_back_labels:
-            min_y -= self.settings.Label_Height + self.settings.Label_Padding
+            min_y -= self.settings.label_height
         elif len(self.carriers) > 0:
-            min_y -= self.settings.carrier_size - self.settings.Label_Padding
+            min_y -= self.settings.carrier_size + self.settings.white_space_padding
         return Drawing(
             size=(f"{width}px", f"{height}px"),
-            viewBox=f"{min_x} {min_y} {width} {height}",
+            viewBox=f"{self.min_x} {min_y} {width} {height}",
         )

@@ -32,7 +32,7 @@ class Carrier_Triangle(Triangle_Element):
         super().__init__(
             side_length=self.settings.carrier_size,
             x=needle_box.global_x if isinstance(needle_box, Needle_Box) else needle_box,
-            y=-1.0 * self.settings.Label_Padding,
+            y=-1.0 * self.settings.white_space_padding,
             name=f"c{self.carrier_id}",
             stroke_width=self.settings.Carrier_Stroke_Width,
             fill=self.settings.Yarn_Fill_Lightening_Factor,
