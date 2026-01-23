@@ -145,12 +145,13 @@ class Visualizer_Element:
     @staticmethod
     def darken_color(color: str = "none", factor: float = 0.7) -> str:
         """Darken a hex or named color.
+
         Args:
             color (str): The color to darken. Either a named color or a hex representation of the color.
-            factor (float, optional):
-                A factor to darken. Defaults to 0.7.
-                * 0.0 = No change.
-                * 1.0 = black.
+            factor (float, optional): A factor to darken. Defaults to 0.7.
+
+                - 0.0 = No change.
+                - 1.0 = black.
 
         Returns:
             str: The color-string of the darkened color. If "none" color is given, this will return "black".
@@ -179,10 +180,10 @@ class Visualizer_Element:
 
         Args:
             color (str, optional): The color to lighten. Either a named color or a hex representation of the color. Defaults to transparent ("none").
-            factor (float, optional):
-                A factor to lighten (0.0 to 1.0). Defaults to 0.3.
-                * 0.0 = no change.
-                * 1.0 = white.
+            factor (float, optional): A factor to lighten (0.0 to 1.0). Defaults to 0.3.
+
+                - 0.0 = no change.
+                - 1.0 = white.
         Returns:
             str: The color-string of the lightened color. If "none" color is given, this will return "black".
         """
