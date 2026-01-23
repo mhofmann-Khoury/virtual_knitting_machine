@@ -3,7 +3,7 @@
 # =============================================================================
 # This section tells Poetry how to build your package
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]  # Poetry build backend version
+requires = ["poetry-core>=2.3.1,<3.0.0"]  # Poetry build backend version
 build-backend = "poetry.core.masonry.api"  # Use Poetry's build system
 
 # =============================================================================
@@ -12,7 +12,7 @@ build-backend = "poetry.core.masonry.api"  # Use Poetry's build system
 # All the information about your project that will appear on PyPI
 [tool.poetry]
 name = "virtual-knitting-machine"
-version = "0.0.22"
+version = "0.0.23"
 description = 'A data structure representing the state and operations of a virtual V-Bed with sliders whole garment knitting machine based on the whole garment knitting machines made by Shima Seiki.'
 authors = ["Megan Hofmann <m.hofmann@northeastern.edu>"]       # Primary authors
 maintainers = ["Megan Hofmann <m.hofmann@northeastern.edu>"]   # Current maintainers
