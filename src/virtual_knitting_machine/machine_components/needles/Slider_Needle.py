@@ -4,7 +4,14 @@ This module provides the Slider_Needle class, which is a specialized type of nee
 Slider needles are commonly used in knitting machines for loop manipulation operations such as transfers and temporary loop storage.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
+
+if TYPE_CHECKING:
+    from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
 
 
 class Slider_Needle(Needle):
@@ -16,14 +23,8 @@ class Slider_Needle(Needle):
     This class inherits all functionality from the base Needle class but overrides specific properties to indicate its slider nature.
     """
 
-    def __init__(self, is_front: bool, position: int) -> None:
-        """Initialize a slider needle.
-
-        Args:
-            is_front (bool): True if this is a front bed needle, False for back bed.
-            position (int): The needle index/position on the machine bed.
-        """
-        super().__init__(is_front, position)
+    def __init__(self, is_front: bool, position: int, knitting_machine: Knitting_Machine_State | None = None) -> None:
+        super().__init__(is_front, position, knitting_machine)
 
     def __str__(self) -> str:
         """Return string representation of the slider needle.

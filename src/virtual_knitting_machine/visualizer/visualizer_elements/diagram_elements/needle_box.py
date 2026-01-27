@@ -63,20 +63,6 @@ class Needle_Box(Rect_Element):
         """
         return self.needle.position
 
-    def slot_number(self, rack: int) -> int:
-        """
-        Args:
-            rack (int): The racking alignment to access the slot number form.
-        Returns:
-            int: The slot number (front bed alignment) of this needle.
-        Notes:
-            Racking Calculations:
-            * R = F - B
-            * F = R + B
-            * B = F - R.
-        """
-        return self.needle.slot_number(rack)
-
     @property
     def all_needle_rack(self) -> bool:
         """

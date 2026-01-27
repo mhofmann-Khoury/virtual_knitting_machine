@@ -12,13 +12,11 @@ class Carriage_Element(Polygon_Element):
     def __init__(
         self,
         last_direction: Carriage_Pass_Direction,
-        is_transferring: bool,
         needle_index: int,
         render_sliders: bool,
         diagram_settings: Diagram_Settings,
         **shape_kwargs: Any,
     ):
-        self._transferring: bool = is_transferring
         self.last_direction: Carriage_Pass_Direction = last_direction
         self.settings: Diagram_Settings = diagram_settings
         self._needle_index: int = needle_index
@@ -56,9 +54,7 @@ class Carriage_Element(Polygon_Element):
             When not transferring, the carriage is shown as an arrow with origin as the point of the direction it is moving.
         """
         x = self.settings.x_of_needle(self._needle_index)
-        y = 2.0 * self.settings.Needle_Height
-        if not self._transferring:
-            y += self.settings.carriage_height / 2
+        y = 2.0 * self.settings.Needle_Height + (self.settings.carriage_height / 2)
         if self._render_sliders:
             y += 2.0 * self.settings.Needle_Height
         if self.settings.render_front_labels:
@@ -73,45 +69,24 @@ class Carriage_Element(Polygon_Element):
             list[tuple[float, float]]: The vertices that draw the carriage in its current state.
         """
         points = [self.carriage_origin]
-        if self._transferring:
-            if self.leftward:
-                points.extend(
-                    [
-                        (self.settings.carriage_width, 0),  # Left of origin
-                        (self.settings.carriage_width, self.settings.carriage_height),  # left and down from origin
-                        (0, self.settings.carriage_height),  # down from origin
-                    ]
-                )
-            else:
-                points.extend(
-                    [
-                        (-1 * self.settings.carriage_width, 0),  # right of origin
-                        (
-                            -1 * self.settings.carriage_width,
-                            self.settings.carriage_height,
-                        ),  # right and down from origin
-                        (0, self.settings.carriage_height),  # down from origin
-                    ]
-                )
+        point_width = (1 / 3) * self.settings.carriage_width
+        box_height = self.settings.carriage_height / 2
+        if self.leftward:
+            points.extend(
+                [
+                    (point_width, -1 * box_height),  # Up half the height and left 1/3 of the width
+                    (self.settings.carriage_width, -1 * box_height),  # left and up half the height
+                    (self.settings.carriage_width, box_height),  # left and down half the height
+                    (point_width, box_height),
+                ]
+            )  # left 1/3 of the width and down half the height
         else:
-            point_width = (1 / 3) * self.settings.carriage_width
-            box_height = self.settings.carriage_height / 2
-            if self.leftward:
-                points.extend(
-                    [
-                        (point_width, -1 * box_height),  # Up half the height and left 1/3 of the width
-                        (self.settings.carriage_width, -1 * box_height),  # left and up half the height
-                        (self.settings.carriage_width, box_height),  # left and down half the height
-                        (point_width, box_height),
-                    ]
-                )  # left 1/3 of the width and down half the height
-            else:
-                points.extend(
-                    [
-                        (-1 * point_width, -1 * box_height),  # right 1/3 of width and up half height
-                        (-1 * self.settings.carriage_width, -1 * box_height),  # right and up half height
-                        (-1 * self.settings.carriage_width, box_height),  # right and down half height
-                        (-1 * point_width, box_height),  # right 1/3 of the width and up half the height
-                    ]
-                )
+            points.extend(
+                [
+                    (-1 * point_width, -1 * box_height),  # right 1/3 of width and up half height
+                    (-1 * self.settings.carriage_width, -1 * box_height),  # right and up half height
+                    (-1 * self.settings.carriage_width, box_height),  # right and down half height
+                    (-1 * point_width, box_height),  # right 1/3 of the width and up half the height
+                ]
+            )
         return points

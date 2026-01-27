@@ -27,28 +27,27 @@ class TestYarnCarrier(unittest.TestCase):
         self.assertEqual(carrier.carrier_id, 10)
         self.assertFalse(carrier.is_active)
         self.assertFalse(carrier.is_hooked)
-        self.assertIsNone(carrier.slot_position)
+        self.assertFalse(carrier.position_on_bed.on_bed)
+        self.assertIs(self.carrier.last_direction, Carriage_Pass_Direction.Rightward)
 
     def test_set_position_none(self):
         """Test position property setter with None."""
         self.carrier.set_position(None)
-        self.assertIsNone(self.carrier.slot_position)
+        self.assertFalse(self.carrier.position_on_bed.on_bed)
         self.assertIs(self.carrier.last_direction, Carriage_Pass_Direction.Leftward)
 
     def test_position_property_setter_front(self):
         """Test position property setter with integer."""
         self.carrier.is_active = True
         self.carrier.set_position(Needle(True, 15))
-        self.assertEqual(self.carrier.needle, Needle(True, 15))
-        self.assertEqual(self.carrier.slot_position, 15)
+        self.assertEqual(self.carrier.slot_number, 15)
         self.assertIs(self.carrier.last_direction, Carriage_Pass_Direction.Leftward)
 
     def test_position_property_setter_back(self):
         """Test position property setter with integer."""
         self.carrier.is_active = True
         self.carrier.set_position(Needle(False, 15))
-        self.assertEqual(self.carrier.needle, Needle(False, 15))
-        self.assertEqual(self.carrier.slot_position, 15)
+        self.assertEqual(self.carrier.slot_number, 15)
         self.assertIs(self.carrier.last_direction, Carriage_Pass_Direction.Leftward)
 
     def test_bring_in_inactive_carrier(self):
@@ -168,28 +167,28 @@ class TestYarnCarrier(unittest.TestCase):
         # Initial state
         self.assertFalse(self.carrier.is_active)
         self.assertFalse(self.carrier.is_hooked)
-        self.assertIsNone(self.carrier.slot_position)
+        self.assertFalse(self.carrier.position_on_bed.on_bed)
 
         # Bring in and hook
         self.carrier.inhook()
         self.assertTrue(self.carrier.is_active)
         self.assertTrue(self.carrier.is_hooked)
-        self.assertIsNone(self.carrier.slot_position)
+        self.assertFalse(self.carrier.position_on_bed.on_bed)
 
         # Set position
         self.carrier.set_position(Needle(True, 10))
-        self.assertEqual(self.carrier.slot_position, 10)
+        self.assertEqual(self.carrier.slot_number, 10)
         self.assertIs(self.carrier.last_direction, Carriage_Pass_Direction.Leftward)
 
         # Release hook
         self.carrier.releasehook()
         self.assertTrue(self.carrier.is_active)
         self.assertFalse(self.carrier.is_hooked)
-        self.assertEqual(self.carrier.slot_position, 10)
+        self.assertEqual(self.carrier.slot_number, 10)
         self.assertIs(self.carrier.last_direction, Carriage_Pass_Direction.Leftward)
 
         # Out
         self.carrier.out()
         self.assertFalse(self.carrier.is_active)
         self.assertFalse(self.carrier.is_hooked)
-        self.assertIsNone(self.carrier.slot_position)
+        self.assertFalse(self.carrier.position_on_bed.on_bed)

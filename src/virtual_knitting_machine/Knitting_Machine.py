@@ -144,8 +144,8 @@ class Knitting_Machine_State(Protocol[Carrier_State_Type]):
         """
         if len(self.all_loops()) == 0 and len(self.all_slider_loops()) == 0:
             return 0, 0
-        slots = [n.slot_number(self.rack) for n in self.all_loops()]
-        slots.extend(n.slot_number(self.rack) for n in self.all_slider_loops())
+        slots = [n.slot_number for n in self.all_loops()]
+        slots.extend(n.slot_number for n in self.all_slider_loops())
         return min(slots), max(slots)
 
     def front_needles(self) -> list[Needle]:
@@ -304,16 +304,16 @@ class Knitting_Machine_State(Protocol[Carrier_State_Type]):
         Returns:
             set[Machine_Knit_Loop]: The set of machine knit loops that are held on needles crossed by the given float.
         """
-        needle1 = loop1.holding_needle
+        needle1 = self[loop1]
         assert needle1 is not None
-        needle2 = loop2.holding_needle
+        needle2 = self[loop2]
         assert needle2 is not None
-        left_slot = min(needle1.slot_number(self.rack), needle2.slot_number(self.rack))
-        right_slot = max(needle1.slot_number(self.rack), needle2.slot_number(self.rack))
+        left_slot = min(needle1.slot_number, needle2.slot_number)
+        right_slot = max(needle1.slot_number, needle2.slot_number)
         return {
             l
             for l in self.active_loops
-            if l.holding_needle is not None and left_slot < l.holding_needle.slot_number(self.rack) < right_slot
+            if l.holding_needle is not None and left_slot < self[l.holding_needle].slot_number < right_slot
         }
 
     def get_carrier(
@@ -706,9 +706,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
             This enables easy tracking of relative movements that involve carriers.
         """
         needle = self[needle]
-        assert isinstance(needle, Needle)
-        self.carriage.transferring = True  # Used to mark that the direction of drop operation is also ignored.
-        self.carriage.move_to(needle.position)
+        self.carriage.move_to_needle(needle)
         return needle.drop()
 
     def _add_xfer_crossing(
@@ -743,7 +741,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
             aligned_needle: The needle receiving loops in the transfer.
             xfer_loops: The loops being transferred.
         """
-        starting_position = starting_needle.slot_number(self.rack)
+        starting_position = starting_needle.slot_number
         front_crossed_positions = [
             f
             for f in self.front_bed[starting_position : starting_position + abs(self.rack) + 1]
@@ -776,7 +774,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
             aligned_needle: The needle receiving loops in the transfer.
             xfer_loops: The loops being transferred.
         """
-        starting_position = starting_needle.slot_number(self.rack)
+        starting_position = starting_needle.slot_number
         front_crossed_positions = [
             f
             for f in self.front_bed[starting_position - self.rack : starting_position + 1]
@@ -854,12 +852,8 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
 
         self._cross_loops_by_xfer(starting_needle, aligned_needle, xfer_loops)
 
-        if not from_split:  # Update the carriage position, regardless of carrier behaviors.
-            self.carriage.transferring = True
-            if starting_needle.is_front:
-                self.carriage.move_to(starting_needle.position)
-            else:
-                self.carriage.move_to(aligned_needle.position)
+        if not from_split:
+            self.carriage.move_to_needle(starting_needle)
         return xfer_loops
 
     def split(
@@ -903,7 +897,6 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
             needle (Needle): Needle to position the carriers from.
             direction (Carriage_Pass_Direction): The carriage direction for the miss operation.
         """
-        slot_position = needle.slot_number(self.rack)
+        needle = self[needle]
         carrier_set.position_carriers_at_needle(self.carrier_system, needle, direction)
-        self.carriage.transferring = False
-        self.carriage.move(direction, slot_position)
+        self.carriage.move_in_direction(needle, direction)

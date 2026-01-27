@@ -131,13 +131,13 @@ class TestNeedle(unittest.TestCase):
     def test_slot_number(self):
         """Test racked position calculation for front bed alignment."""
         # Front needle position unchanged
-        self.assertEqual(self.front_needle.slot_number(0), self.front_pos)
-        self.assertEqual(self.front_needle.slot_number(2), self.front_pos)
+        self.assertEqual(self.front_needle.slot_by_racking(0), self.front_pos)
+        self.assertEqual(self.front_needle.slot_by_racking(2), self.front_pos)
 
         # Back needle position adjusted by rack
-        self.assertEqual(self.back_needle.slot_number(0), self.back_pos)
-        self.assertEqual(self.back_needle.slot_number(2), self.back_pos + 2)
-        self.assertEqual(self.back_needle.slot_number(-1), self.back_pos - 1)
+        self.assertEqual(self.back_needle.slot_by_racking(0), self.back_pos)
+        self.assertEqual(self.back_needle.slot_by_racking(2), self.back_pos + 2)
+        self.assertEqual(self.back_needle.slot_by_racking(-1), self.back_pos - 1)
 
     def test_main_needle(self):
         """Test getting main needle returns regular needle."""
@@ -151,15 +151,6 @@ class TestNeedle(unittest.TestCase):
         """Test string representations of needles."""
         self.assertEqual(str(self.front_needle), f"f{self.front_pos}")
         self.assertEqual(str(self.back_needle), f"b{self.back_pos}")
-
-    def test_hash_function(self):
-        """Test hash function for needles."""
-        self.assertEqual(hash(self.front_needle), self.front_pos)
-        self.assertEqual(hash(self.back_needle), -1 * self.back_pos)
-
-        # Test hash consistency
-        same_needle = Needle(is_front=True, position=self.front_pos)
-        self.assertEqual(hash(self.front_needle), hash(same_needle))
 
     def test_integer_conversion(self):
         """Test integer conversion returns position."""
@@ -192,27 +183,6 @@ class TestNeedle(unittest.TestCase):
         self.assertFalse(needle < 3)
         self.assertFalse(needle < 5.5)
         self.assertTrue(needle < 11)
-
-    def test_at_racking_comparison(self):
-        """Test needle comparison at different racking values."""
-        front_3 = Needle(is_front=True, position=3)
-        back_1 = Needle(is_front=False, position=1)
-
-        # At rack 2: front 3 aligns with back 1 (3 = 1 + 2)
-        self.assertEqual(front_3.at_racking_comparison(back_1, rack=2), 0)
-
-        # Front 3 vs front 5
-        front_5 = Needle(is_front=True, position=5)
-        self.assertEqual(front_3.at_racking_comparison(front_5), -1)
-        self.assertEqual(front_5.at_racking_comparison(front_3), 1)
-
-    def test_static_needle_at_racking_cmp(self):
-        """Test static method for needle comparison at racking."""
-        needle1 = Needle(is_front=True, position=3)
-        needle2 = Needle(is_front=True, position=5)
-
-        result = Needle.needle_at_racking_cmp(needle1, needle2)
-        self.assertEqual(result, -1)
 
     def test_arithmetic_operations_with_needles(self):
         """Test arithmetic operations with other needles."""

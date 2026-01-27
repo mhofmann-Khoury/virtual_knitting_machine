@@ -73,14 +73,12 @@ class Float_Path(Path_Element):
         self,
         loop_1: Loop_Circle,
         loop_2: Loop_Circle,
-        rack: int,
         diagram_settings: Diagram_Settings,
         same_bed_orientation: Float_Orientation_To_Neighbors = Float_Orientation_To_Neighbors.Curve_Away_From_Bed,
         **path_kwargs: Any,
     ) -> None:
         self.loop_circle_1: Loop_Circle = loop_1
         self.loop_circle_2: Loop_Circle = loop_2
-        self.rack = rack
         self.settings: Diagram_Settings = diagram_settings
         self.same_bed_orientation: Float_Orientation_To_Neighbors = same_bed_orientation
         super().__init__(
@@ -110,7 +108,7 @@ class Float_Path(Path_Element):
         Returns:
             bool: True if both loops are on a needle on the same slot. Otherwise, False.
         """
-        return self.needle_1.slot_number(self.rack) == self.needle_2.slot_number(self.rack)
+        return self.needle_1.slot_number == self.needle_2.slot_number
 
     @property
     def float_type(self) -> Float_Type:

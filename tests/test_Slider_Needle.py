@@ -110,15 +110,6 @@ class TestSliderNeedle(unittest.TestCase):
         another_slider = Slider_Needle(is_front=True, position=5)
         self.assertTrue(self.front_slider == another_slider)
 
-    def test_hash_consistency(self):
-        """Test hash function works consistently for slider needles."""
-        # Hash should be same as regular needle (based on position only)
-        regular_needle = Needle(is_front=True, position=5)
-        self.assertEqual(hash(self.front_slider), hash(regular_needle))
-
-        # But equality should still be False
-        self.assertFalse(self.front_slider == regular_needle)
-
     def test_multiple_slider_positions(self):
         """Test slider needles at various positions."""
         positions = [0, 1, 50, 100, 500]

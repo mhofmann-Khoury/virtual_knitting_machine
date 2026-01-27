@@ -29,7 +29,9 @@ class Yarn_Insertion_System_Snapshot(Yarn_Insertion_System_State[Yarn_Carrier_Sn
     def __init__(self, yarn_insertion_system: Yarn_Insertion_System, machine_snapshot: Knitting_Machine_Snapshot):
         self._machine_snapshot: Knitting_Machine_Snapshot = machine_snapshot
         self._yarn_insertion_system: Yarn_Insertion_System = yarn_insertion_system
-        self._carriers: list[Yarn_Carrier_Snapshot] = [Yarn_Carrier_Snapshot(c) for c in yarn_insertion_system.carriers]
+        self._carriers: list[Yarn_Carrier_Snapshot] = [
+            Yarn_Carrier_Snapshot(c, self.knitting_machine) for c in yarn_insertion_system.carriers
+        ]
         self._hook_position: int | None = self.yarn_insertion_system.hook_position
         self._hook_input_direction: Carriage_Pass_Direction | None = self.yarn_insertion_system.hook_input_direction
         self._searching_for_position: bool = self.yarn_insertion_system.searching_for_position

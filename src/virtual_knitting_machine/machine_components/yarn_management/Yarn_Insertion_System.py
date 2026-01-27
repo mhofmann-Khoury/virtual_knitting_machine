@@ -25,29 +25,22 @@ from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warn
     Out_Inactive_Carrier_Warning,
 )
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.machine_components.machine_component_protocol import Machine_Component
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier, Yarn_Carrier_State
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.Knitting_Machine import Knitting_Machine, Knitting_Machine_State
+    from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 
 Carrier_State_Type = TypeVar("Carrier_State_Type", bound="Yarn_Carrier_State")
 
 
-class Yarn_Insertion_System_State(Protocol[Carrier_State_Type]):
+class Yarn_Insertion_System_State(Machine_Component, Protocol[Carrier_State_Type]):
     """
     A protocol for the readable elements of a yarn-insertion system.
     """
-
-    @property
-    def knitting_machine(self) -> Knitting_Machine_State:
-        """
-        Returns:
-            Knitting_Machine_State: The knitting machine that this system belongs to.
-        """
-        ...
 
     @property
     def carriers(self) -> list[Carrier_State_Type]:
@@ -143,7 +136,7 @@ class Yarn_Insertion_System_State(Protocol[Carrier_State_Type]):
         """
         if self.hook_position is None:
             return False
-        return self.hook_position <= needle.slot_number(self.knitting_machine.rack)
+        return self.hook_position <= needle.slot_number
 
     def missing_carriers(
         self, carrier_ids: Sequence[int | Yarn_Carrier_State] | Sequence[int] | Sequence[Yarn_Carrier_State]
@@ -472,7 +465,7 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Yarn_Carrier]):
         needle = self.knitting_machine[needle]
         if self.searching_for_position:  # mark inserting hook position
             # Position yarn inserting hook at the needle slot to the right of the needle.
-            self._hook_position = needle.slot_number(rack) + 1
+            self._hook_position = needle.slot_number + 1
             self.hook_input_direction = direction
             self._searching_for_position = False
         loops: list[Machine_Knit_Loop] = []

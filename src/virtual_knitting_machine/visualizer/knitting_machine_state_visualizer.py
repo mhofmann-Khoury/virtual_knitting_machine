@@ -115,18 +115,14 @@ class Knitting_Machine_State_Visualizer:
                 self.needle_count,
                 self.settings,
             )
-        carriage_on_diagram = (
-            self.leftmost_slot <= self.machine_state.carriage.current_needle_slot < self.rightmost_slot
-        )
         self.carriage_block: Carriage_Element | None = (
             Carriage_Element(
                 self.machine_state.carriage.last_direction,
-                self.machine_state.carriage.transferring,
-                self.machine_state.carriage.current_needle_slot - self.leftmost_slot,
+                self.machine_state.carriage.position_on_bed.slot_number - self.leftmost_slot,
                 self.shows_sliders,
                 self.settings,
             )
-            if self.settings.render_carriage and carriage_on_diagram
+            if self.settings.render_carriage and self.machine_state.carriage.position_on_bed.on_bed
             else None
         )
 
@@ -190,11 +186,7 @@ class Knitting_Machine_State_Visualizer:
                     orientation = Float_Orientation_To_Neighbors.Curve_Into_Bed
                 elif not any(l < loop1 or l < loop2 for l in loops_crossed):  # All loops are younger than the float.
                     orientation = Float_Orientation_To_Neighbors.Curve_Away_From_Bed
-            self.floats.add(
-                Float_Path(
-                    loop_circle1, loop_circle2, self.machine_state.rack, self.settings, same_bed_orientation=orientation
-                )
-            )
+            self.floats.add(Float_Path(loop_circle1, loop_circle2, self.settings, same_bed_orientation=orientation))
 
     def _add_active_loops(self) -> None:
         """
@@ -213,7 +205,7 @@ class Knitting_Machine_State_Visualizer:
         Renders the carrier triangles for active carriers on the diagram.
         """
         for carrier in self.machine_state.carrier_system.active_carriers:
-            between_needles = carrier.between_needles
+            between_needles = carrier.position_on_bed.between_needles
             assert between_needles is not None
             left_needle, right_needle = between_needles[0], between_needles[1]
             if right_needle not in self.needle_bed_group:

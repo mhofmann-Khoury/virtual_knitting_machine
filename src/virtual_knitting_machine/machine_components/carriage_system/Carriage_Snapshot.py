@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 
 from virtual_knitting_machine.machine_components.carriage_system.Carriage import Carriage, Carriage_State
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.machine_components.needle_bed_position import Needle_Bed_Position
+from virtual_knitting_machine.machine_components.Side_of_Needle_Bed import Side_of_Needle_Bed
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine_Snapshot import Knitting_Machine_Snapshot
@@ -18,56 +20,26 @@ class Carriage_Snapshot(Carriage_State):
 
     def __init__(self, carriage: Carriage, machine_snapshot: Knitting_Machine_Snapshot):
         self._machine_snapshot: Knitting_Machine_Snapshot = machine_snapshot
-        self._transferring: bool = carriage.transferring
-        self._last_direction: Carriage_Pass_Direction = carriage.last_direction
-        self._current_needle_position: int = carriage.current_needle_slot
-        self._position_prior_to_transfers: int = carriage.slot_prior_to_transfers
-        self._direction_prior_to_transfers: Carriage_Pass_Direction = carriage.direction_prior_to_transfers
+        self._position: Needle_Bed_Position = Needle_Bed_Position(
+            parking_position=Side_of_Needle_Bed.Left_Side,
+            rightmost_slot=self.needle_count_of_machine,
+            stopping_distance=0,
+        )
+        self._position.update_from_position(carriage.position_on_bed)
+        self._last_set_direction: Carriage_Pass_Direction = carriage.last_set_direction
 
     @property
     def knitting_machine(self) -> Knitting_Machine_Snapshot:
         """
         Returns:
-            Knitting_Machine_Snapshot: The knitting machine snapshot that owns this carriage.
+            Knitting_Machine_Snapshot: The knitting machine that owns this carriage.
         """
         return self._machine_snapshot
 
     @property
-    def transferring(self) -> bool:
-        """
-        Returns:
-            bool: True if the carriage was currently running transfers, False otherwise.
-        """
-        return self._transferring
+    def position_on_bed(self) -> Needle_Bed_Position:
+        return self._position
 
     @property
-    def current_needle_slot(self) -> int:
-        """
-        Returns:
-            int: The needle position of the carriage at the time of the snapshot.
-        """
-        return self._current_needle_position
-
-    @property
-    def slot_prior_to_transfers(self) -> int:
-        """
-        Returns:
-            int: The position of the carriage prior to its last transfer pass.
-        """
-        return self._position_prior_to_transfers
-
-    @property
-    def last_direction(self) -> Carriage_Pass_Direction:
-        """
-        Returns:
-            Carriage_Pass_Direction: The last direction the carriage moved in prior to this snapshot.
-        """
-        return self._last_direction
-
-    @property
-    def direction_prior_to_transfers(self) -> Carriage_Pass_Direction:
-        """
-        Returns:
-            Carriage_Pass_Direction: The direction the carriage was moving prior to the latest transfer pass.
-        """
-        return self._direction_prior_to_transfers
+    def last_set_direction(self) -> Carriage_Pass_Direction:
+        return self._last_set_direction

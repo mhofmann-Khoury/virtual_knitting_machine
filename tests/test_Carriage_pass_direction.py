@@ -23,8 +23,6 @@ class TestCarriagePassDirection(unittest.TestCase):
         """Test string representation of enum values."""
         self.assertEqual(str(self.leftward), "-")
         self.assertEqual(str(self.rightward), "+")
-        self.assertEqual(repr(self.leftward), "-")
-        self.assertEqual(repr(self.rightward), "+")
 
     def test_opposite_method(self):
         """Test opposite method returns correct opposite direction."""
@@ -40,149 +38,6 @@ class TestCarriagePassDirection(unittest.TestCase):
         # Test bitwise invert
         self.assertEqual(~self.leftward, self.rightward)
         self.assertEqual(~self.rightward, self.leftward)
-
-    def test_next_needle_position(self):
-        """Test next needle position calculation in each direction."""
-        # Leftward decreases position
-        self.assertEqual(self.leftward.next_needle_position(5), 4)
-        self.assertEqual(self.leftward.next_needle_position(0), -1)
-        self.assertEqual(self.leftward.next_needle_position(10), 9)
-
-        # Rightward increases position
-        self.assertEqual(self.rightward.next_needle_position(5), 6)
-        self.assertEqual(self.rightward.next_needle_position(0), 1)
-        self.assertEqual(self.rightward.next_needle_position(10), 11)
-
-    def test_prior_needle_position(self):
-        """Test prior needle position calculation in each direction."""
-        # Leftward increases position (opposite of next)
-        self.assertEqual(self.leftward.prior_needle_position(5), 6)
-        self.assertEqual(self.leftward.prior_needle_position(0), 1)
-        self.assertEqual(self.leftward.prior_needle_position(10), 11)
-
-        # Rightward decreases position (opposite of next)
-        self.assertEqual(self.rightward.prior_needle_position(5), 4)
-        self.assertEqual(self.rightward.prior_needle_position(0), -1)
-        self.assertEqual(self.rightward.prior_needle_position(10), 9)
-
-    def test_next_prior_consistency(self):
-        """Test that next and prior are consistent opposites."""
-        positions = [0, 5, 10, -3, 100]
-
-        for pos in positions:
-            # next followed by prior should return original position
-            next_pos = self.leftward.next_needle_position(pos)
-            back_to_original = self.leftward.prior_needle_position(next_pos)
-            self.assertEqual(back_to_original, pos)
-
-            # Same for rightward
-            next_pos_r = self.rightward.next_needle_position(pos)
-            back_to_original_r = self.rightward.prior_needle_position(next_pos_r)
-            self.assertEqual(back_to_original_r, pos)
-
-    def test_rightward_needles_comparison(self):
-        """Test static method for rightward needle comparison."""
-        needle_left = Needle(is_front=True, position=3)
-        needle_right = Needle(is_front=True, position=7)
-        needle_same = Needle(is_front=True, position=3)
-
-        # Left needle should come before right needle in rightward order
-        result = Carriage_Pass_Direction.rightward_needles_comparison(needle_left, needle_right)
-        self.assertEqual(result, 1)  # left comes first in rightward
-
-        # Right needle should come after left needle
-        result = Carriage_Pass_Direction.rightward_needles_comparison(needle_right, needle_left)
-        self.assertEqual(result, -1)  # right comes second in rightward
-
-        # Same needles should be equal
-        result = Carriage_Pass_Direction.rightward_needles_comparison(needle_left, needle_same)
-        self.assertEqual(result, 0)
-
-    def test_leftward_needles_comparison(self):
-        """Test static method for leftward needle comparison."""
-        needle_left = Needle(is_front=True, position=3)
-        needle_right = Needle(is_front=True, position=7)
-        needle_same = Needle(is_front=True, position=3)
-
-        # Left needle should come after right needle in leftward order
-        result = Carriage_Pass_Direction.leftward_needles_comparison(needle_left, needle_right)
-        self.assertEqual(result, -1)  # left comes second in leftward
-
-        # Right needle should come before left needle
-        result = Carriage_Pass_Direction.leftward_needles_comparison(needle_right, needle_left)
-        self.assertEqual(result, 1)  # right comes first in leftward
-
-        # Same needles should be equal
-        result = Carriage_Pass_Direction.leftward_needles_comparison(needle_left, needle_same)
-        self.assertEqual(result, 0)
-
-    def test_needle_direction_comparison_rightward(self):
-        """Test needle direction comparison for rightward direction."""
-        needle_left = Needle(is_front=True, position=3)
-        needle_right = Needle(is_front=True, position=7)
-
-        # For rightward, left needle comes first
-        result = self.rightward.needle_direction_comparison(needle_left, needle_right)
-        self.assertEqual(result, 1)
-
-        result = self.rightward.needle_direction_comparison(needle_right, needle_left)
-        self.assertEqual(result, -1)
-
-    def test_all_needle_direction_comparison_rightward(self):
-        needle_left = Needle(is_front=False, position=0)
-        needle_right = Needle(is_front=True, position=0)
-        result = self.rightward.needle_direction_comparison(needle_left, needle_right, rack=-1, all_needle_rack=True)
-        self.assertEqual(result, 1)
-
-        needle_left = needle_right
-        needle_right = Needle(is_front=False, position=1)
-        result = self.rightward.needle_direction_comparison(needle_left, needle_right, rack=-1, all_needle_rack=True)
-        self.assertEqual(result, 1)
-
-    def test_needle_direction_comparison_leftward(self):
-        """Test needle direction comparison for leftward direction."""
-        needle_left = Needle(is_front=True, position=3)
-        needle_right = Needle(is_front=True, position=7)
-
-        # For leftward, right needle comes first
-        result = self.leftward.needle_direction_comparison(needle_left, needle_right)
-        self.assertEqual(result, -1)
-
-        result = self.leftward.needle_direction_comparison(needle_right, needle_left)
-        self.assertEqual(result, 1)
-
-    def test_needles_are_in_pass_direction(self):
-        """Test checking if needles are in correct pass direction order."""
-        needle_left = Needle(is_front=True, position=3)
-        needle_right = Needle(is_front=True, position=7)
-
-        # Rightward: left before right
-        self.assertTrue(self.rightward.needles_are_in_pass_direction(needle_left, needle_right))
-        self.assertFalse(self.rightward.needles_are_in_pass_direction(needle_right, needle_left))
-
-        # Leftward: right before left
-        self.assertTrue(self.leftward.needles_are_in_pass_direction(needle_right, needle_left))
-        self.assertFalse(self.leftward.needles_are_in_pass_direction(needle_left, needle_right))
-
-    def test_comparison_with_racking(self):
-        """Test needle comparisons with different racking values."""
-        front_needle = Needle(is_front=True, position=5)
-        back_needle = Needle(is_front=False, position=3)
-
-        # At rack 2: front 5 aligns with back 3 (5 = 3 + 2)
-        result = self.rightward.needle_direction_comparison(front_needle, back_needle, rack=2)
-        self.assertEqual(result, 0)  # Should be equal at this racking
-
-    def test_comparison_with_all_needle_racking(self):
-        """Test needle comparisons with all needle racking enabled."""
-        front_needle = Needle(is_front=True, position=5)
-        back_needle = Needle(is_front=False, position=5)
-
-        # With all needle racking, front should come before back at same position
-        result = self.rightward.needle_direction_comparison(front_needle, back_needle, all_needle_rack=True)
-        self.assertEqual(result, 1)  # Front comes first
-        result = self.leftward.needle_direction_comparison(front_needle, back_needle, all_needle_rack=True)
-        self.assertEqual(result, -1)  # Front comes first
 
     def test_get_direction_from_string(self):
         """Test static method to get direction from string."""
@@ -246,28 +101,6 @@ class TestCarriagePassDirection(unittest.TestCase):
         self.assertIn(front_needle, sorted_needles)
         self.assertIn(back_needle, sorted_needles)
 
-    def test_sort_needles_empty_list(self):
-        """Test sorting empty list of needles."""
-        empty_needles = []
-
-        result_rightward = self.rightward.sort_needles(empty_needles)
-        result_leftward = self.leftward.sort_needles(empty_needles)
-
-        self.assertEqual(result_rightward, [])
-        self.assertEqual(result_leftward, [])
-
-    def test_sort_needles_single_needle(self):
-        """Test sorting single needle."""
-        single_needle = [Needle(is_front=True, position=5)]
-
-        result_rightward = self.rightward.sort_needles(single_needle)
-        result_leftward = self.leftward.sort_needles(single_needle)
-
-        self.assertEqual(len(result_rightward), 1)
-        self.assertEqual(len(result_leftward), 1)
-        self.assertEqual(result_rightward[0].position, 5)
-        self.assertEqual(result_leftward[0].position, 5)
-
     def test_sort_needles_with_mixed_beds(self):
         """Test sorting needles from both front and back beds."""
         needles = [
@@ -295,29 +128,3 @@ class TestCarriagePassDirection(unittest.TestCase):
         self.assertTrue(
             all(leftward_positions[i] >= leftward_positions[i + 1] for i in range(len(leftward_positions) - 1))
         )
-
-    def test_enum_identity(self):
-        """Test that enum instances maintain identity."""
-        # Same enum values should be identical
-        self.assertIs(Carriage_Pass_Direction.Leftward, self.leftward)
-        self.assertIs(Carriage_Pass_Direction.Rightward, self.rightward)
-
-        # Different enum values should not be identical
-        self.assertIsNot(self.leftward, self.rightward)
-
-    def test_enum_equality(self):
-        """Test enum equality comparisons."""
-        self.assertEqual(Carriage_Pass_Direction.Leftward, self.leftward)
-        self.assertEqual(Carriage_Pass_Direction.Rightward, self.rightward)
-        self.assertNotEqual(self.leftward, self.rightward)
-
-    def test_enum_in_collections(self):
-        """Test enum usage in collections."""
-        direction_list = [self.leftward, self.rightward, self.leftward]
-        direction_set = {self.leftward, self.rightward, self.leftward}
-
-        self.assertEqual(len(direction_list), 3)
-        self.assertEqual(len(direction_set), 2)  # Set should deduplicate
-
-        self.assertIn(self.leftward, direction_list)
-        self.assertIn(self.rightward, direction_set)

@@ -294,8 +294,13 @@ class Needle_Bed(Needle_Bed_State):
         """
         self._knitting_machine: Knitting_Machine = knitting_machine
         self._is_front: bool = is_front
-        self._needles: list[Needle] = [Needle(self._is_front, i) for i in range(0, self.needle_count)]
-        self._sliders: list[Slider_Needle] = [Slider_Needle(self._is_front, i) for i in range(0, self.needle_count)]
+        self._needles: list[Needle] = [
+            Needle(self._is_front, i, knitting_machine=self.knitting_machine) for i in range(0, self.needle_count)
+        ]
+        self._sliders: list[Slider_Needle] = [
+            Slider_Needle(self._is_front, i, knitting_machine=self.knitting_machine)
+            for i in range(0, self.needle_count)
+        ]
         self._active_sliders: set[Slider_Needle] = set()
 
     @property

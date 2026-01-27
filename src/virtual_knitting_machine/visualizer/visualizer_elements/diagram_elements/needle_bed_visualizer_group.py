@@ -195,7 +195,7 @@ class Needle_Bed_Group(Visualizer_Group):
         Returns:
             bool: True if the needle is rendered. False, otherwise.
         """
-        if not self.has_slot(needle.slot_number(self.rack)):
+        if not self.has_slot(needle.slot_number):
             return False
         if needle.is_slider:
             return self.render_sliders
