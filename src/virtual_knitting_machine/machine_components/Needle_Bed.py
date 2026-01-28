@@ -217,7 +217,7 @@ class Needle_Bed_State(Protocol):
         """
         return iter(self.needles)
 
-    def __contains__(self, item: Machine_Knit_Loop | Needle | int) -> bool:
+    def __contains__(self, item: object) -> bool:
         """
         Args:
             item (Machine_Knit_Loop | Needle | int): The value to find in the needle bed.
@@ -236,12 +236,14 @@ class Needle_Bed_State(Protocol):
                 return abs(item) <= self.needle_count
             else:
                 return 0 <= item < self.needle_count
-        else:  # Machine Knit Loop
+        elif isinstance(item, Machine_Knit_Loop):
             holding_needle = item.holding_needle
             if holding_needle is None:
                 return False
             else:
                 return holding_needle in self
+        else:
+            return False
 
     @overload
     def __getitem__(self, item: Machine_Knit_Loop) -> Needle | None: ...

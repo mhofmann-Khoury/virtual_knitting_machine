@@ -119,7 +119,7 @@ class Needle_Bed_Snapshot(Needle_Bed_State):
         else:
             return int(needle) in self._active_needles_by_position
 
-    def __contains__(self, item: Machine_Knit_Loop | Needle | int) -> bool:
+    def __contains__(self, item: object) -> bool:
         """
         Args:
             item (Machine_Knit_Loop | Needle | int):
@@ -134,8 +134,10 @@ class Needle_Bed_Snapshot(Needle_Bed_State):
             return False
         elif isinstance(item, Slider_Needle):
             return self.slider_is_active(item)
-        else:
+        elif isinstance(item, (int, Needle)):
             return self.needle_is_active(item)
+        else:
+            return False
 
     @overload
     def __getitem__(self, item: Machine_Knit_Loop) -> Needle | None: ...

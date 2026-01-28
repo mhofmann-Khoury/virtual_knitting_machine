@@ -7,7 +7,7 @@ knitting operations, managing needle beds, carriage movement, yarn carriers, and
 from __future__ import annotations
 
 import warnings
-from collections.abc import Sequence
+from collections.abc import Container, Sequence
 from typing import Protocol, overload
 
 from knit_graphs.artin_wale_braids.Crossing_Direction import Crossing_Direction
@@ -34,7 +34,7 @@ from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 
-class Knitting_Machine_State(Protocol[Carrier_State_Type]):
+class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
     """
     Protocol defines all the readable attributes and properties of a knitting machine used to determine its current state.
     """
@@ -396,30 +396,24 @@ class Knitting_Machine_State(Protocol[Carrier_State_Type]):
         needed_rack = Knitting_Machine.get_rack(front_pos, back_pos)
         return self.rack == needed_rack
 
-    def __contains__(
-        self,
-        item: (
-            Needle
-            | Machine_Knit_Loop
-            | Yarn_Carrier_State
-            | Sequence[int | Yarn_Carrier_State]
-            | Sequence[int]
-            | Sequence[Yarn_Carrier_State]
-        ),
-    ) -> bool:
+    def __contains__(self, item: object) -> bool:
         """
         Args:
             item (Needle | Machine_Knit_Loop | Yarn_Carrier_State | Sequence[int | Yarn_Carrier_State]): The item to search for.
 
         Returns:
-            bool: True if the given needle or loop are on one of the needle beds or if the given carriers are all in the carrier system.
+            bool: True if the given needle or loop are on one of the needle beds or if the given carriers are all in the carrier system. Other items will return False.
         """
         if isinstance(item, Needle):
             return self.has_needle(item)
         elif isinstance(item, Machine_Knit_Loop):
             return self.has_loop(item)
-        else:
+        elif isinstance(item, Sequence):
+            if not all(isinstance(i, (int, Yarn_Carrier_State)) for i in item):
+                return False
             return item in self.carrier_system
+        else:
+            return False
 
     @overload
     def __getitem__(self, item: Machine_Knit_Loop) -> Needle | None: ...
