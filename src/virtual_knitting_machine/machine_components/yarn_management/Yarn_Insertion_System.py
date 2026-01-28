@@ -175,6 +175,25 @@ class Yarn_Insertion_System_State(Machine_Component, Protocol[Carrier_State_Type
         """
         return self[carrier_id].yarn.last_needle() is None
 
+    def __contains__(
+        self,
+        item: (
+            int | Yarn_Carrier_State | Sequence[int | Yarn_Carrier_State] | Sequence[Yarn_Carrier_State] | Sequence[int]
+        ),
+    ) -> bool:
+        """
+
+        Args:
+            item (int | Yarn_Carrier_State | Sequence[int | Yarn_Carrier_State]): The carrier, carrier id, or sequence of carriers to search for in carriers in this yarn insertion system.
+
+        Returns:
+            bool: True if all the given carriers are in the yarn insertion system. False otherwise.
+        """
+        if isinstance(item, (int, Yarn_Carrier_State)):
+            return int(item) in self.carrier_ids
+        else:
+            return all(int(elem) in self.carrier_ids for elem in item)
+
     @overload
     def __getitem__(self, item: int | Yarn_Carrier_State) -> Carrier_State_Type: ...
 

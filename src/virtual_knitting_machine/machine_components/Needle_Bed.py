@@ -173,7 +173,7 @@ class Needle_Bed_State(Protocol):
         Returns:
             Needle | None: None if the bed does not hold the loop, otherwise the needle position that holds it.
         """
-        return loop.holding_needle if loop in self else None
+        return self[loop.holding_needle] if loop.holding_needle is not None and loop in self else None
 
     def slider_is_active(self, slider: int | Slider_Needle) -> bool:
         """

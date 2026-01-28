@@ -255,10 +255,38 @@ class Knitting_Machine_State(Protocol[Carrier_State_Type]):
         """
         if loop.holding_needle is None:
             return None
-        if loop.holding_needle.is_front:
+        elif loop.holding_needle.is_front:
             return self.front_bed.get_needle_of_loop(loop)
         else:
             return self.back_bed.get_needle_of_loop(loop)
+
+    def has_loop(self, loop: Machine_Knit_Loop) -> bool:
+        """
+        Args:
+            loop (Machine_Knit_Loop): The loop to search for.
+
+        Returns:
+            bool: True if the loop is held on a needle. False otherwise.
+        """
+        if loop.holding_needle is None:
+            return False
+        elif loop.holding_needle.is_front:
+            return loop in self.front_bed
+        else:
+            return loop in self.back_bed
+
+    def has_needle(self, needle: Needle) -> bool:
+        """
+        Args:
+            needle (Needle): The needle to search for.
+
+        Returns:
+            bool: True if the given needle is on a needle bed. False otherwise.
+        """
+        if needle.is_front:
+            return int(needle) in self.front_bed
+        else:
+            return int(needle) in self.back_bed
 
     def get_needle(self, needle: Needle) -> Needle:
         """Get the needle on this knitting machine at the given needle location.
@@ -368,6 +396,31 @@ class Knitting_Machine_State(Protocol[Carrier_State_Type]):
         needed_rack = Knitting_Machine.get_rack(front_pos, back_pos)
         return self.rack == needed_rack
 
+    def __contains__(
+        self,
+        item: (
+            Needle
+            | Machine_Knit_Loop
+            | Yarn_Carrier_State
+            | Sequence[int | Yarn_Carrier_State]
+            | Sequence[int]
+            | Sequence[Yarn_Carrier_State]
+        ),
+    ) -> bool:
+        """
+        Args:
+            item (Needle | Machine_Knit_Loop | Yarn_Carrier_State | Sequence[int | Yarn_Carrier_State]): The item to search for.
+
+        Returns:
+            bool: True if the given needle or loop are on one of the needle beds or if the given carriers are all in the carrier system.
+        """
+        if isinstance(item, Needle):
+            return self.has_needle(item)
+        elif isinstance(item, Machine_Knit_Loop):
+            return self.has_loop(item)
+        else:
+            return item in self.carrier_system
+
     @overload
     def __getitem__(self, item: Machine_Knit_Loop) -> Needle | None: ...
 
@@ -379,7 +432,7 @@ class Knitting_Machine_State(Protocol[Carrier_State_Type]):
 
     @overload
     def __getitem__(
-        self, item: Sequence[int | Yarn_Carrier_State] | Sequence[int] | Sequence[Yarn_Carrier_State]
+        self, item: Sequence[int | Yarn_Carrier_State] | Sequence[Yarn_Carrier_State] | Sequence[int]
     ) -> list[Carrier_State_Type]: ...
 
     def __getitem__(
