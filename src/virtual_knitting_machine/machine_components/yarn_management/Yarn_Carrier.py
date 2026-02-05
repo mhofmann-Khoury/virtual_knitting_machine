@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, TypeVar, runtime_checkable
 
 from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn_Properties
@@ -24,6 +24,7 @@ from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warn
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needle_bed_position import Needle_Bed_Position, Relative_to_Needle_Bed
 from virtual_knitting_machine.machine_components.Side_of_Needle_Bed import Side_of_Needle_Bed
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import Machine_Knit_Yarn
 
 if TYPE_CHECKING:
@@ -31,15 +32,17 @@ if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.needles.Needle import Needle
     from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
+
 
 @runtime_checkable
-class Yarn_Carrier_State(Relative_to_Needle_Bed, Protocol):
+class Yarn_Carrier_State(Relative_to_Needle_Bed, Protocol[Machine_LoopT]):
     """A class from which all read-only attributes and properties of a yarn-carrier can be accessed.
     This class defines common properties between yarn-carriers and yarn-carrier-snapshots.
     """
 
     @property
-    def yarn(self) -> Machine_Knit_Yarn:
+    def yarn(self) -> Machine_Knit_Yarn[Machine_LoopT]:
         """
         Returns:
             Machine_Knit_Yarn: The yarn held on this carrier.
@@ -156,7 +159,7 @@ class Yarn_Carrier_State(Relative_to_Needle_Bed, Protocol):
         return self.carrier_id
 
 
-class Yarn_Carrier(Yarn_Carrier_State):
+class Yarn_Carrier(Yarn_Carrier_State[Machine_LoopT]):
     """A class representing an individual yarn carrier on a knitting machine.
     Yarn carriers hold yarn and can be moved to different positions on the machine, activated for knitting operations, and connected to insertion hooks for yarn manipulation.
     Each carrier tracks its state including position, active status, and hook connection.
@@ -165,7 +168,7 @@ class Yarn_Carrier(Yarn_Carrier_State):
     def __init__(
         self,
         carrier_id: int,
-        yarn: Machine_Knit_Yarn | None = None,
+        yarn: Machine_Knit_Yarn[Machine_LoopT] | None = None,
         yarn_properties: Yarn_Properties | None = None,
         knit_graph: Knit_Graph | None = None,
         machine_state: Knitting_Machine | None = None,
@@ -174,7 +177,7 @@ class Yarn_Carrier(Yarn_Carrier_State):
 
         Args:
             carrier_id (int): Unique identifier for this yarn carrier.
-            yarn (None | Machine_Knit_Yarn, optional): Existing machine knit yarn to assign to this carrier. Defaults to None.
+            yarn (Machine_Knit_Yarn, optional): Existing machine knit yarn to assign to this carrier. Defaults to None.
             yarn_properties (Yarn_Properties | None, optional): Properties for creating new yarn if yarn parameter is None. Defaults to None.
         """
         self._machine_state: Knitting_Machine | None = machine_state
@@ -183,7 +186,7 @@ class Yarn_Carrier(Yarn_Carrier_State):
         self._is_hooked: bool = False
         self._position: Needle_Bed_Position = self.starting_position(self._machine_state)
         if yarn is not None:
-            self._yarn: Machine_Knit_Yarn = yarn
+            self._yarn: Machine_Knit_Yarn[Machine_LoopT] = yarn
             if knit_graph is not None:
                 self._yarn.knit_graph = knit_graph
         else:
@@ -194,7 +197,7 @@ class Yarn_Carrier(Yarn_Carrier_State):
             self._yarn: Machine_Knit_Yarn = Machine_Knit_Yarn(self, yarn_properties, knit_graph=knit_graph)
 
     @property
-    def knitting_machine(self) -> Knitting_Machine | None:
+    def knitting_machine(self) -> Knitting_Machine[Machine_LoopT] | None:
         """
         Returns:
             Knitting_Machine_State | None: The machine state of the knitting machine that owns this component or None if the machine has not been specified.
@@ -211,7 +214,7 @@ class Yarn_Carrier(Yarn_Carrier_State):
         return self._carrier_id
 
     @property
-    def yarn(self) -> Machine_Knit_Yarn:
+    def yarn(self) -> Machine_Knit_Yarn[Machine_LoopT]:
         """Get the yarn held on this carrier.
 
         Returns:

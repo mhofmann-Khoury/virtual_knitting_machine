@@ -6,15 +6,18 @@ Slider needles are commonly used in knitting machines for loop manipulation oper
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
-class Slider_Needle(Needle):
+
+class Slider_Needle(Needle[Machine_LoopT]):
     """A specialized needle subclass for slider needles in knitting machines.
 
     Slider needles are needles that can hold and transfer loops but cannot be knit through.
@@ -23,7 +26,9 @@ class Slider_Needle(Needle):
     This class inherits all functionality from the base Needle class but overrides specific properties to indicate its slider nature.
     """
 
-    def __init__(self, is_front: bool, position: int, knitting_machine: Knitting_Machine_State | None = None) -> None:
+    def __init__(
+        self, is_front: bool, position: int, knitting_machine: Knitting_Machine_State[Machine_LoopT, Any] | None = None
+    ) -> None:
         super().__init__(is_front, position, knitting_machine)
 
     def __str__(self) -> str:
@@ -39,8 +44,7 @@ class Slider_Needle(Needle):
 
     @property
     def is_slider(self) -> bool:
-        """Check if the needle is a slider needle.
-
+        """
         Returns:
             bool: Always returns True for Slider_Needle instances.
         """

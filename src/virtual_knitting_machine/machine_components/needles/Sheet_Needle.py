@@ -6,12 +6,16 @@ It includes the Sheet_Needle class which extends the base Needle class to suppor
 
 from __future__ import annotations
 
+from typing import Self, TypeVar
+
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
-class Sheet_Needle(Needle):
+
+class Sheet_Needle(Needle[Machine_LoopT]):
     """A needle class for managing needles in a layered gauging schema.
 
     Sheet needles are used in multi-sheet knitting where multiple layers of knitting are created simultaneously.
@@ -34,7 +38,7 @@ class Sheet_Needle(Needle):
         self._sheet_pos: int = sheet_pos
         self._sheet: int = sheet
         super().__init__(is_front, Sheet_Needle.get_actual_pos(self.sheet_pos, self.sheet, self.gauge))
-        self.recorded_loops: list[Machine_Knit_Loop] = []
+        self.recorded_loops: list[Machine_LoopT] = []
 
     @property
     def gauge(self) -> int:
@@ -104,7 +108,7 @@ class Sheet_Needle(Needle):
         """
         return sheet + sheet_pos * gauge
 
-    def offset_in_sheet(self, offset: int) -> Sheet_Needle:
+    def offset_in_sheet(self, offset: int) -> Self:
         """Get a needle offset within the same sheet.
 
         Args:
@@ -115,7 +119,7 @@ class Sheet_Needle(Needle):
         """
         return self + offset
 
-    def main_needle(self) -> Sheet_Needle:
+    def main_needle(self) -> Sheet_Needle[Machine_LoopT]:
         """Get the non-slider needle at this needle position.
 
         Returns:
@@ -127,7 +131,7 @@ class Sheet_Needle(Needle):
         else:
             return Sheet_Needle(is_front=self.is_front, sheet_pos=self.sheet_pos, sheet=self.sheet, gauge=self.gauge)
 
-    def gauge_neighbors(self) -> list[Sheet_Needle]:
+    def gauge_neighbors(self) -> list[Self]:
         """Get list of needles that neighbor this needle in other sheets of the same gauge.
 
         Returns:
@@ -136,10 +140,10 @@ class Sheet_Needle(Needle):
         neighbors = []
         for i in range(0, self.gauge):
             if i != self.sheet:
-                neighbors.append(Sheet_Needle(self.is_front, self.sheet_pos, i, self.gauge))
+                neighbors.append(self.__class__(self.is_front, self.sheet_pos, i, self.gauge))
         return neighbors
 
-    def __add__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+    def __add__(self, other: Needle | int) -> Self:
         """Add to this sheet needle's position.
 
         Args:
@@ -156,24 +160,18 @@ class Sheet_Needle(Needle):
             position = int(other)
         return self.__class__(self.is_front, self.sheet_pos + position, self.sheet, self.gauge)
 
-    def __radd__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+    def __radd__(self, other: int) -> Self:
         """Right-hand add operation for sheet needle.
 
         Args:
-            other (Sheet_Needle | Needle | int): The needle or integer to add.
+            other (int): The needle or integer to add.
 
         Returns:
             Sheet_Needle: New sheet needle with the sum position.
         """
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        else:
-            position = int(other)
-        return self.__class__(self.is_front, position + self.sheet_pos, self.sheet, self.gauge)
+        return self.__class__(self.is_front, other + self.sheet_pos, self.sheet, self.gauge)
 
-    def __sub__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+    def __sub__(self, other: Needle | int) -> Self:
         """Subtract from this sheet needle's position.
 
         Args:
@@ -190,25 +188,19 @@ class Sheet_Needle(Needle):
             position = int(other)
         return self.__class__(self.is_front, self.sheet_pos - position, self.sheet, self.gauge)
 
-    def __rsub__(self, other: Sheet_Needle | Needle | int) -> Sheet_Needle:
+    def __rsub__(self, other: int) -> Self:
         """Right-hand subtract operation for sheet needle.
 
         Args:
-            other (Sheet_Needle | Needle | int): The needle or integer to subtract from.
+            other (int): The needle or integer to subtract from.
 
         Returns:
             Sheet_Needle: New sheet needle with the difference position.
         """
-        if isinstance(other, Sheet_Needle):
-            position = other.sheet_pos
-        elif isinstance(other, Needle):
-            position = other.position
-        else:
-            position = int(other)
-        return self.__class__(self.is_front, position - self.sheet_pos, self.sheet, self.gauge)
+        return self.__class__(self.is_front, other - self.sheet_pos, self.sheet, self.gauge)
 
 
-class Slider_Sheet_Needle(Sheet_Needle, Slider_Needle):
+class Slider_Sheet_Needle(Sheet_Needle[Machine_LoopT], Slider_Needle[Machine_LoopT]):
     """A slider needle class for use in gauging schema.
 
     This class combines the functionality of Sheet_Needle and Slider_Needle to provide
@@ -227,7 +219,7 @@ class Slider_Sheet_Needle(Sheet_Needle, Slider_Needle):
         super().__init__(is_front, sheet_pos, sheet, gauge)
 
 
-def get_sheet_needle(needle: Needle, gauge: int, slider: bool = False) -> Sheet_Needle:
+def get_sheet_needle(needle: Needle[Machine_LoopT], gauge: int, slider: bool = False) -> Sheet_Needle[Machine_LoopT]:
     """Convert a standard needle to a sheet needle with the given gauge.
 
     Args:
@@ -241,6 +233,6 @@ def get_sheet_needle(needle: Needle, gauge: int, slider: bool = False) -> Sheet_
     sheet_pos = Sheet_Needle.get_sheet_pos(needle.position, gauge)
     sheet = Sheet_Needle.get_sheet(needle.position, sheet_pos, gauge)
     if slider:
-        return Slider_Sheet_Needle(needle.is_front, sheet_pos, sheet, gauge)
+        return Slider_Sheet_Needle[Machine_LoopT](needle.is_front, sheet_pos, sheet, gauge)
     else:
-        return Sheet_Needle(needle.is_front, sheet_pos, sheet, gauge)
+        return Sheet_Needle[Machine_LoopT](needle.is_front, sheet_pos, sheet, gauge)

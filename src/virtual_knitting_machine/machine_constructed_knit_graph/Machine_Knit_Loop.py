@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from knit_graphs.Loop import Loop
+from knit_graphs.Pull_Direction import Pull_Direction
 
 from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import (
     Slider_Loop_Exception,
@@ -45,7 +46,7 @@ class Machine_Knit_Loop(Loop):
         Raises:
             Slider_Loop_Exception: If attempting to create a loop on a slider needle.
         """
-        super().__init__(loop_id, yarn)
+        super().__init__(loop_id, yarn, yarn.knit_graph)
         self._loop_count_on_machine: int = Machine_Knit_Loop._Machine_Loop_Count
         Machine_Knit_Loop._Machine_Loop_Count += 1  # next instance will be a later loop.
         self.yarn: Machine_Knit_Yarn = yarn  # redeclare yarn with correct typing.
@@ -109,6 +110,35 @@ class Machine_Knit_Loop(Loop):
         """
         return self.needle_history[0]
 
+    @property
+    def pull_direction(self) -> Pull_Direction:
+        """
+        Returns:
+            Pull_Direction: The direction that the loop was formed in based on its source needle.
+        """
+        return Pull_Direction.BtF if self.source_needle.is_front else Pull_Direction.FtB
+
+    @property
+    def returns_to_original_needle(self) -> bool:
+        """
+        Returns:
+            bool: True if this loop returns to its source needle. False otherwise.
+
+        Notes:
+            This does not imply that the loop never left the source needle.
+            The loop may still be held by a needle and moved (changing this property).
+            If the loop has been dropped, this property will be frozen in the state of the last needle that held this loop before the drop.
+        """
+        return self.source_needle == self.last_needle
+
+    @property
+    def left_original_needle(self) -> bool:
+        """
+        Returns:
+            bool: True if at any point this loop was held on a needle other than its source needle.
+        """
+        return len(self.needle_history) > 1 and any(self.source_needle != n for n in self.needle_history[1:])
+
     def transfer_loop(self, target_needle: Needle) -> None:
         """Add target needle to the end of needle history for loop transfer operation.
 
@@ -136,6 +166,21 @@ class Machine_Knit_Loop(Loop):
             int: A hash value of the tuple of the loop id, the yarn, and the source needle.
         """
         return hash((self.loop_id, self.yarn, self.source_needle))
+
+    def __eq__(self, other: object) -> bool:
+        """
+        Args:
+            other (Machine_Knit_Loop): The machine knit loop to compare to.
+
+        Returns:
+            bool: True if these loops have the same id and source carrier needle, False otherwise.
+        """
+        if isinstance(other, Loop) and not super().__eq__(other):
+            return False
+        elif isinstance(other, Machine_Knit_Loop):
+            return self.yarn.carrier.carrier_id == other.yarn.carrier.carrier_id
+        else:
+            return False
 
     def __lt__(self, other: Loop | int) -> bool:
         """Compare loop_id with another loop or integer for ordering.

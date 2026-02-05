@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Container, Sequence
-from typing import Protocol, overload
+from typing import Protocol, TypeVar, overload
 
 from knit_graphs.artin_wale_braids.Crossing_Direction import Crossing_Direction
 from knit_graphs.Knit_Graph import Knit_Graph
@@ -33,8 +33,10 @@ from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_
 )
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
-class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
+
+class Knitting_Machine_State(Container, Protocol[Machine_LoopT, Carrier_State_Type]):
     """
     Protocol defines all the readable attributes and properties of a knitting machine used to determine its current state.
     """
@@ -48,7 +50,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         ...
 
     @property
-    def knit_graph(self) -> Knit_Graph:
+    def knit_graph(self) -> Knit_Graph[Machine_LoopT]:
         """
         Returns:
             Knit_Graph: The knit graph formed on this machine.
@@ -56,7 +58,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         ...
 
     @property
-    def carrier_system(self) -> Yarn_Insertion_System_State[Carrier_State_Type]:
+    def carrier_system(self) -> Yarn_Insertion_System_State[Machine_LoopT, Carrier_State_Type]:
         """
         Returns:
             Yarn_Insertion_System_State[Carrier_State_Type]: The carrier system used by the knitting machine.
@@ -72,7 +74,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         ...
 
     @property
-    def front_bed(self) -> Needle_Bed_State:
+    def front_bed(self) -> Needle_Bed_State[Machine_LoopT]:
         """
         Returns:
             Needle_Bed_State: The front bed of needles and slider needles in this machine.
@@ -80,7 +82,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         ...
 
     @property
-    def back_bed(self) -> Needle_Bed_State:
+    def back_bed(self) -> Needle_Bed_State[Machine_LoopT]:
         """
         Returns:
             Needle_Bed_State: The back bed of needles and slider needles in this machine.
@@ -148,7 +150,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         slots.extend(n.slot_number for n in self.all_slider_loops())
         return min(slots), max(slots)
 
-    def front_needles(self) -> list[Needle]:
+    def front_needles(self) -> list[Needle[Machine_LoopT]]:
         """Get list of all front bed needles.
 
         Returns:
@@ -156,7 +158,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return self.front_bed.needles
 
-    def front_sliders(self) -> list[Slider_Needle]:
+    def front_sliders(self) -> list[Slider_Needle[Machine_LoopT]]:
         """Get list of all front bed slider needles.
 
         Returns:
@@ -164,7 +166,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return self.front_bed.sliders
 
-    def back_needles(self) -> list[Needle]:
+    def back_needles(self) -> list[Needle[Machine_LoopT]]:
         """Get list of all back bed needles.
 
         Returns:
@@ -172,7 +174,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return self.back_bed.needles
 
-    def back_sliders(self) -> list[Slider_Needle]:
+    def back_sliders(self) -> list[Slider_Needle[Machine_LoopT]]:
         """Get list of all back bed slider needles.
 
         Returns:
@@ -180,7 +182,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return self.back_bed.sliders
 
-    def front_loops(self) -> list[Needle]:
+    def front_loops(self) -> list[Needle[Machine_LoopT]]:
         """Get list of front bed needles that currently hold loops.
 
         Returns:
@@ -188,7 +190,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return self.front_bed.loop_holding_needles
 
-    def front_slider_loops(self) -> list[Slider_Needle]:
+    def front_slider_loops(self) -> list[Slider_Needle[Machine_LoopT]]:
         """Get list of front slider needles that currently hold loops.
 
         Returns:
@@ -196,7 +198,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return self.front_bed.loop_holding_sliders
 
-    def back_loops(self) -> list[Needle]:
+    def back_loops(self) -> list[Needle[Machine_LoopT]]:
         """Get list of back bed needles that currently hold loops.
 
         Returns:
@@ -204,7 +206,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return self.back_bed.loop_holding_needles
 
-    def back_slider_loops(self) -> list[Slider_Needle]:
+    def back_slider_loops(self) -> list[Slider_Needle[Machine_LoopT]]:
         """Get list of back slider needles that currently hold loops.
 
         Returns:
@@ -212,7 +214,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return self.back_bed.loop_holding_sliders
 
-    def all_needles(self) -> list[Needle]:
+    def all_needles(self) -> list[Needle[Machine_LoopT]]:
         """Get list of all needles with front bed needles given first.
 
         Returns:
@@ -220,7 +222,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return [*self.front_needles(), *self.back_needles()]
 
-    def all_sliders(self) -> list[Slider_Needle]:
+    def all_sliders(self) -> list[Slider_Needle[Machine_LoopT]]:
         """Get list of all slider needles with front bed sliders given first.
 
         Returns:
@@ -228,7 +230,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return [*self.front_sliders(), *self.back_sliders()]
 
-    def all_loops(self) -> list[Needle]:
+    def all_loops(self) -> list[Needle[Machine_LoopT]]:
         """Get list of all needles holding loops with front bed needles given first.
 
         Returns:
@@ -236,7 +238,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return [*self.front_loops(), *self.back_loops()]
 
-    def all_slider_loops(self) -> list[Slider_Needle]:
+    def all_slider_loops(self) -> list[Slider_Needle[Machine_LoopT]]:
         """Get list of all slider needles holding loops with front bed sliders given first.
 
         Returns:
@@ -245,7 +247,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return [*self.front_slider_loops(), *self.back_slider_loops()]
 
-    def get_needle_of_loop(self, loop: Machine_Knit_Loop) -> Needle | None:
+    def get_needle_of_loop(self, loop: Machine_Knit_Loop) -> Needle[Machine_LoopT] | None:
         """
         Args:
             loop (Machine_Knit_Loop): The loop to search for.
@@ -288,7 +290,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         else:
             return int(needle) in self.back_bed
 
-    def get_needle(self, needle: Needle) -> Needle:
+    def get_needle(self, needle: Needle) -> Needle[Machine_LoopT]:
         """Get the needle on this knitting machine at the given needle location.
 
         Args:
@@ -303,7 +305,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
             return self.back_bed[needle]
 
     @property
-    def active_loops(self) -> set[Machine_Knit_Loop]:
+    def active_loops(self) -> set[Machine_LoopT]:
         """
         Returns:
             set[Machine_Knit_Loop]: The set of loops currently held on a needle.
@@ -315,7 +317,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         loops.update(self.back_bed.active_slider_loops)
         return loops
 
-    def active_floats(self) -> list[tuple[Machine_Knit_Loop, Machine_Knit_Loop]]:
+    def active_floats(self) -> list[tuple[Machine_LoopT, Machine_LoopT]]:
         """
         Returns:
             list[tuple[Machine_Knit_Loop, Machine_Knit_Loop]]: List of all active floats between two active loops currently held on the needle beds.
@@ -323,7 +325,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         floats = [(l, l.next_loop_on_yarn()) for l in self.active_loops]
         return [(l, nl) for l, nl in floats if isinstance(nl, Machine_Knit_Loop) and nl in self.active_loops]
 
-    def loops_crossed_by_float(self, loop1: Machine_Knit_Loop, loop2: Machine_Knit_Loop) -> set[Machine_Knit_Loop]:
+    def loops_crossed_by_float(self, loop1: Machine_Knit_Loop, loop2: Machine_Knit_Loop) -> set[Machine_LoopT]:
         """
         Args:
             loop1 (Machine_Knit_Loop): First loop in the float.
@@ -362,7 +364,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         return self.carrier_system[carrier]
 
-    def get_aligned_needle(self, needle: Needle, aligned_slider: bool = False) -> Needle:
+    def get_aligned_needle(self, needle: Needle, aligned_slider: bool = False) -> Needle[Machine_LoopT]:
         """
         Args:
             needle (Needle): The needle to find the aligned needle to.
@@ -379,9 +381,9 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         """
         aligned_position = needle.position - self.rack if needle.is_front else needle.position + self.rack
         if aligned_slider:
-            return Slider_Needle(not needle.is_front, aligned_position)
+            return self[Slider_Needle(not needle.is_front, aligned_position)]
         else:
-            return Needle(not needle.is_front, aligned_position)
+            return self[Needle(not needle.is_front, aligned_position)]
 
     def valid_rack(self, front_pos: int, back_pos: int) -> bool:
         """Check if transfer can be completed at current racking.
@@ -416,10 +418,10 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
             return False
 
     @overload
-    def __getitem__(self, item: Machine_Knit_Loop) -> Needle | None: ...
+    def __getitem__(self, item: Machine_Knit_Loop) -> Needle[Machine_LoopT] | None: ...
 
     @overload
-    def __getitem__(self, item: Needle) -> Needle: ...
+    def __getitem__(self, item: Needle) -> Needle[Machine_LoopT]: ...
 
     @overload
     def __getitem__(self, item: Yarn_Carrier_State) -> Carrier_State_Type: ...
@@ -439,7 +441,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
             | Sequence[Yarn_Carrier_State]
             | Machine_Knit_Loop
         ),
-    ) -> Needle | Carrier_State_Type | list[Carrier_State_Type] | None:
+    ) -> Needle[Machine_LoopT] | Carrier_State_Type | list[Carrier_State_Type] | None:
         """Access needles, carriers, or find needles holding loops on the machine.
 
         Args:
@@ -472,7 +474,7 @@ class Knitting_Machine_State(Container, Protocol[Carrier_State_Type]):
         return self.needle_count
 
 
-class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
+class Knitting_Machine(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier]):
     """A virtual representation of a V-Bed WholeGarment knitting machine.
 
     This class provides comprehensive functionality for simulating knitting operations including
@@ -483,7 +485,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
     def __init__(
         self,
         machine_specification: Knitting_Machine_Specification | None = None,
-        knit_graph: Knit_Graph | None = None,
+        knit_graph: Knit_Graph[Machine_LoopT] | None = None,
     ) -> None:
         """Initialize a virtual knitting machine with specified configuration.
 
@@ -495,11 +497,11 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
             machine_specification = Knitting_Machine_Specification()
         self._machine_specification: Knitting_Machine_Specification = machine_specification
         if knit_graph is None:
-            knit_graph = Knit_Graph()
-        self._knit_graph: Knit_Graph = knit_graph
-        self._front_bed: Needle_Bed = Needle_Bed(is_front=True, knitting_machine=self)
-        self._back_bed: Needle_Bed = Needle_Bed(is_front=False, knitting_machine=self)
-        self._carrier_system: Yarn_Insertion_System = Yarn_Insertion_System(
+            knit_graph = Knit_Graph[Machine_LoopT]()
+        self._knit_graph: Knit_Graph[Machine_LoopT] = knit_graph
+        self._front_bed: Needle_Bed[Machine_LoopT] = Needle_Bed[Machine_LoopT](is_front=True, knitting_machine=self)
+        self._back_bed: Needle_Bed[Machine_LoopT] = Needle_Bed[Machine_LoopT](is_front=False, knitting_machine=self)
+        self._carrier_system: Yarn_Insertion_System[Machine_LoopT] = Yarn_Insertion_System[Machine_LoopT](
             self, self.machine_specification.carrier_count
         )
         self._carriage: Carriage = Carriage(self)
@@ -515,7 +517,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
         return self._machine_specification
 
     @property
-    def knit_graph(self) -> Knit_Graph:
+    def knit_graph(self) -> Knit_Graph[Machine_LoopT]:
         """
         Returns:
             Knit_Graph: The knit graph formed on this machine.
@@ -523,7 +525,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
         return self._knit_graph
 
     @property
-    def carrier_system(self) -> Yarn_Insertion_System:
+    def carrier_system(self) -> Yarn_Insertion_System[Machine_LoopT]:
         """Get the carrier system used by the knitting machine.
 
         Returns:
@@ -540,7 +542,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
         return self._carriage
 
     @property
-    def front_bed(self) -> Needle_Bed:
+    def front_bed(self) -> Needle_Bed[Machine_LoopT]:
         """
         Returns:
             Needle_Bed: The front bed of needles and slider needles in this machine.
@@ -548,7 +550,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
         return self._front_bed
 
     @property
-    def back_bed(self) -> Needle_Bed:
+    def back_bed(self) -> Needle_Bed[Machine_LoopT]:
         """
         Returns:
             Needle_Bed: The back bed of needles and slider needles in this machine.
@@ -676,7 +678,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
 
     def tuck(
         self, carrier_set: Yarn_Carrier_Set, needle: Needle, direction: Carriage_Pass_Direction
-    ) -> list[Machine_Knit_Loop]:
+    ) -> list[Machine_LoopT]:
         """Place loops made with carriers in the carrier set on the given needle.
 
         Args:
@@ -689,7 +691,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
         """
         self.miss(carrier_set, needle, direction)  # aligns the carriers and completes the carriage movement.
         needle = self[needle]
-        new_loops: list[Machine_Knit_Loop] = self.carrier_system.make_loops(carrier_set, needle, direction, self.rack)
+        new_loops: list[Machine_LoopT] = self.carrier_system.make_loops(carrier_set, needle, direction)
         if needle.is_front:
             self.front_bed.add_loops(needle, new_loops, drop_prior_loops=False)
         else:
@@ -698,7 +700,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
 
     def knit(
         self, carrier_set: Yarn_Carrier_Set, needle: Needle, direction: Carriage_Pass_Direction
-    ) -> tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]:
+    ) -> tuple[list[Machine_LoopT], list[Machine_LoopT]]:
         """Form new loops from the carrier set by pulling them through all loops on the given needle.
 
         Drop the existing loops and hold the new loops on the needle.
@@ -730,7 +732,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
         bed = self.front_bed if needle.is_front else self.back_bed
         parent_loops = bed.drop(needle)
         # Make child loops by this specification
-        child_loops = self.carrier_system.make_loops(carrier_set, needle, direction, self.rack)
+        child_loops = self.carrier_system.make_loops(carrier_set, needle, direction)
         bed.add_loops(needle, child_loops, drop_prior_loops=False)  # drop should have occurred in prior line
 
         # Create stitches in the knitgraph.
@@ -739,7 +741,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
                 self.knit_graph.connect_loops(parent, child, needle.pull_direction)
         return parent_loops, child_loops
 
-    def drop(self, needle: Needle) -> list[Machine_Knit_Loop]:
+    def drop(self, needle: Needle) -> list[Machine_LoopT]:
         """Drop all loops currently on given needle.
 
         Args:
@@ -757,7 +759,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
         return needle.drop()
 
     def _add_xfer_crossing(
-        self, left_loop: Machine_Knit_Loop, right_loop: Machine_Knit_Loop, crossing_direction: Crossing_Direction
+        self, left_loop: Machine_LoopT, right_loop: Machine_LoopT, crossing_direction: Crossing_Direction
     ) -> None:
         """
         Add a crossing to the knit_graph's braid graph based on a transfer of the left loop (over or under) the right loop.
@@ -768,17 +770,17 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
             right_loop: The loop involved in the crossing that starts on the right of the crossing.
             crossing_direction: The direction of the crossing.
         """
-        if self.knit_graph.braid_graph.loop_crossing_graph.has_edge(right_loop, left_loop):
+        if self.knit_graph.braid_graph.has_edge(right_loop, left_loop):
             current_crossing = self.knit_graph.braid_graph.get_crossing(right_loop, left_loop)
             if current_crossing.opposite == crossing_direction:  # inverted crossing direction
-                self.knit_graph.braid_graph.loop_crossing_graph.remove_edge(right_loop, left_loop)
+                self.knit_graph.braid_graph.remove_edge(right_loop, left_loop)
             else:
                 self.knit_graph.add_crossing(right_loop, left_loop, crossing_direction.opposite)
         else:
             self.knit_graph.add_crossing(left_loop, right_loop, crossing_direction)
 
     def _cross_loops_by_rightward_xfer(
-        self, starting_needle: Needle, aligned_needle: Needle, xfer_loops: list[Machine_Knit_Loop]
+        self, starting_needle: Needle, aligned_needle: Needle, xfer_loops: list[Machine_LoopT]
     ) -> None:
         """
         Update the knitgraph's braid graph with a loop crossing created by a rightward crossing from the starting_needle to the aligned needle in a transfer.
@@ -811,7 +813,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
                     self._add_xfer_crossing(left_loop, right_loop, Crossing_Direction.Over_Right)
 
     def _cross_loops_by_leftward_xfer(
-        self, starting_needle: Needle, aligned_needle: Needle, xfer_loops: list[Machine_Knit_Loop]
+        self, starting_needle: Needle, aligned_needle: Needle, xfer_loops: list[Machine_LoopT]
     ) -> None:
         """
         Update the knitgraph's braid graph with a loop crossing created by a leftward crossing from the starting_needle to the aligned needle in a transfer.
@@ -844,7 +846,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
                     self._add_xfer_crossing(left_loop, right_loop, Crossing_Direction.Under_Right)
 
     def _cross_loops_by_xfer(
-        self, starting_needle: Needle, aligned_needle: Needle, xfer_loops: list[Machine_Knit_Loop]
+        self, starting_needle: Needle, aligned_needle: Needle, xfer_loops: list[Machine_LoopT]
     ) -> None:
         """
         Update the knitgraph's braid graph with a loop crossing created by a transfer from the starting_needle to the aligned needle.
@@ -859,9 +861,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
         elif self.rack > 0:  # leftward xfer
             self._cross_loops_by_leftward_xfer(starting_needle, aligned_needle, xfer_loops)
 
-    def xfer(
-        self, starting_needle: Needle, to_slider: bool = False, from_split: bool = False
-    ) -> list[Machine_Knit_Loop]:
+    def xfer(self, starting_needle: Needle, to_slider: bool = False, from_split: bool = False) -> list[Machine_LoopT]:
         """Move all loops on starting_needle to aligned needle at current racking.
 
         Args:
@@ -885,7 +885,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
             for loop in held_loops:  # Update loop's needle history
                 loop.reverse_drop()
                 loop.transfer_loop(aligned_needle)
-            xfer_loops: list[Machine_Knit_Loop] = self.back_bed.add_loops(
+            xfer_loops: list[Machine_LoopT] = self.back_bed.add_loops(
                 aligned_needle, held_loops, drop_prior_loops=False
             )
         else:
@@ -893,7 +893,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
             for loop in held_loops:  # Update loop's needle history
                 loop.reverse_drop()
                 loop.transfer_loop(aligned_needle)
-            xfer_loops: list[Machine_Knit_Loop] = self.front_bed.add_loops(
+            xfer_loops: list[Machine_LoopT] = self.front_bed.add_loops(
                 aligned_needle, held_loops, drop_prior_loops=False
             )
 
@@ -905,7 +905,7 @@ class Knitting_Machine(Knitting_Machine_State[Yarn_Carrier]):
 
     def split(
         self, carrier_set: Yarn_Carrier_Set, starting_needle: Needle, direction: Carriage_Pass_Direction
-    ) -> tuple[list[Machine_Knit_Loop], list[Machine_Knit_Loop]]:
+    ) -> tuple[list[Machine_LoopT], list[Machine_LoopT]]:
         """Pull a loop formed in direction by the yarns in carriers through the loops on needle.
 
         Transfer the old loops to opposite-bed needle in the process.

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 from virtual_knitting_machine.machine_components.needle_bed_position import Needle_Bed_Position
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier, Yarn_Carrier_State
@@ -12,24 +12,28 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn i
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine_Snapshot import Knitting_Machine_Snapshot
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
-class Yarn_Carrier_Snapshot(Yarn_Carrier_State):
+
+class Yarn_Carrier_Snapshot(Yarn_Carrier_State[Machine_LoopT]):
     """
     A snapshot of the state of a carrier at the time this instance was created.
     """
 
-    def __init__(self, yarn_carrier: Yarn_Carrier, machine_snapshot: Knitting_Machine_Snapshot):
+    def __init__(
+        self, yarn_carrier: Yarn_Carrier[Machine_LoopT], machine_snapshot: Knitting_Machine_Snapshot[Machine_LoopT]
+    ):
         self._carrier_id: int = yarn_carrier.carrier_id
         self._is_active: bool = yarn_carrier.is_active
         self._is_hooked: bool = yarn_carrier.is_hooked
-        self._machine_snapshot: Knitting_Machine_Snapshot = machine_snapshot
+        self._machine_snapshot: Knitting_Machine_Snapshot[Machine_LoopT] = machine_snapshot
         self._position: Needle_Bed_Position = self.starting_position(self.knitting_machine)
         self._position.update_from_position(yarn_carrier.position_on_bed)
-        self._yarn: Machine_Knit_Yarn = yarn_carrier.yarn
+        self._yarn: Machine_Knit_Yarn[Machine_LoopT] = yarn_carrier.yarn
         self._last_loop_id: int | None = int(self.yarn.last_loop) if self.yarn.last_loop is not None else None
 
     @property
-    def knitting_machine(self) -> Knitting_Machine_Snapshot:
+    def knitting_machine(self) -> Knitting_Machine_Snapshot[Machine_LoopT]:
         """
         Returns:
             Knitting_Machine_Snapshot: The knitting machine snapshot that this system belongs to.
@@ -45,7 +49,7 @@ class Yarn_Carrier_Snapshot(Yarn_Carrier_State):
         return self._last_loop_id
 
     @property
-    def yarn(self) -> Machine_Knit_Yarn:
+    def yarn(self) -> Machine_Knit_Yarn[Machine_LoopT]:
         """
         Returns:
             Machine_Knit_Yarn: The yarn held on this carrier.

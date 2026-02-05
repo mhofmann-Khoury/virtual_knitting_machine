@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Protocol, overload
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, overload
 
 from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
     get_user_warning_stack_level_from_virtual_knitting_machine_package,
@@ -19,12 +19,14 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop i
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine, Knitting_Machine_State
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
-class Needle_Bed_State(Protocol):
+
+class Needle_Bed_State(Protocol[Machine_LoopT]):
     """Protocol for the readable properties of a needle bed."""
 
     @property
-    def knitting_machine(self) -> Knitting_Machine_State:
+    def knitting_machine(self) -> Knitting_Machine_State[Machine_LoopT, Any]:
         """
         Returns:
             Knitting_Machine_State: The knitting machine this bed belongs to.
@@ -41,7 +43,7 @@ class Needle_Bed_State(Protocol):
         ...
 
     @property
-    def needles(self) -> list[Needle]:
+    def needles(self) -> list[Needle[Machine_LoopT]]:
         """
         Returns:
             list[Needle]: The needles on this bed ordered from 0 to the needle count specified by the knitting machine.
@@ -49,7 +51,7 @@ class Needle_Bed_State(Protocol):
         ...
 
     @property
-    def sliders(self) -> list[Slider_Needle]:
+    def sliders(self) -> list[Slider_Needle[Machine_LoopT]]:
         """
         Returns:
             list[Slider_Needle]: The slider needles on this bed ordered from 0 to the needle count specified by the knitting machine."
@@ -73,7 +75,7 @@ class Needle_Bed_State(Protocol):
         return self.knitting_machine.needle_count
 
     @property
-    def loop_holding_needles(self) -> list[Needle]:
+    def loop_holding_needles(self) -> list[Needle[Machine_LoopT]]:
         """
         Returns:
             list[Needle]: List of needles on bed that actively hold loops.
@@ -81,7 +83,7 @@ class Needle_Bed_State(Protocol):
         return [n for n in self if n.has_loops]
 
     @property
-    def loop_holding_sliders(self) -> list[Slider_Needle]:
+    def loop_holding_sliders(self) -> list[Slider_Needle[Machine_LoopT]]:
         """
         Returns:
             list[Slider_Needle]: List of sliders on bed that actively hold loops.
@@ -89,7 +91,7 @@ class Needle_Bed_State(Protocol):
         return [s for s in self.sliders if s.has_loops]
 
     @property
-    def active_loops(self) -> set[Machine_Knit_Loop]:
+    def active_loops(self) -> set[Machine_LoopT]:
         """
         Returns:
             set[Machine_Knit_Loop]: The set of loops held on needles on the needle bed.
@@ -100,7 +102,7 @@ class Needle_Bed_State(Protocol):
         return loops
 
     @property
-    def active_slider_loops(self) -> set[Machine_Knit_Loop]:
+    def active_slider_loops(self) -> set[Machine_LoopT]:
         """
         Returns:
             set[Machine_Knit_Loop]: The set of loops held on slider needles on the needle bed.
@@ -165,7 +167,7 @@ class Needle_Bed_State(Protocol):
         """
         return loop in self.active_loops
 
-    def get_needle_of_loop(self, loop: Machine_Knit_Loop) -> Needle | None:
+    def get_needle_of_loop(self, loop: Machine_Knit_Loop) -> Needle[Machine_LoopT] | None:
         """
         Args:
             loop (Machine_Knit_Loop): The loop being searched for.
@@ -209,7 +211,7 @@ class Needle_Bed_State(Protocol):
         """
         return self.needle_count
 
-    def __iter__(self) -> Iterator[Needle]:
+    def __iter__(self) -> Iterator[Needle[Machine_LoopT]]:
         """Iterate over the needles in this bed.
 
         Returns:
@@ -246,15 +248,17 @@ class Needle_Bed_State(Protocol):
             return False
 
     @overload
-    def __getitem__(self, item: Machine_Knit_Loop) -> Needle | None: ...
+    def __getitem__(self, item: Machine_Knit_Loop) -> Needle[Machine_LoopT] | None: ...
 
     @overload
-    def __getitem__(self, item: Needle | int) -> Needle: ...
+    def __getitem__(self, item: Needle | int) -> Needle[Machine_LoopT]: ...
 
     @overload
-    def __getitem__(self, item: slice) -> list[Needle]: ...
+    def __getitem__(self, item: slice) -> list[Needle[Machine_LoopT]]: ...
 
-    def __getitem__(self, item: Machine_Knit_Loop | Needle | slice | int) -> Needle | list[Needle] | None:
+    def __getitem__(
+        self, item: Machine_Knit_Loop | Needle | slice | int
+    ) -> Needle[Machine_LoopT] | list[Needle[Machine_LoopT]] | None:
         """Get an indexed needle on the bed, or find needle holding a specific loop.
 
         Args:
@@ -273,28 +277,28 @@ class Needle_Bed_State(Protocol):
                 raise KeyError(f"Needle {item} is not on the {self}")
         if isinstance(item, (int, slice)):
             return self.needles[item]
-        elif isinstance(item, Machine_Knit_Loop):
-            return self.get_needle_of_loop(item)
-        else:  # isinstance(item, Needle):
+        elif isinstance(item, Needle):
             if item.is_slider:
                 return self.sliders[item.position]
             else:
                 return self.needles[item.position]
+        else:
+            return self.get_needle_of_loop(item)
 
 
-class Needle_Bed(Needle_Bed_State):
+class Needle_Bed(Needle_Bed_State[Machine_LoopT]):
     """A structure to hold information about loops held on one bed of needles where increasing indices indicate needles moving from left to right (LEFT -> 0 1 2....N <- RIGHT of Machine).
     This class manages both regular needles and slider needles, tracks active sliders, and provides methods for loop manipulation and needle access operations.
     """
 
-    def __init__(self, is_front: bool, knitting_machine: Knitting_Machine) -> None:
+    def __init__(self, is_front: bool, knitting_machine: Knitting_Machine[Machine_LoopT]) -> None:
         """Initialize a needle bed representation for the machine.
 
         Args:
             is_front (bool): True if this is the front bed, False if it is the back bed.
             knitting_machine (Knitting_Machine): The knitting machine this bed belongs to.
         """
-        self._knitting_machine: Knitting_Machine = knitting_machine
+        self._knitting_machine: Knitting_Machine[Machine_LoopT] = knitting_machine
         self._is_front: bool = is_front
         self._needles: list[Needle] = [
             Needle(self._is_front, i, knitting_machine=self.knitting_machine) for i in range(0, self.needle_count)
@@ -306,7 +310,7 @@ class Needle_Bed(Needle_Bed_State):
         self._active_sliders: set[Slider_Needle] = set()
 
     @property
-    def knitting_machine(self) -> Knitting_Machine:
+    def knitting_machine(self) -> Knitting_Machine[Machine_LoopT]:
         """
         Returns:
             Knitting_Machine: The knitting machine this bed belongs to.
@@ -323,7 +327,7 @@ class Needle_Bed(Needle_Bed_State):
         return self._is_front
 
     @property
-    def needles(self) -> list[Needle]:
+    def needles(self) -> list[Needle[Machine_LoopT]]:
         """
         Returns:
             list[Needle]: The needles on this bed ordered from 0 to the needle count specified by the knitting machine.
@@ -331,7 +335,7 @@ class Needle_Bed(Needle_Bed_State):
         return self._needles
 
     @property
-    def sliders(self) -> list[Slider_Needle]:
+    def sliders(self) -> list[Slider_Needle[Machine_LoopT]]:
         """
         Returns:
             list[Slider_Needle]: The slider needles on this bed ordered from 0 to the needle count specified by the knitting machine."
@@ -348,8 +352,8 @@ class Needle_Bed(Needle_Bed_State):
         return len(self._active_sliders) == 0
 
     def add_loops(
-        self, needle: Needle, loops: list[Machine_Knit_Loop], drop_prior_loops: bool = True
-    ) -> list[Machine_Knit_Loop]:
+        self, needle: Needle, loops: list[Machine_LoopT], drop_prior_loops: bool = True
+    ) -> list[Machine_LoopT]:
         """Add loops to a given needle, optionally dropping existing loops as if a knit operation took place.
 
         Args:
@@ -376,7 +380,7 @@ class Needle_Bed(Needle_Bed_State):
             self._active_sliders.add(needle)
         return loops
 
-    def drop(self, needle: Needle) -> list[Machine_Knit_Loop]:
+    def drop(self, needle: Needle) -> list[Machine_LoopT]:
         """Clear the loops held at this position as though a drop operation has been done.
 
         Args:

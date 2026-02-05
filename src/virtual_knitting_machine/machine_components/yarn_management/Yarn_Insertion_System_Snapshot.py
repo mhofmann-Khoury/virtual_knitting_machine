@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
@@ -17,8 +17,10 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop i
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine_Snapshot import Knitting_Machine_Snapshot
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
-class Yarn_Insertion_System_Snapshot(Yarn_Insertion_System_State[Yarn_Carrier_Snapshot]):
+
+class Yarn_Insertion_System_Snapshot(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carrier_Snapshot]):
     """
     A snapshot of a given Yarn Insertion System at the time of instance creation.
 
@@ -26,11 +28,15 @@ class Yarn_Insertion_System_Snapshot(Yarn_Insertion_System_State[Yarn_Carrier_Sn
         _carriers (list[Yarn_Carrier_Snapshot]): The list of carrier snapshots at the time of this snapshot.
     """
 
-    def __init__(self, yarn_insertion_system: Yarn_Insertion_System, machine_snapshot: Knitting_Machine_Snapshot):
-        self._machine_snapshot: Knitting_Machine_Snapshot = machine_snapshot
-        self._yarn_insertion_system: Yarn_Insertion_System = yarn_insertion_system
-        self._carriers: list[Yarn_Carrier_Snapshot] = [
-            Yarn_Carrier_Snapshot(c, self.knitting_machine) for c in yarn_insertion_system.carriers
+    def __init__(
+        self,
+        yarn_insertion_system: Yarn_Insertion_System[Machine_LoopT],
+        machine_snapshot: Knitting_Machine_Snapshot[Machine_LoopT],
+    ):
+        self._machine_snapshot: Knitting_Machine_Snapshot[Machine_LoopT] = machine_snapshot
+        self._yarn_insertion_system: Yarn_Insertion_System[Machine_LoopT] = yarn_insertion_system
+        self._carriers: list[Yarn_Carrier_Snapshot[Machine_LoopT]] = [
+            Yarn_Carrier_Snapshot[Machine_LoopT](c, self.knitting_machine) for c in yarn_insertion_system.carriers
         ]
         self._hook_position: int | None = self.yarn_insertion_system.hook_position
         self._hook_input_direction: Carriage_Pass_Direction | None = self.yarn_insertion_system.hook_input_direction
@@ -40,18 +46,18 @@ class Yarn_Insertion_System_Snapshot(Yarn_Insertion_System_State[Yarn_Carrier_Sn
             if isinstance(self.yarn_insertion_system.hooked_carrier, Yarn_Carrier)
             else None
         )
-        self.active_loops_by_carrier: dict[Yarn_Carrier_Snapshot, dict[Machine_Knit_Loop, Needle]] = {
-            c: c.yarn.active_loops for c in self._carriers
-        }
-        self.active_floats_by_carrier: dict[Yarn_Carrier_Snapshot, dict[Machine_Knit_Loop, Machine_Knit_Loop]] = {
-            c: c.yarn.active_floats() for c in self._carriers
-        }
-        self._active_floats: dict[Machine_Knit_Loop, Machine_Knit_Loop] = {}
+        self.active_loops_by_carrier: dict[
+            Yarn_Carrier_Snapshot[Machine_LoopT], dict[Machine_LoopT, Needle[Machine_LoopT]]
+        ] = {c: c.yarn.active_loops for c in self._carriers}
+        self.active_floats_by_carrier: dict[
+            Yarn_Carrier_Snapshot[Machine_LoopT], dict[Machine_LoopT, Machine_LoopT]
+        ] = {c: c.yarn.active_floats() for c in self._carriers}
+        self._active_floats: dict[Machine_LoopT, Machine_LoopT] = {}
         for floats in self.active_floats_by_carrier.values():
             self._active_floats.update(floats)
 
     @property
-    def yarn_insertion_system(self) -> Yarn_Insertion_System:
+    def yarn_insertion_system(self) -> Yarn_Insertion_System[Machine_LoopT]:
         """
         Returns:
             Yarn_Insertion_System: The Yarn Insertion System this snapshot was taken from.
@@ -59,7 +65,7 @@ class Yarn_Insertion_System_Snapshot(Yarn_Insertion_System_State[Yarn_Carrier_Sn
         return self._yarn_insertion_system
 
     @property
-    def knitting_machine(self) -> Knitting_Machine_Snapshot:
+    def knitting_machine(self) -> Knitting_Machine_Snapshot[Machine_LoopT]:
         """
         Returns:
             Knitting_Machine_Snapshot: The knitting machine snapshot that this system belongs to.
@@ -67,7 +73,7 @@ class Yarn_Insertion_System_Snapshot(Yarn_Insertion_System_State[Yarn_Carrier_Sn
         return self._machine_snapshot
 
     @property
-    def carriers(self) -> list[Yarn_Carrier_Snapshot]:
+    def carriers(self) -> list[Yarn_Carrier_Snapshot[Machine_LoopT]]:
         """
         Returns:
             list[Yarn_Carrier_Snapshot]: The list of yarn carriers in this insertion system. The carriers are ordered from 1 to the number of carriers in the system.
@@ -94,7 +100,7 @@ class Yarn_Insertion_System_Snapshot(Yarn_Insertion_System_State[Yarn_Carrier_Sn
         return self._hook_input_direction
 
     @property
-    def hooked_carrier(self) -> Yarn_Carrier_Snapshot | None:
+    def hooked_carrier(self) -> Yarn_Carrier_Snapshot[Machine_LoopT] | None:
         """
         Returns:
             (Yarn_Carrier_Snapshot | None): The snapshot of the yarn-carrier that was on the yarn-inserting-hook or None if the hook was not active.
@@ -112,7 +118,7 @@ class Yarn_Insertion_System_Snapshot(Yarn_Insertion_System_State[Yarn_Carrier_Sn
         return self._searching_for_position
 
     @property
-    def active_floats(self) -> dict[Machine_Knit_Loop, Machine_Knit_Loop]:
+    def active_floats(self) -> dict[Machine_LoopT, Machine_LoopT]:
         """Get dictionary of all active floats from all carriers in the system.
 
         Returns:

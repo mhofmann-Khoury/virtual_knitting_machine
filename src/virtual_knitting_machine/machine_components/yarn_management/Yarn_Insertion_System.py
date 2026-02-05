@@ -34,10 +34,11 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop i
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 Carrier_State_Type = TypeVar("Carrier_State_Type", bound="Yarn_Carrier_State")
 
 
-class Yarn_Insertion_System_State(Machine_Component, Protocol[Carrier_State_Type]):
+class Yarn_Insertion_System_State(Machine_Component, Protocol[Machine_LoopT, Carrier_State_Type]):
     """
     A protocol for the readable elements of a yarn-insertion system.
     """
@@ -113,7 +114,7 @@ class Yarn_Insertion_System_State(Machine_Component, Protocol[Carrier_State_Type
         return {c for c in self.carriers if c.is_active}
 
     @property
-    def active_floats(self) -> dict[Machine_Knit_Loop, Machine_Knit_Loop]:
+    def active_floats(self) -> dict[Machine_LoopT, Machine_LoopT]:
         """Get dictionary of all active floats from all carriers in the system.
 
         Returns:
@@ -240,23 +241,25 @@ class Yarn_Insertion_System_State(Machine_Component, Protocol[Carrier_State_Type
         return len(self.carriers)
 
 
-class Yarn_Insertion_System(Yarn_Insertion_System_State[Yarn_Carrier]):
+class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carrier[Machine_LoopT]]):
     """A class for managing the complete state of the yarn insertion system including all yarn carriers on the knitting machine.
     This system handles carrier positioning, activation states, insertion hook operations, and coordinates loop creation across multiple carriers.
     It provides comprehensive management of yarn carrier operations including bring-in, hook operations, and float management.
 
     """
 
-    def __init__(self, knitting_machine: Knitting_Machine, carrier_count: int = 10) -> None:
+    def __init__(self, knitting_machine: Knitting_Machine[Machine_LoopT], carrier_count: int = 10) -> None:
         """Initialize the yarn insertion system with specified number of carriers.
 
         Args:
             knitting_machine (Knitting_Machine): The knitting machine this system belongs to.
             carrier_count (int, optional): Number of yarn carriers to create. Defaults to 10.
         """
-        self._knitting_machine: Knitting_Machine = knitting_machine
-        self._carriers: list[Yarn_Carrier] = [
-            Yarn_Carrier(i, knit_graph=self.knitting_machine.knit_graph, machine_state=self.knitting_machine)
+        self._knitting_machine: Knitting_Machine[Machine_LoopT] = knitting_machine
+        self._carriers: list[Yarn_Carrier[Machine_LoopT]] = [
+            Yarn_Carrier[Machine_LoopT](
+                i, knit_graph=self.knitting_machine.knit_graph, machine_state=self.knitting_machine
+            )
             for i in range(1, carrier_count + 1)
         ]
         self._hook_position: int | None = None
@@ -265,7 +268,7 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Yarn_Carrier]):
         self._hooked_carrier: Yarn_Carrier | None = None
 
     @property
-    def knitting_machine(self) -> Knitting_Machine:
+    def knitting_machine(self) -> Knitting_Machine[Machine_LoopT]:
         """
         Returns:
             Knitting_Machine: The knitting machine that this system belongs to.
@@ -273,7 +276,7 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Yarn_Carrier]):
         return self._knitting_machine
 
     @property
-    def carriers(self) -> list[Yarn_Carrier]:
+    def carriers(self) -> list[Yarn_Carrier[Machine_LoopT]]:
         """
         Returns:
             list[Yarn_Carrier]: The list of yarn carriers in this insertion system. The carriers are ordered from 1 to the number of carriers in the system.
@@ -317,7 +320,7 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Yarn_Carrier]):
             self._hook_input_direction = direction
 
     @property
-    def hooked_carrier(self) -> Yarn_Carrier | None:
+    def hooked_carrier(self) -> Yarn_Carrier[Machine_LoopT] | None:
         """
         Returns:
             (Yarn_Carrier | None): The yarn-carrier currently on the yarn-inserting-hook or None if the hook is not active.
@@ -465,15 +468,13 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Yarn_Carrier]):
         carrier_ids: Sequence[int | Yarn_Carrier] | Yarn_Carrier_Set | Sequence[int] | Sequence[Yarn_Carrier],
         needle: Needle,
         direction: Carriage_Pass_Direction,
-        rack: int,
-    ) -> list[Machine_Knit_Loop]:
+    ) -> list[Machine_LoopT]:
         """Create loops using specified carriers on a needle, handling insertion hook positioning and float management.
 
         Args:
             carrier_ids (list[int | Yarn_Carrier] | Yarn_Carrier_Set): The carriers to make the loops with on this needle.
             needle (Needle): The needle to make the loops on.
             direction (Carriage_Pass_Direction): The carriage direction for this operation.
-            rack (int): The current racking alignment between the beds when the loops are formed.
 
         Returns:
             list[Machine_Knit_Loop]: The set of loops made on this machine.
@@ -487,12 +488,13 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Yarn_Carrier]):
             self._hook_position = needle.slot_number + 1
             self.hook_input_direction = direction
             self._searching_for_position = False
-        loops: list[Machine_Knit_Loop] = []
+        loops: list[Machine_LoopT] = []
         for cid in carrier_ids:
             carrier = self[cid]
             if not carrier.is_active:
                 raise Use_Inactive_Carrier_Exception(cid)
-            float_source_needle = carrier.yarn.last_needle()
+            float_source_loop = carrier.yarn.last_loop
+            float_source_needle = float_source_loop.holding_needle if float_source_loop is not None else None
             loop = carrier.yarn.make_loop_on_needle(
                 holding_needle=needle, max_float_length=self.knitting_machine.machine_specification.maximum_float
             )
@@ -513,9 +515,9 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Yarn_Carrier]):
                 for float_source_loop in float_source_needle.held_loops:
                     for fn in front_floated_needles:
                         for fl in fn.held_loops:
-                            carrier.yarn.add_loop_in_front_of_float(fl, float_source_loop, loop)
+                            carrier.yarn.add_loop_in_front_of_float(fl, float_source_loop)
                     for bn in back_floated_needles:
                         for bl in bn.held_loops:
-                            carrier.yarn.add_loop_behind_float(bl, float_source_loop, loop)
+                            carrier.yarn.add_loop_behind_float(bl, float_source_loop)
             loops.append(loop)
         return loops

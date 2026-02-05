@@ -1,18 +1,23 @@
 """A module containing the Knitting_Machine_Snapshot class."""
 
+from typing import TypeVar
+
 from knit_graphs.Knit_Graph import Knit_Graph
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine, Knitting_Machine_State
 from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Snapshot import Carriage_Snapshot
 from virtual_knitting_machine.machine_components.Needle_Bed_Snapshot import Needle_Bed_Snapshot
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Snapshot import Yarn_Carrier_Snapshot
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System_Snapshot import (
     Yarn_Insertion_System_Snapshot,
 )
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
-class Knitting_Machine_Snapshot(Knitting_Machine_State):
+
+class Knitting_Machine_Snapshot(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier_Snapshot]):
     """
     A snapshot of the state of a knitting machine at the time an instance is created.
 
@@ -20,8 +25,8 @@ class Knitting_Machine_Snapshot(Knitting_Machine_State):
         _machine_state (Knitting_Machine): A reference to the current state of the knitting machine that this snapshot was created from. It will update after creation of the snapshot.
     """
 
-    def __init__(self, machine_state: Knitting_Machine):
-        self._machine_state: Knitting_Machine = machine_state
+    def __init__(self, machine_state: Knitting_Machine[Machine_LoopT]):
+        self._machine_state: Knitting_Machine[Machine_LoopT] = machine_state
         self._last_loop_id: int | None = (
             machine_state.knit_graph.last_loop.loop_id if machine_state.knit_graph.last_loop is not None else None
         )
@@ -51,7 +56,7 @@ class Knitting_Machine_Snapshot(Knitting_Machine_State):
         return self._machine_state.machine_specification
 
     @property
-    def knit_graph(self) -> Knit_Graph:
+    def knit_graph(self) -> Knit_Graph[Machine_LoopT]:
         """
         Returns:
             Knit_Graph: The knit graph associated with the machine state.

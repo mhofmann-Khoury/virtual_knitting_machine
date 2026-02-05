@@ -7,7 +7,8 @@ functionality for loop management, needle positioning, and various knitting oper
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 
 from knit_graphs.Pull_Direction import Pull_Direction
 
@@ -19,8 +20,10 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop i
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
-class Needle(Slotted_Position, Machine_Component):
+
+class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
     """A class for managing individual needles on a knitting machine.
 
     This class represents a needle on either the front or back bed of a knitting machine.
@@ -31,7 +34,12 @@ class Needle(Slotted_Position, Machine_Component):
         held_loops (list[Machine_Knit_Loop]): List of loops currently held by this needle.
     """
 
-    def __init__(self, is_front: bool, position: int, knitting_machine: Knitting_Machine_State | None = None) -> None:
+    def __init__(
+        self,
+        is_front: bool,
+        position: int,
+        knitting_machine: Knitting_Machine_State[Machine_LoopT, Any] | None = None,
+    ) -> None:
         """Initialize a new needle.
 
         Args:
@@ -41,11 +49,11 @@ class Needle(Slotted_Position, Machine_Component):
         """
         self._is_front: bool = is_front
         self._position: int = int(position)
-        self.held_loops: list[Machine_Knit_Loop] = []
-        self._knitting_machine: Knitting_Machine_State | None = knitting_machine
+        self.held_loops: list[Machine_LoopT] = []
+        self._knitting_machine: Knitting_Machine_State[Machine_LoopT, Any] | None = knitting_machine
 
     @property
-    def knitting_machine(self) -> Knitting_Machine_State | None:
+    def knitting_machine(self) -> Knitting_Machine_State[Machine_LoopT, Any] | None:
         return self._knitting_machine
 
     @property
@@ -140,15 +148,17 @@ class Needle(Slotted_Position, Machine_Component):
         """
         return self.position if self.is_front else self.position + racking
 
-    def opposite(self) -> Needle:
+    def opposite(self) -> Self:
         """Get the needle on the opposite bed at the same position.
 
         Returns:
             Needle: The needle on the opposite bed at the same position.
         """
-        return self.__class__(is_front=not self.is_front, position=self.position)
+        return self.__class__(
+            is_front=not self.is_front, position=self.position, knitting_machine=self.knitting_machine
+        )
 
-    def offset(self, offset: int) -> Needle:
+    def offset(self, offset: int) -> Self:
         """Get a needle offset by the specified amount on the same bed.
 
         Args:
@@ -159,7 +169,7 @@ class Needle(Slotted_Position, Machine_Component):
         """
         return self + offset
 
-    def main_needle(self) -> Needle:
+    def main_needle(self) -> Needle[Machine_LoopT]:
         """Get the non-slider needle at this needle position.
 
         Returns:
@@ -169,9 +179,9 @@ class Needle(Slotted_Position, Machine_Component):
         """
         if not self.is_slider:
             return self
-        return Needle(is_front=self.is_front, position=self.position)
+        return Needle[Machine_LoopT](is_front=self.is_front, position=self.position)
 
-    def active_floats(self) -> dict[Machine_Knit_Loop, Machine_Knit_Loop]:
+    def active_floats(self) -> dict[Machine_LoopT, Machine_LoopT]:
         """Get active floats connecting to loops on this needle.
 
         Returns:
@@ -181,15 +191,15 @@ class Needle(Slotted_Position, Machine_Component):
         """
         active_floats = {}
         for loop in self.held_loops:
-            next_loop = cast(Machine_Knit_Loop, loop.next_loop_on_yarn())
+            next_loop = loop.next_loop_on_yarn()
             if next_loop is not None and next_loop.on_needle:
                 active_floats[loop] = next_loop
-            prior_loop = cast(Machine_Knit_Loop, loop.prior_loop_on_yarn())
+            prior_loop = loop.prior_loop_on_yarn()
             if prior_loop is not None and prior_loop.on_needle:
                 active_floats[prior_loop] = loop
         return active_floats
 
-    def float_overlaps_needle(self, u: Machine_Knit_Loop, v: Machine_Knit_Loop) -> bool:
+    def float_overlaps_needle(self, u: Machine_LoopT, v: Machine_LoopT) -> bool:
         """Check if a float between two loops overlaps this needle's position.
 
         Args:
@@ -205,7 +215,7 @@ class Needle(Slotted_Position, Machine_Component):
         right_position = max(u.holding_needle.position, v.holding_needle.position)
         return bool(left_position <= self.position <= right_position)
 
-    def add_loop(self, loop: Machine_Knit_Loop) -> None:
+    def add_loop(self, loop: Machine_LoopT) -> None:
         """Add a loop to the set of currently held loops.
 
         Args:
@@ -214,16 +224,16 @@ class Needle(Slotted_Position, Machine_Component):
         self.held_loops.append(loop)
         loop.yarn.active_loops[loop] = self
 
-    def add_loops(self, loops: list[Machine_Knit_Loop]) -> None:
+    def add_loops(self, loops: Sequence[Machine_LoopT]) -> None:
         """Add multiple loops to the held set.
 
         Args:
-            loops (list[Machine_Knit_Loop]): List of loops to place onto needle.
+            loops (Sequence[Machine_Knit_Loop]): List of loops to place onto needle.
         """
         for l in loops:
             self.add_loop(l)
 
-    def transfer_loops(self, target_needle: Needle) -> list[Machine_Knit_Loop]:
+    def transfer_loops(self, target_needle: Needle[Machine_LoopT]) -> list[Machine_LoopT]:
         """Transfer all loops from this needle to a target needle.
 
         Args:
@@ -239,7 +249,7 @@ class Needle(Slotted_Position, Machine_Component):
         target_needle.add_loops(xfer_loops)
         return xfer_loops
 
-    def drop(self) -> list[Machine_Knit_Loop]:
+    def drop(self) -> list[Machine_LoopT]:
         """Drop all held loops by releasing them from the needle.
 
         Returns:
@@ -326,7 +336,7 @@ class Needle(Slotted_Position, Machine_Component):
         """
         return self.position
 
-    def __add__(self, other: Needle | int) -> Needle:
+    def __add__(self, other: Needle | int) -> Self:
         """Add another needle's position or an integer to this needle's position.
 
         Args:
@@ -335,26 +345,21 @@ class Needle(Slotted_Position, Machine_Component):
         Returns:
             Needle: New needle with the sum position on the same bed.
         """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(self.position + position))
+        position = other.position if isinstance(other, Needle) else other
+        return self.__class__(self.is_front, self.position + position)
 
-    def __radd__(self, other: Needle | int) -> Needle:
+    def __radd__(self, other: int) -> Self:
         """Right-hand add operation.
 
         Args:
-            other (Needle | int): The needle or integer to add.
+            other (int): The integer to add.
 
         Returns:
             Needle: New needle with the sum position on the same bed.
         """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(self.position + position))
+        return self.__class__(self.is_front, self.position + other)
 
-    def __sub__(self, other: Needle | int) -> Needle:
+    def __sub__(self, other: Needle | int) -> Self:
         """Subtract another needle's position or an integer from this needle's position.
 
         Args:
@@ -363,63 +368,58 @@ class Needle(Slotted_Position, Machine_Component):
         Returns:
             Needle: New needle with the difference position on the same bed.
         """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(self.position - position))
+        position = other.position if isinstance(other, Needle) else other
+        return self.__class__(self.is_front, self.position - position)
 
-    def __rsub__(self, other: Needle | int) -> Needle:
+    def __rsub__(self, other: int) -> Self:
         """Right-hand subtract operation.
 
         Args:
-            other (Needle | int): The needle or integer to subtract from.
+            other (int): The integer to subtract from.
 
         Returns:
             Needle: New needle with the difference position on the same bed.
         """
-        position = other
-        if isinstance(other, Needle):
-            position = other.position
-        return self.__class__(self.is_front, int(position - self.position))
+        return self.__class__(self.is_front, other - self.position)
 
-    def __lshift__(self, other: Needle | int) -> Needle:
+    def __lshift__(self, other: int) -> Self:
         """Left shift operation (equivalent to subtraction).
 
         Args:
-            other (Needle | int): The needle or integer to shift by.
+            other (int): The needle or integer to shift by.
 
         Returns:
             Needle: New needle shifted left (position decreased).
         """
         return self - other
 
-    def __rshift__(self, other: Needle | int) -> Needle:
+    def __rshift__(self, other: int) -> Self:
         """Right shift operation (equivalent to addition).
 
         Args:
-            other (Needle | int): The needle or integer to shift by.
+            other (int): The needle or integer to shift by.
 
         Returns:
             Needle: New needle shifted right (position increased).
         """
         return self + other
 
-    def __rlshift__(self, other: Needle | int) -> Needle:
+    def __rlshift__(self, other: int) -> Self:
         """Right-hand left shift operation.
 
         Args:
-            other (Needle | int): The needle or integer to shift.
+            other (int): The needle or integer to shift.
 
         Returns:
             Needle: New needle with shifted position.
         """
         return other - self
 
-    def __rrshift__(self, other: Needle | int) -> Needle:
+    def __rrshift__(self, other: int) -> Self:
         """Right-hand right shift operation.
 
         Args:
-            other (Needle | int): The needle or integer to shift.
+            other (int): The needle or integer to shift.
 
         Returns:
             Needle: New needle with shifted position.
