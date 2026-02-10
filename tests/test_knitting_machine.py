@@ -74,7 +74,7 @@ class TestKnittingMachine(unittest.TestCase):
 
     def test_get_needle_of_loop_not_held(self):
         """Test get_needle_of_loop when loop is not held."""
-        loop = Machine_Knit_Loop(0, self.machine.carrier_system.carriers[0].yarn, Needle(True, 1))
+        loop = Machine_Knit_Loop(Needle(True, 1), self.machine.carrier_system.carriers[0].yarn, 0)
         loop.drop()
         result = self.machine.get_needle_of_loop(loop)
 

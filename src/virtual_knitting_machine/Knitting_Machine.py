@@ -322,7 +322,7 @@ class Knitting_Machine_State(Container, Protocol[Machine_LoopT, Carrier_State_Ty
         Returns:
             list[tuple[Machine_Knit_Loop, Machine_Knit_Loop]]: List of all active floats between two active loops currently held on the needle beds.
         """
-        floats = [(l, l.next_loop_on_yarn()) for l in self.active_loops]
+        floats = [(l, l.next_loop_on_yarn) for l in self.active_loops]
         return [(l, nl) for l, nl in floats if isinstance(nl, Machine_Knit_Loop) and nl in self.active_loops]
 
     def loops_crossed_by_float(self, loop1: Machine_Knit_Loop, loop2: Machine_Knit_Loop) -> set[Machine_LoopT]:

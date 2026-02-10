@@ -191,10 +191,10 @@ class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
         """
         active_floats = {}
         for loop in self.held_loops:
-            next_loop = loop.next_loop_on_yarn()
+            next_loop = loop.next_loop_on_yarn
             if next_loop is not None and next_loop.on_needle:
                 active_floats[loop] = next_loop
-            prior_loop = loop.prior_loop_on_yarn()
+            prior_loop = loop.prior_loop_on_yarn
             if prior_loop is not None and prior_loop.on_needle:
                 active_floats[prior_loop] = loop
         return active_floats

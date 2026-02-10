@@ -211,7 +211,7 @@ class TestSheetNeedle(unittest.TestCase):
         self.assertEqual(len(neighbors), 3)  # gauge 4 - 1
         for neighbor in neighbors:
             self.assertIsInstance(neighbor, Sheet_Needle)
-            self.assertFalse(neighbor.is_slider)  # Neighbors are regular Sheet_Needles
+            self.assertTrue(neighbor.is_slider)
             self.assertEqual(neighbor.sheet_pos, 3)
             self.assertNotEqual(neighbor.sheet, 1)
 

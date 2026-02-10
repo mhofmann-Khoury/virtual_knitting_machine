@@ -18,9 +18,9 @@ class Machine_Component(Protocol):
 
     _DEFAULT_RACK: int = 0  # Default racking alignment if a machine is not specified
     _DEFAULT_ALL_NEEDLE: bool = False  # Default state of all needle racking.
-    _DEFAULT_NEEDLE_COUNT: int = (
-        Knitting_Machine_Specification().needle_count
-    )  # Default needle count if a machine is not specified.
+    _DEFAULT_MACHINE_SPEC: Knitting_Machine_Specification = (
+        Knitting_Machine_Specification()
+    )  # Default specification when the knitting machine is not present.
 
     @property
     def knitting_machine(self) -> Knitting_Machine_State | None:
@@ -37,6 +37,16 @@ class Machine_Component(Protocol):
             bool: True if the knitting machine that owns this component has been specified.
         """
         return self.knitting_machine is not None
+
+    @property
+    def machine_specification(self) -> Knitting_Machine_Specification:
+        """
+        Returns:
+            Knitting_Machine_Specification: The machine specification of the machine associated with this component or a default machine spec.
+        """
+        return (
+            self._DEFAULT_MACHINE_SPEC if self.knitting_machine is None else self.knitting_machine.machine_specification
+        )
 
     @property
     def machine_racking(self) -> int:
@@ -64,11 +74,7 @@ class Machine_Component(Protocol):
         Returns:
             int: The number of needles on each bed of the knitting machine. Defaults to the bed size in the knitting machine specification.
         """
-        return (
-            self.knitting_machine.needle_count
-            if self.knitting_machine is not None
-            else Machine_Component._DEFAULT_NEEDLE_COUNT
-        )
+        return self.machine_specification.needle_count
 
     @property
     def rightmost_slot_on_machine(self) -> int:

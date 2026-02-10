@@ -22,6 +22,7 @@ from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warn
     Out_Inactive_Carrier_Warning,
 )
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.machine_components.machine_component_protocol import Machine_Component
 from virtual_knitting_machine.machine_components.needle_bed_position import Needle_Bed_Position, Relative_to_Needle_Bed
 from virtual_knitting_machine.machine_components.Side_of_Needle_Bed import Side_of_Needle_Bed
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
@@ -36,7 +37,7 @@ Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
 
 @runtime_checkable
-class Yarn_Carrier_State(Relative_to_Needle_Bed, Protocol[Machine_LoopT]):
+class Yarn_Carrier_State(Machine_Component, Relative_to_Needle_Bed, Protocol[Machine_LoopT]):
     """A class from which all read-only attributes and properties of a yarn-carrier can be accessed.
     This class defines common properties between yarn-carriers and yarn-carrier-snapshots.
     """
@@ -168,10 +169,9 @@ class Yarn_Carrier(Yarn_Carrier_State[Machine_LoopT]):
     def __init__(
         self,
         carrier_id: int,
-        yarn: Machine_Knit_Yarn[Machine_LoopT] | None = None,
         yarn_properties: Yarn_Properties | None = None,
-        knit_graph: Knit_Graph | None = None,
-        machine_state: Knitting_Machine | None = None,
+        knit_graph: Knit_Graph[Machine_LoopT] | None = None,
+        machine_state: Knitting_Machine[Machine_LoopT] | None = None,
     ) -> None:
         """Initialize a yarn carrier with specified ID and optional yarn configuration.
 
@@ -180,21 +180,16 @@ class Yarn_Carrier(Yarn_Carrier_State[Machine_LoopT]):
             yarn (Machine_Knit_Yarn, optional): Existing machine knit yarn to assign to this carrier. Defaults to None.
             yarn_properties (Yarn_Properties | None, optional): Properties for creating new yarn if yarn parameter is None. Defaults to None.
         """
-        self._machine_state: Knitting_Machine | None = machine_state
+        self._machine_state: Knitting_Machine[Machine_LoopT] | None = machine_state
         self._carrier_id: int = carrier_id
         self._is_active: bool = False
         self._is_hooked: bool = False
         self._position: Needle_Bed_Position = self.starting_position(self._machine_state)
-        if yarn is not None:
-            self._yarn: Machine_Knit_Yarn[Machine_LoopT] = yarn
-            if knit_graph is not None:
-                self._yarn.knit_graph = knit_graph
-        else:
-            if yarn_properties is None and self._machine_state is not None:
-                yarn_properties = Yarn_Properties(
-                    color=self._machine_state.machine_specification.get_yarn_color(self.carrier_id)
-                )
-            self._yarn: Machine_Knit_Yarn = Machine_Knit_Yarn(self, yarn_properties, knit_graph=knit_graph)
+        if yarn_properties is None and self._machine_state is not None:
+            yarn_properties = Yarn_Properties(
+                color=self._machine_state.machine_specification.get_yarn_color(self.carrier_id)
+            )
+        self._yarn: Machine_Knit_Yarn = Machine_Knit_Yarn[Machine_LoopT](self, yarn_properties, knit_graph=knit_graph)
 
     @property
     def knitting_machine(self) -> Knitting_Machine[Machine_LoopT] | None:

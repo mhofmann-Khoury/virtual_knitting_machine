@@ -226,7 +226,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
     def test_make_loops_inactive_carrier_raises_exception(self):
         """Test make_loops with inactive carrier raises exception."""
         with self.assertRaises(Use_Inactive_Carrier_Exception):
-            self.system.make_loops([1], Needle(True, 1), Carriage_Pass_Direction.Leftward, rack=0)
+            self.system.make_loops([1], Needle(True, 1), Carriage_Pass_Direction.Leftward)
 
     def test_getitem_single_integer(self):
         """Test __getitem__ with single integer."""

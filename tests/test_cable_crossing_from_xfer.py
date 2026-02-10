@@ -30,9 +30,9 @@ class TestCarriage(unittest.TestCase):
         self.machine.rack = -1  # rack to right # rack -1
         self.machine.xfer(f1)  # xfer f1 b2
         self.assertEqual(self.machine.back_loops()[0].position, 2)
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 1)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertEqual(self.machine.knit_graph.braid_graph.get_crossing(l, r), Crossing_Direction.Under_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 1)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertEqual(crossing, Crossing_Direction.Under_Right)
         self.machine.rack = 0  # rack 0
         self.machine.xfer(f2.opposite())  # xfer b2 f2
         self.assertEqual(len(self.machine.back_loops()), 0)
@@ -48,9 +48,9 @@ class TestCarriage(unittest.TestCase):
         self.machine.rack = 1  # rack to left
         self.machine.xfer(f2)  # xfer f2 b1
         self.assertEqual(self.machine.back_loops()[0].position, 1)
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 1)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertEqual(self.machine.knit_graph.braid_graph.get_crossing(l, r), Crossing_Direction.Over_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 1)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertEqual(crossing, Crossing_Direction.Over_Right)
         self.machine.rack = 0
         self.machine.xfer(f1.opposite())  # xfer b1 f1
         self.assertEqual(len(self.machine.back_loops()), 0)
@@ -68,12 +68,12 @@ class TestCarriage(unittest.TestCase):
         self.machine.rack = -2  # rack to right
         self.machine.xfer(f1)  # xfer f1 b3
         self.assertEqual(self.machine.back_loops()[0].position, 3)
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 2)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertEqual(self.machine.knit_graph.braid_graph.get_crossing(l, r), Crossing_Direction.Under_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 2)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertEqual(crossing, Crossing_Direction.Under_Right)
         self.machine.rack = 0
         self.machine.xfer(f3.opposite())
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 2)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 2)
         self.assertEqual(len(self.machine.back_loops()), 0)
 
     def test_decrease_long_leftward(self):
@@ -89,12 +89,12 @@ class TestCarriage(unittest.TestCase):
         self.machine.rack = 2  # rack to left
         self.machine.xfer(f3)
         self.assertEqual(self.machine.back_loops()[0].position, 1)
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 2)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertEqual(self.machine.knit_graph.braid_graph.get_crossing(l, r), Crossing_Direction.Over_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 2)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertEqual(crossing, Crossing_Direction.Over_Right)
         self.machine.rack = 0
         self.machine.xfer(f1.opposite())
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 2)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 2)
         self.assertEqual(len(self.machine.back_loops()), 0)
 
     def test_twist_cable_leftward(self):
@@ -108,14 +108,14 @@ class TestCarriage(unittest.TestCase):
         self.machine.rack = -1  # rack to right
         self.machine.xfer(f1)  # xfer f1 b2
         self.assertEqual(self.machine.back_loops()[0].position, 2)
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 1)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertEqual(self.machine.knit_graph.braid_graph.get_crossing(l, r), Crossing_Direction.Under_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 1)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertEqual(crossing, Crossing_Direction.Under_Right)
         self.machine.rack = 1
         self.machine.xfer(f2)  # xfer f2 b1
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 1)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertTrue(self.machine.knit_graph.braid_graph.get_crossing(l, r) == Crossing_Direction.Under_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 1)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertTrue(crossing == Crossing_Direction.Under_Right)
         self.machine.rack = 0
         for n in self.machine.back_loops():
             self.machine.xfer(n)
@@ -131,14 +131,14 @@ class TestCarriage(unittest.TestCase):
         self.machine.rack = 1  # rack to left
         self.machine.xfer(f2)  # xfer f2 b1
         self.assertEqual(self.machine.back_loops()[0].position, 1)
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 1)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertTrue(self.machine.knit_graph.braid_graph.get_crossing(l, r) == Crossing_Direction.Over_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 1)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertTrue(crossing == Crossing_Direction.Over_Right)
         self.machine.rack = -1
         self.machine.xfer(f1)  # xfer f1 b2
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 1)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertTrue(self.machine.knit_graph.braid_graph.get_crossing(l, r) == Crossing_Direction.Over_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 1)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertTrue(crossing == Crossing_Direction.Over_Right)
         self.machine.rack = 0
         for n in self.machine.back_loops():
             self.machine.xfer(n)
@@ -156,21 +156,21 @@ class TestCarriage(unittest.TestCase):
         self.machine.rack = 1
         self.machine.xfer(f3)  # xfer f3 b2
         self.machine.xfer(f2)  # xfer f2 b1
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 1)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertTrue(self.machine.knit_graph.braid_graph.get_crossing(l, r) == Crossing_Direction.Over_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 1)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertTrue(crossing == Crossing_Direction.Over_Right)
         self.machine.rack = -2  # rack to right
         self.machine.xfer(f1)  # xfer f1 b3
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 2)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertTrue(self.machine.knit_graph.braid_graph.get_crossing(l, r) == Crossing_Direction.Over_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 2)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertTrue(crossing == Crossing_Direction.Over_Right)
         self.machine.rack = 0
         self.machine.xfer(f3.opposite())
         self.machine.xfer(f2.opposite())
         self.machine.xfer(f1.opposite())
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 2)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertTrue(self.machine.knit_graph.braid_graph.get_crossing(l, r) == Crossing_Direction.Over_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 2)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertTrue(crossing == Crossing_Direction.Over_Right)
 
     def test_1_over_2_leftward_cable(self):
         self.machine.in_hook(1)
@@ -185,18 +185,18 @@ class TestCarriage(unittest.TestCase):
         self.machine.rack = -1
         self.machine.xfer(f1)  # xfer f1 b2
         self.machine.xfer(f2)  # xfer f2 b3
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 1)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertTrue(self.machine.knit_graph.braid_graph.get_crossing(l, r) == Crossing_Direction.Under_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 1)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertTrue(crossing == Crossing_Direction.Under_Right)
         self.machine.rack = 2
         self.machine.xfer(f3)  # xfer f3 b1
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 2)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertTrue(self.machine.knit_graph.braid_graph.get_crossing(l, r) == Crossing_Direction.Under_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 2)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertTrue(crossing == Crossing_Direction.Under_Right)
         self.machine.rack = 0
         self.machine.xfer(f3.opposite())
         self.machine.xfer(f2.opposite())
         self.machine.xfer(f1.opposite())
-        self.assertEqual(len(self.machine.knit_graph.braid_graph.loop_crossing_graph.edges), 2)
-        for l, r in self.machine.knit_graph.braid_graph.loop_crossing_graph.edges:
-            self.assertTrue(self.machine.knit_graph.braid_graph.get_crossing(l, r) == Crossing_Direction.Under_Right)
+        self.assertEqual(self.machine.knit_graph.braid_graph.edge_count, 2)
+        for l, r, crossing in self.machine.knit_graph.braid_graph.edge_iter:
+            self.assertTrue(crossing == Crossing_Direction.Under_Right)

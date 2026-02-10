@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Protocol, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
     Blocked_by_Yarn_Inserting_Hook_Exception,
@@ -30,6 +30,7 @@ from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier, Yarn_Carrier_State
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import Machine_Knit_Yarn
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
@@ -463,6 +464,26 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
             raise Hooked_Carrier_Exception(carrier_id)
         carrier.outhook()
 
+    def _make_loop(
+        self, carrier: Yarn_Carrier[Machine_LoopT], needle: Needle[Machine_LoopT], **_loop_kwargs: Any
+    ) -> Machine_LoopT:
+        """
+
+        Args:
+            carrier (Yarn_Carrier[Machine_LoopT]): Carrier to be used.
+            needle (Needle[Machine_LoopT]): Needle to the loop is created on.
+
+        Returns:
+            Machine_Knit_Loop: Create a machine knit loop of the bound type on the given needle on a carrier.
+        """
+        carrier = self[carrier]
+        return cast(
+            Machine_LoopT,
+            Machine_Knit_Loop(
+                cast(Needle[Machine_Knit_Loop], needle), cast(Machine_Knit_Yarn[Machine_Knit_Loop], carrier.yarn)
+            ),
+        )
+
     def make_loops(
         self,
         carrier_ids: Sequence[int | Yarn_Carrier] | Yarn_Carrier_Set | Sequence[int] | Sequence[Yarn_Carrier],
@@ -495,9 +516,8 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
                 raise Use_Inactive_Carrier_Exception(cid)
             float_source_loop = carrier.yarn.last_loop
             float_source_needle = float_source_loop.holding_needle if float_source_loop is not None else None
-            loop = carrier.yarn.make_loop_on_needle(
-                holding_needle=needle, max_float_length=self.knitting_machine.machine_specification.maximum_float
-            )
+            loop = self._make_loop(carrier, needle)
+            carrier.yarn.add_loop_to_end(loop)
             if float_source_needle is not None:
                 float_source_needle = self.knitting_machine[float_source_needle]
                 float_start = min(float_source_needle.position, needle.position)
@@ -515,9 +535,9 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
                 for float_source_loop in float_source_needle.held_loops:
                     for fn in front_floated_needles:
                         for fl in fn.held_loops:
-                            carrier.yarn.add_loop_in_front_of_float(fl, float_source_loop)
+                            float_source_loop.add_loop_in_front_of_started_float(fl)
                     for bn in back_floated_needles:
                         for bl in bn.held_loops:
-                            carrier.yarn.add_loop_behind_float(bl, float_source_loop)
+                            float_source_loop.add_loop_behind_started_float(bl)
             loops.append(loop)
         return loops
