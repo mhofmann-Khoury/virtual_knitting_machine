@@ -139,6 +139,7 @@ class Knitting_Machine_Error_Policy:
     ) -> None:
         """
         Check the given violation against this policy and act accordingly.
+
         Args:
             response (ViolationResponse): The response pattern to the violation.
             violation_exception (Exception): The exception to raised with the given violation.
