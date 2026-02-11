@@ -2,71 +2,58 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol
 
-from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
+from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import (
+    Knitting_Machine_Error_Policy,
+    Machine_State_With_Policy,
+)
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
+    from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
 
 
-@runtime_checkable
-class Machine_Component(Protocol):
-    """
-    A protocol for elements owned by a knitting machine used to access common state values across multiple sources.
-    """
-
-    _DEFAULT_RACK: int = 0  # Default racking alignment if a machine is not specified
-    _DEFAULT_ALL_NEEDLE: bool = False  # Default state of all needle racking.
-    _DEFAULT_MACHINE_SPEC: Knitting_Machine_Specification = (
-        Knitting_Machine_Specification()
-    )  # Default specification when the knitting machine is not present.
-
+class Machine_Component(Machine_State_With_Policy, Protocol):
     @property
-    def knitting_machine(self) -> Knitting_Machine_State | None:
+    def knitting_machine(self) -> Knitting_Machine_State:
         """
         Returns:
-            Knitting_Machine_State | None: The machine state of the knitting machine that owns this component or None if the machine has not been specified.
+            Knitting_Machine_State: The knitting machine that owns this component.
         """
         ...
 
     @property
-    def has_machine(self) -> bool:
+    def violation_policy(self) -> Knitting_Machine_Error_Policy:
         """
         Returns:
-            bool: True if the knitting machine that owns this component has been specified.
+            Knitting_Machine_Error_Policy: The policy for handling machine state errors.
         """
-        return self.knitting_machine is not None
+        return self.knitting_machine.violation_policy
 
     @property
     def machine_specification(self) -> Knitting_Machine_Specification:
         """
         Returns:
-            Knitting_Machine_Specification: The machine specification of the machine associated with this component or a default machine spec.
+            Knitting_Machine_Specification: The machine specification of the machine associated with this component.
         """
-        return (
-            self._DEFAULT_MACHINE_SPEC if self.knitting_machine is None else self.knitting_machine.machine_specification
-        )
+        return self.knitting_machine.machine_specification
 
     @property
     def machine_racking(self) -> int:
         """
         Returns:
-            int: The racking of the knitting machine. Defaults to 0 if no machine is specified.
+            int: The racking of the knitting machine.
         """
-        return self.knitting_machine.rack if self.knitting_machine is not None else Machine_Component._DEFAULT_RACK
+        return self.knitting_machine.rack
 
     @property
     def machine_is_all_needle_racked(self) -> bool:
         """
         Returns:
-            bool: True if the knitting machine is racked for all needle knitting. Defaults to False if no machine is specified.
+            bool: True if the knitting machine is racked for all needle knitting.
         """
-        return (
-            self.knitting_machine.all_needle_rack
-            if self.knitting_machine is not None
-            else Machine_Component._DEFAULT_ALL_NEEDLE
-        )
+        return self.knitting_machine.all_needle_rack
 
     @property
     def needle_count_of_machine(self) -> int:
@@ -83,17 +70,3 @@ class Machine_Component(Protocol):
             int: The rightmost slot on this knitting machine. Defaults to the standard bed size in the knitting machine specification.
         """
         return self.needle_count_of_machine - 1
-
-    def machines_match(self, other: Machine_Component | Knitting_Machine_State) -> bool:
-        """
-
-        Args:
-            other (Machine_Component | Knitting_Machine_State): The component or machine to ensure the machines match.
-
-        Returns:
-            bool: True if the other component shares or is the machine state of this component. False, otherwise.
-        """
-        if isinstance(other, Machine_Component):
-            return self.knitting_machine is other.knitting_machine
-        else:
-            return self.knitting_machine is other

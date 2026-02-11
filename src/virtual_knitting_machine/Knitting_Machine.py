@@ -32,11 +32,16 @@ from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_
     Yarn_Insertion_System_State,
 )
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import (
+    Knitting_Machine_Error_Policy,
+    Machine_State_With_Policy,
+    checked_operation,
+)
 
 Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
 
-class Knitting_Machine_State(Container, Protocol[Machine_LoopT, Carrier_State_Type]):
+class Knitting_Machine_State(Machine_State_With_Policy, Container, Protocol[Machine_LoopT, Carrier_State_Type]):
     """
     Protocol defines all the readable attributes and properties of a knitting machine used to determine its current state.
     """
@@ -88,6 +93,13 @@ class Knitting_Machine_State(Container, Protocol[Machine_LoopT, Carrier_State_Ty
             Needle_Bed_State: The back bed of needles and slider needles in this machine.
         """
         ...
+
+    @property
+    def gauged_layers(self) -> int:
+        """
+        Returns:
+            int: The number of gauged layers the machine is set to.
+        """
 
     @property
     def all_needle_rack(self) -> bool:
@@ -290,6 +302,49 @@ class Knitting_Machine_State(Container, Protocol[Machine_LoopT, Carrier_State_Ty
         else:
             return int(needle) in self.back_bed
 
+    def get_front_needle(self, position: int, is_slider: bool = False) -> Needle[Machine_LoopT]:
+        """
+        Args:
+            position (int): The position of the needle.
+            is_slider (bool): True if the needle is on a slider. Defaults to False.
+
+        Returns:
+            Needle[Machine_LoopT]: The specified front bed needle.
+        """
+        if is_slider:
+            return self.front_bed.sliders[position]
+        else:
+            return self.front_bed[position]
+
+    def get_back_needle(self, position: int, is_slider: bool = False) -> Needle[Machine_LoopT]:
+        """
+        Args:
+            position (int): The position of the needle.
+            is_slider (bool): True if the needle is on a slider. Defaults to False.
+
+        Returns:
+            Needle[Machine_LoopT]: The specified back bed needle.
+        """
+        if is_slider:
+            return self.back_bed.sliders[position]
+        else:
+            return self.back_bed[position]
+
+    def get_specified_needle(self, is_front: bool, position: int, is_slider: bool = False) -> Needle[Machine_LoopT]:
+        """
+        Args:
+            is_front (bool): If True, get a front bed needle.:
+            position (int): The position of the needle.
+            is_slider (bool, optional): If True get a slider needle. Defaults to False.
+
+        Returns:
+            Needle[Machine_LoopT]: The specified needle on this machine.
+        """
+        if is_front:
+            return self.get_front_needle(position, is_slider)
+        else:
+            return self.get_back_needle(position, is_slider)
+
     def get_needle(self, needle: Needle) -> Needle[Machine_LoopT]:
         """Get the needle on this knitting machine at the given needle location.
 
@@ -380,10 +435,7 @@ class Knitting_Machine_State(Container, Protocol[Machine_LoopT, Carrier_State_Ty
             At racking 2 it is possible to transfer from f3 to b1 using formulas F = B + R, R = F - B, B = F - R.
         """
         aligned_position = needle.position - self.rack if needle.is_front else needle.position + self.rack
-        if aligned_slider:
-            return self[Slider_Needle(not needle.is_front, aligned_position)]
-        else:
-            return self[Needle(not needle.is_front, aligned_position)]
+        return self.get_specified_needle(not needle.is_front, aligned_position, aligned_slider)
 
     def valid_rack(self, front_pos: int, back_pos: int) -> bool:
         """Check if transfer can be completed at current racking.
@@ -486,6 +538,7 @@ class Knitting_Machine(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier]):
         self,
         machine_specification: Knitting_Machine_Specification | None = None,
         knit_graph: Knit_Graph[Machine_LoopT] | None = None,
+        violation_policy: Knitting_Machine_Error_Policy | None = None,
     ) -> None:
         """Initialize a virtual knitting machine with specified configuration.
 
@@ -493,9 +546,13 @@ class Knitting_Machine(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier]):
             machine_specification (Knitting_Machine_Specification, optional): Configuration parameters for the machine. Defaults to Knitting_Machine_Specification().
             knit_graph (Knit_Graph | None, optional): Existing knit graph to use, creates new one if None. Defaults to None.
         """
-        if machine_specification is None:
-            machine_specification = Knitting_Machine_Specification()
-        self._machine_specification: Knitting_Machine_Specification = machine_specification
+        self._gauge: int = 1
+        self._violation_policy: Knitting_Machine_Error_Policy = (
+            violation_policy if violation_policy is not None else Knitting_Machine_Error_Policy()
+        )
+        self._machine_specification: Knitting_Machine_Specification = (
+            machine_specification if machine_specification is not None else Knitting_Machine_Specification()
+        )
         if knit_graph is None:
             knit_graph = Knit_Graph[Machine_LoopT]()
         self._knit_graph: Knit_Graph[Machine_LoopT] = knit_graph
@@ -507,6 +564,14 @@ class Knitting_Machine(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier]):
         self._carriage: Carriage = Carriage(self)
         self._rack: int = 0
         self._all_needle_rack: bool = False
+
+    @property
+    def violation_policy(self) -> Knitting_Machine_Error_Policy:
+        """
+        Returns:
+            Knitting_Machine_Error_Policy: The policy for handling machine state errors.
+        """
+        return self._violation_policy
 
     @property
     def machine_specification(self) -> Knitting_Machine_Specification:
@@ -558,6 +623,14 @@ class Knitting_Machine(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier]):
         return self._back_bed
 
     @property
+    def gauged_layers(self) -> int:
+        return self._gauge
+
+    @gauged_layers.setter
+    def gauged_layers(self, gauge: int) -> None:
+        self._gauge = max(1, gauge)  # clamp to 1 layer
+
+    @property
     def all_needle_rack(self) -> bool:
         """Check if racking is aligned for all needle knitting.
 
@@ -576,6 +649,7 @@ class Knitting_Machine(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier]):
         return self._rack
 
     @rack.setter
+    @checked_operation
     def rack(self, new_rack: float) -> None:
         """Set the rack value with support for all-needle racking.
 
@@ -585,13 +659,15 @@ class Knitting_Machine(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier]):
         Raises:
             Max_Rack_Exception: If the absolute rack value exceeds the maximum allowed rack.
         """
-        if abs(new_rack) > self.max_rack:
-            raise Max_Rack_Exception(new_rack, self.max_rack)
-        self._all_needle_rack = abs(new_rack - int(new_rack)) != 0.0
-        if new_rack < 0 and self.all_needle_rack:
-            self._rack = int(new_rack) - 1
-        else:
-            self._rack = int(new_rack)
+        with self.handle_violations():
+            if abs(new_rack) > self.max_rack:
+                raise Max_Rack_Exception(new_rack, self.max_rack)
+        if self.violation_policy.proceed:
+            self._all_needle_rack = abs(new_rack - int(new_rack)) != 0.0
+            if new_rack < 0 and self.all_needle_rack:
+                self._rack = int(new_rack) - 1
+            else:
+                self._rack = int(new_rack)
 
     def update_rack(self, front_pos: int, back_pos: int) -> bool:
         """Update the current racking to align front and back needle positions.
@@ -629,13 +705,18 @@ class Knitting_Machine(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier]):
             target_needle (Needle): Needle to transfer loops to.
 
         Returns:
-            int | None:
+            int:
                 Racking value needed to make transfer between start and target needle,
                 None if no racking can be made because needles are on the same bed.
+
+        Raises:
+            ValueError: If the needles are on the same bed and therefor cannot be aligned by racking.
         """
         if start_needle.is_front == target_needle.is_front:
-            return None
-        if start_needle.is_front:
+            raise ValueError(
+                f"{start_needle} and {target_needle} cannot be aligned by racking because they are on the same bed."
+            )
+        elif start_needle.is_front:
             return Knitting_Machine.get_rack(start_needle.position, target_needle.position)
         else:
             return Knitting_Machine.get_rack(target_needle.position, start_needle.position)
@@ -875,9 +956,7 @@ class Knitting_Machine(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier]):
         """
         # Get the needle and aligned needle in the current machine state.
         starting_needle = self[starting_needle]  # get needle on the machine.
-        assert isinstance(starting_needle, Needle)
         aligned_needle = self[self.get_aligned_needle(starting_needle, to_slider)]  # get needle on the machine.
-        assert isinstance(aligned_needle, Needle)
 
         # Drop the loops from the starting bed and add them to the aligned needle on the opposite bed.
         if starting_needle.is_front:

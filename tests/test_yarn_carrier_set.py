@@ -5,7 +5,6 @@ import warnings
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Duplicate_Carriers_In_Set
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
 
@@ -15,8 +14,8 @@ class TestYarnCarrierSet(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures before each test method."""
-        # self.mock_carrier_system = Mock()
-        self.carrier_system = Yarn_Insertion_System(Knitting_Machine())
+        self.machine = Knitting_Machine()
+        self.carrier_system = Yarn_Insertion_System(self.machine)
 
     def test_initialization_single_integer(self):
         """Test initialization with single integer."""
@@ -28,7 +27,7 @@ class TestYarnCarrierSet(unittest.TestCase):
 
     def test_initialization_single_carrier(self):
         """Test initialization with single Yarn_Carrier object."""
-        carrier = Yarn_Carrier(10)
+        carrier = self.machine.get_carrier(10)
 
         carrier_set = Yarn_Carrier_Set(carrier)
 
@@ -47,7 +46,7 @@ class TestYarnCarrierSet(unittest.TestCase):
         """Test initialization with list of Yarn_Carrier objects."""
         carriers = []
         for i in [2, 4, 6]:
-            carrier = Yarn_Carrier(i)
+            carrier = self.machine.get_carrier(i)
             carriers.append(carrier)
 
         carrier_set = Yarn_Carrier_Set(carriers)
@@ -57,7 +56,7 @@ class TestYarnCarrierSet(unittest.TestCase):
 
     def test_initialization_mixed_list(self):
         """Test initialization with mixed list of integers and carriers."""
-        carrier = Yarn_Carrier(3)
+        carrier = self.machine.get_carrier(3)
 
         carrier_set = Yarn_Carrier_Set([2, carrier, 12])
 
@@ -158,7 +157,7 @@ class TestYarnCarrierSet(unittest.TestCase):
         """Test equality comparison with Yarn_Carrier."""
         carrier_set = Yarn_Carrier_Set(8)
 
-        carrier = Yarn_Carrier(8)
+        carrier = self.machine.get_carrier(8)
 
         self.assertTrue(carrier_set == carrier)
 
@@ -231,8 +230,8 @@ class TestYarnCarrierSet(unittest.TestCase):
         """Test __contains__ with Yarn_Carrier object."""
         carrier_set = Yarn_Carrier_Set([3, 6, 9])
 
-        carrier_in = Yarn_Carrier(6)
-        carrier_out = Yarn_Carrier(5)
+        carrier_in = self.machine.get_carrier(6)
+        carrier_out = self.machine.get_carrier(5)
 
         self.assertTrue(carrier_in in carrier_set)
         self.assertFalse(carrier_out in carrier_set)

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import Knitting_Machine_Exception
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import Violation
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier_State
@@ -18,15 +19,21 @@ class Yarn_Carrier_Exception(Knitting_Machine_Exception):
     This class provides a foundation for all yarn carrier-specific exceptions and includes
     the carrier ID reference for detailed error reporting and debugging of carrier-related operational failures."""
 
-    def __init__(self, carrier_id: int | Yarn_Carrier_State, message: str) -> None:
+    def __init__(
+        self,
+        carrier_id: int | Yarn_Carrier_State,
+        message: str,
+        violation: Violation = Violation.YARN_CARRIER_VIOLATION,
+    ) -> None:
         """Initialize a yarn carrier-specific exception.
 
         Args:
             carrier_id (int | Yarn_Carrier): The carrier ID or carrier object involved in the exception condition.
             message (str): The descriptive error message about the carrier state or operation failure.
+            violation (Violation, optional): The type of violation associated with this error. Defaults to Violation.YARN_CARRIER_VIOLATION.
         """
         self.carrier_id: Yarn_Carrier_State | int = carrier_id
-        super().__init__(message)
+        super().__init__(message, violation=violation)
 
 
 class Hooked_Carrier_Exception(Yarn_Carrier_Exception):
@@ -40,18 +47,23 @@ class Hooked_Carrier_Exception(Yarn_Carrier_Exception):
         Args:
             carrier_id (int | Yarn_Carrier): The carrier that is already on the yarn inserting hook.
         """
-        super().__init__(carrier_id, f"Cannot Hook {carrier_id} out because it is on the yarn inserting hook.")
-
-
-class Blocked_by_Yarn_Inserting_Hook_Exception(Yarn_Carrier_Exception):
-    def __init__(self, carrier_id: int | Yarn_Carrier_State, needle: Needle) -> None:
         super().__init__(
             carrier_id,
-            f"Cannot use carrier {carrier_id} on needle {needle} because it is blocked by the yarn inserting hook.",
+            f"Cannot Hook {carrier_id} out because it is on the yarn inserting hook.",
+            violation=Violation.HOOKED_CARRIER,
         )
 
 
-class Inserting_Hook_In_Use_Exception(Yarn_Carrier_Exception):
+class Blocked_by_Yarn_Inserting_Hook_Exception(Yarn_Carrier_Exception):
+    def __init__(self, hooked_carrier_id: int | Yarn_Carrier_State, needle: Needle) -> None:
+        super().__init__(
+            hooked_carrier_id,
+            f"Cannot use {needle} because it is blocked by the yarn inserting hook holding carrier {hooked_carrier_id}.",
+            violation=Violation.BlOCKED_BY_HOOK,
+        )
+
+
+class Inserting_Hook_In_Use_Exception(Yarn_Carrier_Exception, ValueError):
     """Exception for attempting to use the yarn inserting hook when it is already occupied by another carrier.
     This exception occurs when trying to perform hook operations while the insertion hook is already in use by a different carrier, preventing conflicts in hook operations.
     """
@@ -63,7 +75,9 @@ class Inserting_Hook_In_Use_Exception(Yarn_Carrier_Exception):
             carrier_id (int | Yarn_Carrier): The carrier that attempted to use the already occupied insertion hook.
         """
         super().__init__(
-            carrier_id, f"Cannot bring carrier {carrier_id} out because the yarn inserting hook is in use."
+            carrier_id,
+            f"Cannot bring carrier {carrier_id} out because the yarn inserting hook is in use.",
+            violation=Violation.INSERTING_HOOK_IN_USE,
         )
 
 
@@ -78,4 +92,6 @@ class Use_Inactive_Carrier_Exception(Yarn_Carrier_Exception):
         Args:
             carrier_id (int | Yarn_Carrier): The inactive carrier that was attempted to be used.
         """
-        super().__init__(carrier_id, f"Cannot use inactive yarn on carrier {carrier_id}.")
+        super().__init__(
+            carrier_id, f"Cannot use inactive yarn on carrier {carrier_id}.", violation=Violation.INACTIVE_CARRIER
+        )

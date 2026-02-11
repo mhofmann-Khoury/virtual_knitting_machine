@@ -27,7 +27,7 @@ class Slider_Needle(Needle[Machine_LoopT]):
     """
 
     def __init__(
-        self, is_front: bool, position: int, knitting_machine: Knitting_Machine_State[Machine_LoopT, Any] | None = None
+        self, is_front: bool, position: int, knitting_machine: Knitting_Machine_State[Machine_LoopT, Any]
     ) -> None:
         super().__init__(is_front, position, knitting_machine)
 

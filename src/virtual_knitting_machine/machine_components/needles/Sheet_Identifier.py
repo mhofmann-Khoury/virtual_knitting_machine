@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from typing import cast
 
+from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.needles.Sheet_Needle import Sheet_Needle, Slider_Sheet_Needle
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 
 
 class Sheet_Identifier:
@@ -38,36 +37,23 @@ class Sheet_Identifier:
         """
         return self._gauge
 
-    def get_needle(self, needle: Needle) -> Sheet_Needle:
-        """Used to identify the sheet needle from a given base needle.
-        Args:
-            needle: Needle to access from sheet. Maybe a sheet needle which will be retargeted to this sheet.
-
-        Returns:
-            Sheet_Needle:
-                The sheet needle at the given needle index and bed
-
-        """
-        pos = needle.position
-        if isinstance(needle, Sheet_Needle):
-            pos = needle.sheet_pos
-        if isinstance(needle, Slider_Needle):
-            return Slider_Sheet_Needle(needle.is_front, pos, self.sheet, self.gauge)
-        else:
-            return Sheet_Needle(needle.is_front, pos, self.sheet, self.gauge)
-
-    def needle(self, is_front: bool, position: int) -> Sheet_Needle:
+    def needle(
+        self, is_front: bool, position_in_sheet: int, machine_state: Knitting_Machine_State, is_slider: bool = False
+    ) -> Needle:
         """Gets a needle within the sheet with specified position
 
         Args:
             is_front (bool): True if needle is on front bed.
-            position (bool): The position within the sheet.
+            position_in_sheet (bool): The position within the sheet.
+            machine_state (Knitting_Machine_State): The state of the machine to get the needle from.
+            is_slider (bool,): True if needle is a slider. Defaults to False.
 
         Returns:
-            Sheet_Needle:
-                The specified sheet needle.
+            Needle: The needle in the machine state at the given sheet position.
         """
-        return Sheet_Needle(is_front, position, self.sheet, self.gauge)
+        return machine_state.get_specified_needle(
+            is_front, Needle.needle_position_from_sheet_and_gauge(position_in_sheet, self.sheet, self.gauge), is_slider
+        )
 
     def __str__(self) -> str:
         return f"s{self.sheet}:g{self.gauge}"

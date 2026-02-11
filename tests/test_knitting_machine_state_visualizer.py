@@ -3,7 +3,6 @@ from unittest import TestCase
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.Knitting_Machine_Snapshot import Knitting_Machine_Snapshot
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.knitting_machine_state_visualizer import Knitting_Machine_State_Visualizer
@@ -39,12 +38,16 @@ class TestKnitting_Machine_State_Visualizer(TestCase):
             direction (Carriage_Pass_Direction, optional): The direction to tuck in. Defaults to Leftward
         """
         if isinstance(needle_range, int):
-            self.machine.tuck(Yarn_Carrier_Set(carrier_id), Needle(is_front, needle_range), direction)
+            self.machine.tuck(
+                Yarn_Carrier_Set(carrier_id), self.machine.get_specified_needle(is_front, needle_range), direction
+            )
         else:
             for n in range(
                 needle_range.start, needle_range.stop, needle_range.step if needle_range.step is not None else 1
             ):
-                self.machine.tuck(Yarn_Carrier_Set(carrier_id), Needle(is_front, n), direction)
+                self.machine.tuck(
+                    Yarn_Carrier_Set(carrier_id), self.machine.get_specified_needle(is_front, n), direction
+                )
 
     def xfer_to_sliders(self, start_front: bool = True):
         loops = self.machine.front_loops() if start_front else self.machine.back_loops()

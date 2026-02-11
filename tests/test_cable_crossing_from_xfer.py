@@ -7,7 +7,6 @@ from knit_graphs.artin_wale_braids.Crossing_Direction import Crossing_Direction
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 
 
@@ -22,9 +21,10 @@ class TestCarriage(unittest.TestCase):
     def test_decrease_rightward(self):
         self.machine.in_hook(1)  # inhook 1
         cs = Yarn_Carrier_Set(1)
-        f2 = Needle(True, 2)
+        f2 = self.machine.get_specified_needle(True, 2)
         self.machine.tuck(cs, f2, Carriage_Pass_Direction.Leftward)  # tuck - f2 1
-        f1 = Needle(True, 1)
+        self.assertEqual(1, len(self.machine.front_loops()))
+        f1 = self.machine.get_specified_needle(True, 1)
         self.machine.tuck(cs, f1, Carriage_Pass_Direction.Leftward)  # tuck - f1 1
         self.machine.release_hook()  # releasehook
         self.machine.rack = -1  # rack to right # rack -1
@@ -40,9 +40,9 @@ class TestCarriage(unittest.TestCase):
     def test_decrease_leftward(self):
         self.machine.in_hook(1)
         cs = Yarn_Carrier_Set(1)
-        f2 = Needle(True, 2)
+        f2 = self.machine.get_specified_needle(True, 2)
         self.machine.tuck(cs, f2, Carriage_Pass_Direction.Leftward)
-        f1 = Needle(True, 1)
+        f1 = self.machine.get_specified_needle(True, 1)
         self.machine.tuck(cs, f1, Carriage_Pass_Direction.Leftward)
         self.machine.release_hook()
         self.machine.rack = 1  # rack to left
@@ -58,11 +58,11 @@ class TestCarriage(unittest.TestCase):
     def test_decrease_long_rightward(self):
         self.machine.in_hook(1)
         cs = Yarn_Carrier_Set(1)
-        f3 = Needle(True, 3)
+        f3 = self.machine.get_specified_needle(True, 3)
         self.machine.tuck(cs, f3, Carriage_Pass_Direction.Leftward)
-        f2 = Needle(True, 2)
+        f2 = self.machine.get_specified_needle(True, 2)
         self.machine.tuck(cs, f2, Carriage_Pass_Direction.Leftward)
-        f1 = Needle(True, 1)
+        f1 = self.machine.get_specified_needle(True, 1)
         self.machine.tuck(cs, f1, Carriage_Pass_Direction.Leftward)
         self.machine.release_hook()
         self.machine.rack = -2  # rack to right
@@ -79,11 +79,11 @@ class TestCarriage(unittest.TestCase):
     def test_decrease_long_leftward(self):
         self.machine.in_hook(1)
         cs = Yarn_Carrier_Set(1)
-        f3 = Needle(True, 3)
+        f3 = self.machine.get_specified_needle(True, 3)
         self.machine.tuck(cs, f3, Carriage_Pass_Direction.Leftward)
-        f2 = Needle(True, 2)
+        f2 = self.machine.get_specified_needle(True, 2)
         self.machine.tuck(cs, f2, Carriage_Pass_Direction.Leftward)
-        f1 = Needle(True, 1)
+        f1 = self.machine.get_specified_needle(True, 1)
         self.machine.tuck(cs, f1, Carriage_Pass_Direction.Leftward)
         self.machine.release_hook()
         self.machine.rack = 2  # rack to left
@@ -100,9 +100,9 @@ class TestCarriage(unittest.TestCase):
     def test_twist_cable_leftward(self):
         self.machine.in_hook(1)
         cs = Yarn_Carrier_Set(1)
-        f2 = Needle(True, 2)
+        f2 = self.machine.get_specified_needle(True, 2)
         self.machine.tuck(cs, f2, Carriage_Pass_Direction.Leftward)
-        f1 = Needle(True, 1)
+        f1 = self.machine.get_specified_needle(True, 1)
         self.machine.tuck(cs, f1, Carriage_Pass_Direction.Leftward)
         self.machine.release_hook()
         self.machine.rack = -1  # rack to right
@@ -123,9 +123,9 @@ class TestCarriage(unittest.TestCase):
     def test_twist_cable_rightward(self):
         self.machine.in_hook(1)
         cs = Yarn_Carrier_Set(1)
-        f2 = Needle(True, 2)
+        f2 = self.machine.get_specified_needle(True, 2)
         self.machine.tuck(cs, f2, Carriage_Pass_Direction.Leftward)
-        f1 = Needle(True, 1)
+        f1 = self.machine.get_specified_needle(True, 1)
         self.machine.tuck(cs, f1, Carriage_Pass_Direction.Leftward)
         self.machine.release_hook()
         self.machine.rack = 1  # rack to left
@@ -146,11 +146,11 @@ class TestCarriage(unittest.TestCase):
     def test_1_over_2_rightward_cable(self):
         self.machine.in_hook(1)
         cs = Yarn_Carrier_Set(1)
-        f3 = Needle(True, 3)
+        f3 = self.machine.get_specified_needle(True, 3)
         self.machine.tuck(cs, f3, Carriage_Pass_Direction.Leftward)
-        f2 = Needle(True, 2)
+        f2 = self.machine.get_specified_needle(True, 2)
         self.machine.tuck(cs, f2, Carriage_Pass_Direction.Leftward)
-        f1 = Needle(True, 1)
+        f1 = self.machine.get_specified_needle(True, 1)
         self.machine.tuck(cs, f1, Carriage_Pass_Direction.Leftward)
         self.machine.release_hook()
         self.machine.rack = 1
@@ -175,11 +175,11 @@ class TestCarriage(unittest.TestCase):
     def test_1_over_2_leftward_cable(self):
         self.machine.in_hook(1)
         cs = Yarn_Carrier_Set(1)
-        f3 = Needle(True, 3)
+        f3 = self.machine.get_specified_needle(True, 3)
         self.machine.tuck(cs, f3, Carriage_Pass_Direction.Leftward)
-        f2 = Needle(True, 2)
+        f2 = self.machine.get_specified_needle(True, 2)
         self.machine.tuck(cs, f2, Carriage_Pass_Direction.Leftward)
-        f1 = Needle(True, 1)
+        f1 = self.machine.get_specified_needle(True, 1)
         self.machine.tuck(cs, f1, Carriage_Pass_Direction.Leftward)
         self.machine.release_hook()
         self.machine.rack = -1

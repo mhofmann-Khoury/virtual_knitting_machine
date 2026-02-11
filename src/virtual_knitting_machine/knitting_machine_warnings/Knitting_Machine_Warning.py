@@ -51,6 +51,13 @@ class Knitting_Machine_Warning(RuntimeWarning):
         """
         ignore_str = ""
         if ignore_instructions:
-            ignore_str = ". Ignoring Operation."
-        self.message = f"\n\t{self.__class__.__name__}: {message}{ignore_str}"
+            ignore_str = "(Causing Operation is Ignored)"
+        self.message = f"\n{self.__class__.__name__}{ignore_str}:\n\t{message}"
         super().__init__(self.message)
+
+
+class Passed_Machine_Error_Warning(Knitting_Machine_Warning):
+
+    def __init__(self, exception: Exception, ignore_instructions: bool = False) -> None:
+        self.exception: Exception = exception
+        super().__init__(f"{self.exception.__class__} passed with warning\n\t{self.exception}", ignore_instructions)

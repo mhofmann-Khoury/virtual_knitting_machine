@@ -4,6 +4,7 @@ Module containing the Needle_Bed_Element class
 
 from typing import overload
 
+from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
@@ -26,14 +27,12 @@ class Needle_Bed_Element(Visualizer_Group):
         is_slider: bool,
         leftmost_needle: int,
         rightmost_needle: int,
-        all_needle_rack: bool,
-        carriage_direction: Carriage_Pass_Direction,
         render_sliders: bool,
         diagram_setting: Diagram_Settings,
+        machine_state: Knitting_Machine_State,
     ):
+        self.machine_state: Knitting_Machine_State = machine_state
         self.render_sliders = render_sliders
-        self.carriage_direction: Carriage_Pass_Direction = carriage_direction
-        self.all_needle_rack: bool = all_needle_rack
         self.settings: Diagram_Settings = diagram_setting
         self.rightmost_needle: int = rightmost_needle
         self.leftmost_needle: int = leftmost_needle
@@ -85,6 +84,22 @@ class Needle_Bed_Element(Visualizer_Group):
         """
         return self.rightmost_needle - self.leftmost_needle
 
+    @property
+    def all_needle_rack(self) -> bool:
+        """
+        Returns:
+            bool: True if the machine state is set for all needle rack. False otherwise.
+        """
+        return self.machine_state.all_needle_rack
+
+    @property
+    def carriage_direction(self) -> Carriage_Pass_Direction:
+        """
+        Returns:
+            Carriage_Pass_Direction: The last direction of movement of the carriage.
+        """
+        return self.machine_state.carriage.last_direction
+
     def on_bed(self, needle: Needle) -> bool:
         """
         Args:
@@ -121,9 +136,9 @@ class Needle_Bed_Element(Visualizer_Group):
     def _build_needles(self) -> None:
         def _needle(n: int) -> Needle:
             if self.is_slider:
-                return Slider_Needle(is_front=self.is_front, position=n)
+                return Slider_Needle(is_front=self.is_front, position=n, knitting_machine=self.machine_state)
             else:
-                return Needle(is_front=self.is_front, position=n)
+                return Needle(is_front=self.is_front, position=n, knitting_machine=self.machine_state)
 
         for needle_position in range(self.leftmost_needle, self.rightmost_needle + 1):
             needle = _needle(needle_position)

@@ -2,8 +2,8 @@
 
 import unittest
 
+from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 
 class TestCarriagePassDirection(unittest.TestCase):
@@ -11,6 +11,7 @@ class TestCarriagePassDirection(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures before each test method."""
+        self.machine = Knitting_Machine()
         self.leftward = Carriage_Pass_Direction.Leftward
         self.rightward = Carriage_Pass_Direction.Rightward
 
@@ -49,10 +50,10 @@ class TestCarriagePassDirection(unittest.TestCase):
     def test_sort_needles_rightward(self):
         """Test sorting needles in rightward direction."""
         needles = [
-            Needle(is_front=True, position=7),
-            Needle(is_front=True, position=2),
-            Needle(is_front=True, position=5),
-            Needle(is_front=False, position=3),
+            self.machine.get_specified_needle(is_front=True, position=7),
+            self.machine.get_specified_needle(is_front=True, position=2),
+            self.machine.get_specified_needle(is_front=True, position=5),
+            self.machine.get_specified_needle(is_front=False, position=3),
         ]
 
         sorted_needles = self.rightward.sort_needles(needles)
@@ -69,10 +70,10 @@ class TestCarriagePassDirection(unittest.TestCase):
     def test_sort_needles_leftward(self):
         """Test sorting needles in leftward direction."""
         needles = [
-            Needle(is_front=True, position=7),
-            Needle(is_front=True, position=2),
-            Needle(is_front=True, position=5),
-            Needle(is_front=False, position=3),
+            self.machine.get_specified_needle(is_front=True, position=7),
+            self.machine.get_specified_needle(is_front=True, position=2),
+            self.machine.get_specified_needle(is_front=True, position=5),
+            self.machine.get_specified_needle(is_front=False, position=3),
         ]
 
         sorted_needles = self.leftward.sort_needles(needles)
@@ -88,8 +89,8 @@ class TestCarriagePassDirection(unittest.TestCase):
 
     def test_sort_needles_with_racking(self):
         """Test sorting needles with specific racking value."""
-        front_needle = Needle(is_front=True, position=5)
-        back_needle = Needle(is_front=False, position=3)
+        front_needle = self.machine.get_specified_needle(is_front=True, position=5)
+        back_needle = self.machine.get_specified_needle(is_front=False, position=3)
 
         needles = [back_needle, front_needle]
 
@@ -104,10 +105,10 @@ class TestCarriagePassDirection(unittest.TestCase):
     def test_sort_needles_with_mixed_beds(self):
         """Test sorting needles from both front and back beds."""
         needles = [
-            Needle(is_front=True, position=3),
-            Needle(is_front=False, position=3),
-            Needle(is_front=True, position=5),
-            Needle(is_front=False, position=1),
+            self.machine.get_specified_needle(is_front=True, position=3),
+            self.machine.get_specified_needle(is_front=False, position=3),
+            self.machine.get_specified_needle(is_front=True, position=5),
+            self.machine.get_specified_needle(is_front=False, position=1),
         ]
 
         sorted_rightward = self.rightward.sort_needles(needles)

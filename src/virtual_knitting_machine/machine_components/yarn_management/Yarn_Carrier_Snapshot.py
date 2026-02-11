@@ -27,7 +27,7 @@ class Yarn_Carrier_Snapshot(Yarn_Carrier_State[Machine_LoopT]):
         self._is_active: bool = yarn_carrier.is_active
         self._is_hooked: bool = yarn_carrier.is_hooked
         self._machine_snapshot: Knitting_Machine_Snapshot[Machine_LoopT] = machine_snapshot
-        self._position: Needle_Bed_Position = self.starting_position(self.knitting_machine)
+        self._position: Needle_Bed_Position = self.starting_position
         self._position.update_from_position(yarn_carrier.position_on_bed)
         self._yarn: Machine_Knit_Yarn[Machine_LoopT] = yarn_carrier.yarn
         self._last_loop_id: int | None = int(self.yarn.last_loop) if self.yarn.last_loop is not None else None

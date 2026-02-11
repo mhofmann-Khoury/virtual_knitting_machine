@@ -45,9 +45,7 @@ class Carriage(Carriage_State):
         """
         self._knitting_machine: Knitting_Machine = knitting_machine
         self._position: Needle_Bed_Position = Needle_Bed_Position(
-            parking_position=Side_of_Needle_Bed.Left_Side,
-            rightmost_slot=self.needle_count_of_machine,
-            stopping_distance=0,
+            self.knitting_machine, parking_position=Side_of_Needle_Bed.Left_Side, stopping_distance=0
         )
         self._last_set_direction: Carriage_Pass_Direction = self._position.last_direction
 

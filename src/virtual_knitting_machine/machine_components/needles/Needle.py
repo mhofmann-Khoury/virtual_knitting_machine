@@ -7,13 +7,18 @@ functionality for loop management, needle positioning, and various knitting oper
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar, cast
 
 from knit_graphs.Pull_Direction import Pull_Direction
 
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
+    get_user_warning_stack_level_from_virtual_knitting_machine_package,
+)
+from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import Xfer_Dropped_Loop_Warning
+
 #
-from virtual_knitting_machine.machine_components.machine_component_protocol import Machine_Component
 from virtual_knitting_machine.machine_components.needles.slotted_position_protocol import Slotted_Position
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
@@ -23,7 +28,7 @@ if TYPE_CHECKING:
 Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
 
-class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
+class Needle(Slotted_Position, Generic[Machine_LoopT]):
     """A class for managing individual needles on a knitting machine.
 
     This class represents a needle on either the front or back bed of a knitting machine.
@@ -38,23 +43,64 @@ class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
         self,
         is_front: bool,
         position: int,
-        knitting_machine: Knitting_Machine_State[Machine_LoopT, Any] | None = None,
+        knitting_machine: Knitting_Machine_State[Machine_LoopT, Any],
     ) -> None:
         """Initialize a new needle.
 
         Args:
             is_front (bool): True if this is a front bed needle, False for back bed.
             position (int): The needle index/position on the machine bed.
-            knitting_machine (Knitting_Machine_State, optional): The machine that owns this needle. Defaults to no owning machine.
+            knitting_machine (Knitting_Machine_State): The machine that owns this needle.
         """
+        self._gauge: int = 0
         self._is_front: bool = is_front
         self._position: int = int(position)
         self.held_loops: list[Machine_LoopT] = []
-        self._knitting_machine: Knitting_Machine_State[Machine_LoopT, Any] | None = knitting_machine
+        self._knitting_machine: Knitting_Machine_State[Machine_LoopT, Any] = knitting_machine
+        self.recorded_loop_at_gauge: dict[int, list[Machine_LoopT]] = {
+            1: []
+        }  # Todo: look at knitscript for uses of sheet needle to determine how to record loops.
 
     @property
-    def knitting_machine(self) -> Knitting_Machine_State[Machine_LoopT, Any] | None:
+    def gauged_layers(self) -> int:
+        """
+        Returns:
+            int: The gauge (number of layers) currently knitting in.
+        """
+        return self.knitting_machine.gauged_layers
+
+    @property
+    def sheet(self) -> int:
+        """
+        Returns:
+            int: The position of the sheet in the gauge.
+        """
+        return self._position % self.gauged_layers
+
+    @property
+    def position_in_sheet(self) -> int:
+        """
+        Returns:
+            int: The position of this needle in the sheet in the current gauged-schema.
+        """
+        return self._position // self.gauged_layers
+
+    @property
+    def knitting_machine(self) -> Knitting_Machine_State[Machine_LoopT, Any]:
         return self._knitting_machine
+
+    @property
+    def gauge_neighbors(self) -> list[Self]:
+        """
+        Returns:
+            list[Sheet_Needle]: List of needles that neighbor this loop in sheets at the current gauge layering.
+        """
+        neighbors = []
+        for i in range(self.sheet - 1, -1, -1):
+            neighbors.append(self + i)
+        for i in range(self.sheet + 1, self.gauged_layers):
+            neighbors.append(self + i)
+        return neighbors
 
     @property
     def is_front(self) -> bool:
@@ -149,14 +195,11 @@ class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
         return self.position if self.is_front else self.position + racking
 
     def opposite(self) -> Self:
-        """Get the needle on the opposite bed at the same position.
-
+        """
         Returns:
             Needle: The needle on the opposite bed at the same position.
         """
-        return self.__class__(
-            is_front=not self.is_front, position=self.position, knitting_machine=self.knitting_machine
-        )
+        return cast(Self, self.knitting_machine.get_specified_needle(not self.is_front, self.position, self.is_slider))
 
     def offset(self, offset: int) -> Self:
         """Get a needle offset by the specified amount on the same bed.
@@ -173,13 +216,12 @@ class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
         """Get the non-slider needle at this needle position.
 
         Returns:
-            Needle:
-                The non-slider needle at this needle position.
-                If this is not a slider needle, this instance is returned.
+            Needle: The non-slider needle at this needle position.
         """
         if not self.is_slider:
             return self
-        return Needle[Machine_LoopT](is_front=self.is_front, position=self.position)
+        else:
+            return self.knitting_machine.get_specified_needle(self.is_front, self.position, is_slider=False)
 
     def active_floats(self) -> dict[Machine_LoopT, Machine_LoopT]:
         """Get active floats connecting to loops on this needle.
@@ -244,6 +286,12 @@ class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
         """
         xfer_loops = self.held_loops
         for loop in xfer_loops:
+            if loop.dropped:
+                warnings.warn(
+                    Xfer_Dropped_Loop_Warning(target_needle),
+                    stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
+                )
+                continue
             loop.transfer_loop(target_needle)
         self.held_loops = []
         target_needle.add_loops(xfer_loops)
@@ -261,6 +309,32 @@ class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
             loop.drop()
         self.held_loops = []
         return old_loops
+
+    @staticmethod
+    def needle_position_from_sheet_and_gauge(sheet_pos: int, sheet: int, gauge: int) -> int:
+        """
+        Args:
+            sheet_pos (int): The position in the sheet.
+            sheet (int): The sheet being used.
+            gauge (int): The number of sheets supported by the gauge.
+
+        Returns:
+            int: The position of the needle on the bed based on the given information about its position in a sheet.
+        """
+        return sheet + sheet_pos * gauge
+
+    @staticmethod
+    def get_position_in_sheet(actual_pos: int, gauge: int) -> int:
+        """Get the sheet position from an actual needle position at a given gauge.
+
+        Args:
+            actual_pos (int): The needle position on the bed.
+            gauge (int): The number of layers supported by the gauge.
+
+        Returns:
+            int: The position in the sheet of a given needle position at a specific gauge.
+        """
+        return int(actual_pos / gauge)
 
     def __str__(self) -> str:
         """Return string representation of the needle.
@@ -301,9 +375,6 @@ class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
                 If the needles are at the same location but in opposite positions (back vs. front),
                 the front needle is considered less than the back.
                 This orders needles as front-to-back in a leftward carriage pass.
-
-        Raises:
-            TypeError: If other is not a Needle or number.
         """
         if isinstance(other, (int, float)):
             return self.position < other
@@ -346,7 +417,9 @@ class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
             Needle: New needle with the sum position on the same bed.
         """
         position = other.position if isinstance(other, Needle) else other
-        return self.__class__(self.is_front, self.position + position)
+        return cast(
+            Self, self.knitting_machine.get_specified_needle(self.is_front, self.position + position, self.is_slider)
+        )
 
     def __radd__(self, other: int) -> Self:
         """Right-hand add operation.
@@ -357,7 +430,9 @@ class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
         Returns:
             Needle: New needle with the sum position on the same bed.
         """
-        return self.__class__(self.is_front, self.position + other)
+        return cast(
+            Self, self.knitting_machine.get_specified_needle(self.is_front, self.position + other, self.is_slider)
+        )
 
     def __sub__(self, other: Needle | int) -> Self:
         """Subtract another needle's position or an integer from this needle's position.
@@ -369,7 +444,9 @@ class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
             Needle: New needle with the difference position on the same bed.
         """
         position = other.position if isinstance(other, Needle) else other
-        return self.__class__(self.is_front, self.position - position)
+        return cast(
+            Self, self.knitting_machine.get_specified_needle(self.is_front, self.position - position, self.is_slider)
+        )
 
     def __rsub__(self, other: int) -> Self:
         """Right-hand subtract operation.
@@ -380,48 +457,6 @@ class Needle(Slotted_Position, Machine_Component, Generic[Machine_LoopT]):
         Returns:
             Needle: New needle with the difference position on the same bed.
         """
-        return self.__class__(self.is_front, other - self.position)
-
-    def __lshift__(self, other: int) -> Self:
-        """Left shift operation (equivalent to subtraction).
-
-        Args:
-            other (int): The needle or integer to shift by.
-
-        Returns:
-            Needle: New needle shifted left (position decreased).
-        """
-        return self - other
-
-    def __rshift__(self, other: int) -> Self:
-        """Right shift operation (equivalent to addition).
-
-        Args:
-            other (int): The needle or integer to shift by.
-
-        Returns:
-            Needle: New needle shifted right (position increased).
-        """
-        return self + other
-
-    def __rlshift__(self, other: int) -> Self:
-        """Right-hand left shift operation.
-
-        Args:
-            other (int): The needle or integer to shift.
-
-        Returns:
-            Needle: New needle with shifted position.
-        """
-        return other - self
-
-    def __rrshift__(self, other: int) -> Self:
-        """Right-hand right shift operation.
-
-        Args:
-            other (int): The needle or integer to shift.
-
-        Returns:
-            Needle: New needle with shifted position.
-        """
-        return other + self
+        return cast(
+            Self, self.knitting_machine.get_specified_needle(self.is_front, other - self.position, self.is_slider)
+        )

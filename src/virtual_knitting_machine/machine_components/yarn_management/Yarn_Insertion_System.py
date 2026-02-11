@@ -6,23 +6,13 @@
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, overload
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
     Blocked_by_Yarn_Inserting_Hook_Exception,
     Hooked_Carrier_Exception,
     Inserting_Hook_In_Use_Exception,
-    Use_Inactive_Carrier_Exception,
-)
-from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
-    get_user_warning_stack_level_from_virtual_knitting_machine_package,
-)
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
-    In_Active_Carrier_Warning,
-    In_Loose_Carrier_Warning,
-    Out_Inactive_Carrier_Warning,
 )
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.machine_component_protocol import Machine_Component
@@ -30,7 +20,8 @@ from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier, Yarn_Carrier_State
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
-from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import Machine_Knit_Yarn
+from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import checked_operation
+from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import Violation
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
@@ -175,7 +166,7 @@ class Yarn_Insertion_System_State(Machine_Component, Protocol[Machine_LoopT, Car
         Returns:
             bool: True if any yarn in yarn carrier set is loose (not on the inserting hook or tuck/knit on bed), False otherwise.
         """
-        return self[carrier_id].yarn.last_needle() is None
+        return self[carrier_id].yarn.last_needle is None
 
     def __contains__(
         self,
@@ -258,10 +249,7 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
         """
         self._knitting_machine: Knitting_Machine[Machine_LoopT] = knitting_machine
         self._carriers: list[Yarn_Carrier[Machine_LoopT]] = [
-            Yarn_Carrier[Machine_LoopT](
-                i, knit_graph=self.knitting_machine.knit_graph, machine_state=self.knitting_machine
-            )
-            for i in range(1, carrier_count + 1)
+            Yarn_Carrier[Machine_LoopT](i, machine_state=self.knitting_machine) for i in range(1, carrier_count + 1)
         ]
         self._hook_position: int | None = None
         self._hook_input_direction: Carriage_Pass_Direction | None = None
@@ -304,6 +292,7 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
         return self._hook_input_direction
 
     @hook_input_direction.setter
+    @checked_operation
     def hook_input_direction(self, direction: Carriage_Pass_Direction | None) -> None:
         """
         Sets the direction of movement for the yarn-inserting hook.
@@ -315,10 +304,12 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
         """
         if direction is None:
             self._hook_input_direction = None
-        elif direction is Carriage_Pass_Direction.Rightward:
-            raise ValueError("Yarn Inserting Hook must start in a leftward direction")
         else:
-            self._hook_input_direction = direction
+            with self.handle_violations(response_policy=Violation.INHOOK_RIGHTWARDS):
+                if direction is Carriage_Pass_Direction.Rightward:
+                    raise ValueError("Yarn Inserting Hook must start in a leftward direction")
+            if self.violation_policy.proceed:
+                self._hook_input_direction = direction
 
     @property
     def hooked_carrier(self) -> Yarn_Carrier[Machine_LoopT] | None:
@@ -339,82 +330,42 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
             return False
         return self._searching_for_position
 
-    def position_carrier_at_needle(
-        self, carrier_id: int | Yarn_Carrier, needle: Needle | None, direction: Carriage_Pass_Direction | None = None
-    ) -> None:
-        """Update the needle-slot position of a specific carrier.
-
-        Args:
-            carrier_id (int | Yarn_Carrier): The carrier to update.
-            needle (Needle | None): The needle to position the carrier relative to.
-            direction (Carriage_Pass_Direction, optional): The direction of the carrier movement. If this is not provided, the direction will be inferred.
-        """
-        carrier = self[carrier_id]
-        if needle is not None and self.conflicts_with_inserting_hook(needle):
-            raise Blocked_by_Yarn_Inserting_Hook_Exception(carrier, needle)
-        carrier.set_position(needle, direction)
-
     def bring_in(self, carrier_id: int | Yarn_Carrier) -> None:
         """Bring in a yarn carrier without insertion hook (tail to gripper), yarn is considered loose until knit.
 
         Args:
             carrier_id (int | Yarn_Carrier): Carrier ID to bring in.
-
-        Warns:
-            In_Active_Carrier_Warning: If carrier is already active.
-            In_Loose_Carrier_Warning: If carrier yarn is loose (not connected).
         """
-        carrier = self[carrier_id]
-        assert isinstance(carrier, Yarn_Carrier)
-        if carrier.is_active:
-            warnings.warn(
-                In_Active_Carrier_Warning(carrier_id),
-                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
-            )
-        if carrier.yarn.last_needle() is None:
-            warnings.warn(
-                In_Loose_Carrier_Warning(carrier_id),
-                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
-            )
-        carrier.bring_in()
+        self[carrier_id].bring_in()
 
+    @checked_operation
     def inhook(self, carrier_id: int | Yarn_Carrier) -> None:
         """Bring a yarn in with insertion hook, yarn is not loose after this operation.
 
         Args:
             carrier_id (int | Yarn_Carrier): Carriers to bring in by id.
-
-        Raises:
-            Inserting_Hook_In_Use_Exception: If insertion hook is already in use by another carrier.
-
-        Warns:
-            In_Active_Carrier_Warning: If carrier is already active.
         """
 
         carrier = self[carrier_id]
-        assert isinstance(carrier, Yarn_Carrier)
-        if carrier.is_active:
-            warnings.warn(
-                In_Active_Carrier_Warning(carrier_id),
-                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
-            )
-        if not self.inserting_hook_available and self.hooked_carrier != carrier:
-            raise Inserting_Hook_In_Use_Exception(carrier_id)
-        self._hooked_carrier = carrier
-        self._searching_for_position = True
-        self._hook_position = None
-        assert isinstance(self.hooked_carrier, Yarn_Carrier)
-        self.hooked_carrier.inhook()
+        with self.handle_violations(handler=self.releasehook):
+            if not self.inserting_hook_available and self.hooked_carrier != carrier:
+                raise Inserting_Hook_In_Use_Exception(carrier)
+        if self.violation_policy.proceed:
+            self._hooked_carrier = carrier
+            self._searching_for_position = True
+            self._hook_position = None
+            self._hooked_carrier.inhook()
 
     def releasehook(self) -> None:
         """Release the yarn inserting hook from whatever carrier is currently using it."""
-        if isinstance(self.hooked_carrier, Yarn_Carrier):
+        if self.hooked_carrier is not None:
             self.hooked_carrier.releasehook()
         self._hooked_carrier = None
         self._searching_for_position = False
         self._hook_position = None
         self.hook_input_direction = None
 
+    @checked_operation
     def out(self, carrier_id: int | Yarn_Carrier) -> None:
         """Move carrier to gripper, removing it from action but does not cut it loose.
 
@@ -423,21 +374,15 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
 
         Raises:
             Hooked_Carrier_Exception: If carrier is currently connected to insertion hook.
-
-        Warns:
-            Out_Inactive_Carrier_Warning: If carrier is already inactive.
         """
         carrier = self[carrier_id]
-        assert isinstance(carrier, Yarn_Carrier)
-        if not carrier.is_active:
-            warnings.warn(
-                Out_Inactive_Carrier_Warning(carrier_id),
-                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
-            )
-        if carrier.is_hooked:
-            raise Hooked_Carrier_Exception(carrier_id)
-        carrier.out()
+        with self.handle_violations(handler=self.releasehook):
+            if carrier.is_hooked:
+                raise Hooked_Carrier_Exception(carrier_id)
+        if self.violation_policy.proceed:
+            carrier.out()
 
+    @checked_operation
     def outhook(self, carrier_id: int | Yarn_Carrier) -> None:
         """Cut carrier yarn and move it to grippers with insertion hook, the carrier will no longer be active and is now loose.
 
@@ -447,48 +392,43 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
         Raises:
             Inserting_Hook_In_Use_Exception: If insertion hook is not available.
             Hooked_Carrier_Exception: If carrier is already connected to insertion hook.
-
-        Warns:
-            Out_Inactive_Carrier_Warning: If carrier is already inactive.
         """
         carrier = self[carrier_id]
-        assert isinstance(carrier, Yarn_Carrier)
-        if not carrier.is_active:
-            warnings.warn(
-                Out_Inactive_Carrier_Warning(carrier_id),
-                stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
-            )
-        if not self.inserting_hook_available:
-            Inserting_Hook_In_Use_Exception(carrier_id)
-        if carrier.is_hooked:
-            raise Hooked_Carrier_Exception(carrier_id)
-        carrier.outhook()
+        with self.handle_violations(response_policy=Violation.INSERTING_HOOK_IN_USE, handler=self.releasehook):
+            if carrier.is_hooked:
+                raise Hooked_Carrier_Exception(carrier)
+            elif not self.inserting_hook_available:
+                raise Inserting_Hook_In_Use_Exception(carrier)
+        if self.violation_policy.proceed:
+            carrier.outhook()
 
-    def _make_loop(
-        self, carrier: Yarn_Carrier[Machine_LoopT], needle: Needle[Machine_LoopT], **_loop_kwargs: Any
-    ) -> Machine_LoopT:
-        """
+    @checked_operation
+    def position_carrier_at_needle(
+        self, carrier_id: int | Yarn_Carrier, needle: Needle | None, direction: Carriage_Pass_Direction | None = None
+    ) -> None:
+        """Update the needle-slot position of a specific carrier.
 
         Args:
-            carrier (Yarn_Carrier[Machine_LoopT]): Carrier to be used.
-            needle (Needle[Machine_LoopT]): Needle to the loop is created on.
+            carrier_id (int | Yarn_Carrier): The carrier to update.
+            needle (Needle | None): The needle to position the carrier relative to.
+            direction (Carriage_Pass_Direction, optional): The direction of the carrier movement. If this is not provided, the direction will be inferred.
 
-        Returns:
-            Machine_Knit_Loop: Create a machine knit loop of the bound type on the given needle on a carrier.
+        Raises:
+            BLocked_By_Yarn_Inserting_Hook_Exception: If the yarn-inserting hook blocks this carrier movement.
         """
-        carrier = self[carrier]
-        return cast(
-            Machine_LoopT,
-            Machine_Knit_Loop(
-                cast(Needle[Machine_Knit_Loop], needle), cast(Machine_Knit_Yarn[Machine_Knit_Loop], carrier.yarn)
-            ),
-        )
+        carrier = self[carrier_id]
+        with self.handle_violations(handler=self.releasehook):
+            if needle is not None and self.hooked_carrier is not None and self.conflicts_with_inserting_hook(needle):
+                raise Blocked_by_Yarn_Inserting_Hook_Exception(self.hooked_carrier, needle)
+        if self.violation_policy.proceed:
+            carrier.set_position(needle, direction)
 
     def make_loops(
         self,
         carrier_ids: Sequence[int | Yarn_Carrier] | Yarn_Carrier_Set | Sequence[int] | Sequence[Yarn_Carrier],
         needle: Needle,
         direction: Carriage_Pass_Direction,
+        **_loop_kwargs: Any,
     ) -> list[Machine_LoopT]:
         """Create loops using specified carriers on a needle, handling insertion hook positioning and float management.
 
@@ -499,9 +439,6 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
 
         Returns:
             list[Machine_Knit_Loop]: The set of loops made on this machine.
-
-        Raises:
-            Use_Inactive_Carrier_Exception: If attempting to use an inactive carrier for loop creation.
         """
         needle = self.knitting_machine[needle]
         if self.searching_for_position:  # mark inserting hook position
@@ -512,11 +449,9 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
         loops: list[Machine_LoopT] = []
         for cid in carrier_ids:
             carrier = self[cid]
-            if not carrier.is_active:
-                raise Use_Inactive_Carrier_Exception(cid)
             float_source_loop = carrier.yarn.last_loop
             float_source_needle = float_source_loop.holding_needle if float_source_loop is not None else None
-            loop = self._make_loop(carrier, needle)
+            loop = carrier.make_loop(needle, **_loop_kwargs)
             carrier.yarn.add_loop_to_end(loop)
             if float_source_needle is not None:
                 float_source_needle = self.knitting_machine[float_source_needle]

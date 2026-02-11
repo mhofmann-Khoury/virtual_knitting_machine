@@ -2,6 +2,7 @@
 
 from typing import overload
 
+from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
@@ -21,8 +22,6 @@ class Needle_Bed_Group(Visualizer_Group):
         render_sliders (bool): True if the slider beds are rendered, False otherwise.
         leftmost_slot (int): The leftmost needle slot to render from.
         rightmost_slot (int): The rightmost needle slot to render to.
-        rack (int): The racking alignment of the needle beds.
-        all_needle_rack (bool): The all needle rack setting to render.
         settings (Diagram_Settings): The machine diagram settings.
     """
 
@@ -30,29 +29,23 @@ class Needle_Bed_Group(Visualizer_Group):
         self,
         leftmost_slot: int,
         rightmost_slot: int,
-        rack: int,
-        all_needle_rack: bool,
-        carriage_direction: Carriage_Pass_Direction,
         render_sliders: bool,
         diagram_settings: Diagram_Settings,
+        machine_state: Knitting_Machine_State,
     ):
         """
         Constructor for the Needle Bed Group class.
         Args:
             leftmost_slot (int): The leftmost needle slot to render from.
             rightmost_slot (int): The rightmost needle slot to render to.
-            rack (int): The racking alignment of the needle beds.
-            all_needle_rack (bool): The all needle rack setting to render.
-            carriage_direction (Carriage_Pass_Direction): The direction the carriage is moving in. Used to orient the back bed when all-needle racked.
             render_sliders (bool): True if the slider beds are rendered, False otherwise.
             diagram_settings (Diagram_Settings): The machine diagram settings.
+            machine_state (Knitting_Machine_State): The machine state being displayed.
         """
+        self.machine_state: Knitting_Machine_State = machine_state
         self.render_sliders: bool = render_sliders
         self.leftmost_slot: int = leftmost_slot
         self.rightmost_slot: int = rightmost_slot
-        self.rack: int = rack
-        self.all_needle_rack: bool = all_needle_rack
-        self.carriage_direction: Carriage_Pass_Direction = carriage_direction
         self.settings: Diagram_Settings = diagram_settings
         super().__init__(x=0, y=0, name="NeedleBed")
         self.back_bed: Needle_Bed_Element = Needle_Bed_Element(
@@ -60,10 +53,9 @@ class Needle_Bed_Group(Visualizer_Group):
             is_slider=False,
             leftmost_needle=self.back_leftmost,
             rightmost_needle=self.back_rightmost,
-            all_needle_rack=self.all_needle_rack,
-            carriage_direction=self.carriage_direction,
             render_sliders=self.render_sliders,
             diagram_setting=self.settings,
+            machine_state=self.machine_state,
         )
         self.add_child(self.back_bed)
         self.front_bed: Needle_Bed_Element = Needle_Bed_Element(
@@ -71,10 +63,9 @@ class Needle_Bed_Group(Visualizer_Group):
             is_slider=False,
             leftmost_needle=self.leftmost_slot,
             rightmost_needle=self.rightmost_slot,
-            all_needle_rack=self.all_needle_rack,
-            carriage_direction=self.carriage_direction,
             render_sliders=self.render_sliders,
             diagram_setting=self.settings,
+            machine_state=self.machine_state,
         )
         self.add_child(self.front_bed)
         self.back_slider_bed: Needle_Bed_Element | None = (
@@ -83,10 +74,9 @@ class Needle_Bed_Group(Visualizer_Group):
                 is_slider=True,
                 leftmost_needle=self.leftmost_slot,
                 rightmost_needle=self.rightmost_slot,
-                all_needle_rack=self.all_needle_rack,
-                carriage_direction=self.carriage_direction,
                 render_sliders=self.render_sliders,
                 diagram_setting=self.settings,
+                machine_state=self.machine_state,
             )
             if self.render_sliders
             else None
@@ -99,16 +89,39 @@ class Needle_Bed_Group(Visualizer_Group):
                 is_slider=True,
                 leftmost_needle=self.back_leftmost,
                 rightmost_needle=self.back_rightmost,
-                all_needle_rack=self.all_needle_rack,
-                carriage_direction=self.carriage_direction,
                 render_sliders=self.render_sliders,
                 diagram_setting=self.settings,
+                machine_state=self.machine_state,
             )
             if self.render_sliders
             else None
         )
         if self.front_slider_bed is not None:
             self.add_child(self.front_slider_bed)
+
+    @property
+    def rack(self) -> int:
+        """
+        Returns:
+            int: Racking value of the machine state.
+        """
+        return self.machine_state.rack
+
+    @property
+    def all_needle_rack(self) -> bool:
+        """
+        Returns:
+            bool: True if the machine state is set for all needle rack. False otherwise.
+        """
+        return self.machine_state.all_needle_rack
+
+    @property
+    def carriage_direction(self) -> Carriage_Pass_Direction:
+        """
+        Returns:
+            Carriage_Pass_Direction: The last direction of movement of the carriage.
+        """
+        return self.machine_state.carriage.last_direction
 
     @property
     def back_leftmost(self) -> int:

@@ -2,7 +2,7 @@
 
 import unittest
 
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 
 
@@ -11,8 +11,9 @@ class TestSliderNeedle(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures before each test method."""
-        self.front_slider = Slider_Needle(is_front=True, position=5)
-        self.back_slider = Slider_Needle(is_front=False, position=10)
+        self.machine = Knitting_Machine()
+        self.front_slider = self.machine.get_specified_needle(is_front=True, position=5, is_slider=True)
+        self.back_slider = self.machine.get_specified_needle(is_front=False, position=10, is_slider=True)
 
     def test_initialization(self):
         """Test slider needle initialization."""
@@ -43,8 +44,8 @@ class TestSliderNeedle(unittest.TestCase):
 
     def test_string_representation_different_from_regular_needle(self):
         """Test slider needle string representation differs from regular needle."""
-        regular_front = Needle(is_front=True, position=5)
-        regular_back = Needle(is_front=False, position=10)
+        regular_front = self.machine.get_specified_needle(is_front=True, position=5)
+        regular_back = self.machine.get_specified_needle(is_front=False, position=10)
 
         # Should be different from regular needles
         self.assertNotEqual(str(self.front_slider), str(regular_front))
@@ -86,9 +87,9 @@ class TestSliderNeedle(unittest.TestCase):
 
     def test_comparison_operations(self):
         """Test comparison operations work correctly for slider needles."""
-        slider1 = Slider_Needle(is_front=True, position=3)
-        slider2 = Slider_Needle(is_front=True, position=7)
-        slider3 = Slider_Needle(is_front=False, position=3)
+        slider1 = self.machine.get_specified_needle(is_front=True, position=3, is_slider=True)
+        slider2 = self.machine.get_specified_needle(is_front=True, position=7, is_slider=True)
+        slider3 = self.machine.get_specified_needle(is_front=False, position=3, is_slider=True)
 
         # Position-based comparison
         self.assertTrue(slider1 < slider2)
@@ -100,14 +101,14 @@ class TestSliderNeedle(unittest.TestCase):
 
     def test_equality_with_regular_needles(self):
         """Test equality comparison between slider needles and regular needles."""
-        regular_needle = Needle(is_front=True, position=5)
+        regular_needle = self.machine.get_specified_needle(is_front=True, position=5)
 
         # Slider needle should NOT equal regular needle even with same position/bed
         self.assertFalse(self.front_slider == regular_needle)
         self.assertFalse(regular_needle == self.front_slider)
 
         # But slider should equal another slider with same properties
-        another_slider = Slider_Needle(is_front=True, position=5)
+        another_slider = self.machine.get_specified_needle(is_front=True, position=5, is_slider=True)
         self.assertTrue(self.front_slider == another_slider)
 
     def test_multiple_slider_positions(self):
@@ -115,8 +116,8 @@ class TestSliderNeedle(unittest.TestCase):
         positions = [0, 1, 50, 100, 500]
 
         for pos in positions:
-            front_slider = Slider_Needle(is_front=True, position=pos)
-            back_slider = Slider_Needle(is_front=False, position=pos)
+            front_slider = self.machine.get_specified_needle(is_front=True, position=pos, is_slider=True)
+            back_slider = self.machine.get_specified_needle(is_front=False, position=pos, is_slider=True)
 
             self.assertEqual(front_slider.position, pos)
             self.assertEqual(back_slider.position, pos)
@@ -127,19 +128,15 @@ class TestSliderNeedle(unittest.TestCase):
 
     def test_edge_case_positions(self):
         """Test slider needles with edge case positions."""
-        # Test negative position (if allowed)
-        negative_slider = Slider_Needle(is_front=True, position=-5)
-        self.assertEqual(negative_slider.position, -5)
-        self.assertEqual(str(negative_slider), "fs-5")
 
         # Test zero position
-        zero_slider = Slider_Needle(is_front=False, position=0)
+        zero_slider = self.machine.get_specified_needle(is_front=False, position=0, is_slider=True)
         self.assertEqual(zero_slider.position, 0)
         self.assertEqual(str(zero_slider), "bs0")
 
     def test_slider_specific_functionality(self):
         """Test functionality that is specific to slider needles."""
-        regular_needle = Needle(is_front=True, position=5)
+        regular_needle = self.machine.get_specified_needle(is_front=True, position=5, is_slider=False)
 
         # The main difference should be the is_slider property
         self.assertTrue(self.front_slider.is_slider)

@@ -11,10 +11,7 @@ from typing import TYPE_CHECKING, Any, Self
 from knit_graphs.Loop import Loop
 from knit_graphs.Pull_Direction import Pull_Direction
 
-from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import (
-    Slider_Loop_Exception,
-    Xfer_Dropped_Loop_Exception,
-)
+from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import Slider_Loop_Exception
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.needles.Needle import Needle
@@ -151,11 +148,7 @@ class Machine_Knit_Loop(Loop):
         Args:
             target_needle (Needle): The needle the loop is transferred to.
 
-        Raises:
-            Xfer_Dropped_Loop_Exception: If attempting to transfer a dropped loop.
         """
-        if self.dropped:
-            raise Xfer_Dropped_Loop_Exception(target_needle)
         self.needle_history.append(target_needle)
 
     def drop(self) -> None:

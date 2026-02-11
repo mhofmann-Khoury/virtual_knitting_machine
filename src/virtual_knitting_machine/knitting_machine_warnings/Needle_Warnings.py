@@ -45,20 +45,6 @@ class Needle_Holds_Too_Many_Loops(Needle_Warning):
         )
 
 
-class Transfer_From_Empty_Needle(Needle_Warning):
-    """A warning for transfer operations attempted on needles that do not hold any loops.
-    This warning indicates that a transfer operation was requested from an empty needle, which may not produce the expected knitting results.
-    """
-
-    def __init__(self, needle: Needle) -> None:
-        """Initialize a transfer from empty needle warning.
-
-        Args:
-            needle (Needle): The empty needle from which a transfer was attempted.
-        """
-        super().__init__(needle, f"Transferring from empty needle {needle}")
-
-
 class Knit_on_Empty_Needle_Warning(Needle_Warning):
     """A warning for knitting operations attempted on needles that do not hold any loops.
     This warning indicates that a knitting operation was requested on an empty needle, which may produce unexpected results or indicate a programming error in the knitting sequence.
@@ -71,3 +57,17 @@ class Knit_on_Empty_Needle_Warning(Needle_Warning):
             needle (Needle): The empty needle on which a knit operation was attempted.
         """
         super().__init__(needle, f"Knitting on empty needle {needle}")
+
+
+class Xfer_Dropped_Loop_Warning(Needle_Warning):
+    """Warning for attempting to transfer dropped loops to target needles.
+    This occurs when trying to transfer a loop that has already been dropped from the machine, which is not physically possible as the loop is no longer held by any needle.
+    """
+
+    def __init__(self, needle: Needle) -> None:
+        """Initialize a transfer dropped loop exception.
+
+        Args:
+            needle (Needle): The target needle where transfer of a dropped loop was attempted.
+        """
+        super().__init__(needle, f"Cannot transfer dropped loop to target needle {needle}")

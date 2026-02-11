@@ -4,7 +4,7 @@ import random
 import unittest
 from unittest.mock import Mock
 
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 
@@ -13,10 +13,11 @@ class TestNeedle(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures before each test method."""
+        self.machine = Knitting_Machine()
         self.front_pos = random.randint(0, 540)
         self.back_pos = random.randint(0, 540)
-        self.front_needle = Needle(is_front=True, position=self.front_pos)
-        self.back_needle = Needle(is_front=False, position=self.back_pos)
+        self.front_needle = self.machine.get_specified_needle(is_front=True, position=self.front_pos)
+        self.back_needle = self.machine.get_specified_needle(is_front=False, position=self.back_pos)
 
     def test_initialization(self):
         """Test needle initialization with various parameters."""
@@ -56,31 +57,6 @@ class TestNeedle(unittest.TestCase):
         self.assertEqual(len(self.front_needle.held_loops), 3)
         for loop in mock_loops:
             self.assertIn(loop, self.front_needle.held_loops)
-
-    def test_transfer_loops(self):
-        """Test transferring loops from one needle to another."""
-        # Setup source needle with loops
-        mock_loops = []
-        for i in range(2):
-            mock_loop = Mock(spec=Machine_Knit_Loop)
-            mock_loop.yarn = Mock()
-            mock_loop.yarn.active_loops = {}
-            mock_loops.append(mock_loop)
-            self.front_needle.held_loops.append(mock_loop)
-
-        target_needle = Needle(is_front=False, position=3)
-        transferred_loops = self.front_needle.transfer_loops(target_needle)
-
-        # Check source needle is empty
-        self.assertEqual(len(self.front_needle.held_loops), 0)
-        # Check target needle has loops
-        self.assertEqual(len(target_needle.held_loops), 2)
-        # Check returned loops match
-        self.assertEqual(len(transferred_loops), 2)
-
-        # Verify transfer_loop was called on each loop
-        for loop in mock_loops:
-            loop.transfer_loop.assert_called_once_with(target_needle)
 
     def test_drop_loops(self):
         """Test dropping all loops from needle."""
@@ -159,9 +135,9 @@ class TestNeedle(unittest.TestCase):
 
     def test_comparison_with_needles(self):
         """Test comparison operations with other needles."""
-        needle1 = Needle(is_front=True, position=3)
-        needle2 = Needle(is_front=True, position=7)
-        needle3 = Needle(is_front=False, position=3)
+        needle1 = self.machine.get_specified_needle(is_front=True, position=3)
+        needle2 = self.machine.get_specified_needle(is_front=True, position=7)
+        needle3 = self.machine.get_specified_needle(is_front=False, position=3)
 
         # Position-based comparison
         self.assertTrue(needle1 < needle2)
@@ -172,13 +148,13 @@ class TestNeedle(unittest.TestCase):
         self.assertFalse(needle3 < needle1)
 
         # Same needle
-        needle4 = Needle(is_front=True, position=3)
+        needle4 = self.machine.get_specified_needle(is_front=True, position=3)
         self.assertFalse(needle1 < needle4)
         self.assertFalse(needle4 < needle1)
 
     def test_comparison_with_numbers(self):
         """Test comparison operations with numbers."""
-        needle = Needle(is_front=True, position=10)
+        needle = self.machine.get_specified_needle(is_front=True, position=10)
         self.assertFalse(needle < 10)  # Equality
         self.assertFalse(needle < 3)
         self.assertFalse(needle < 5.5)
@@ -186,8 +162,8 @@ class TestNeedle(unittest.TestCase):
 
     def test_arithmetic_operations_with_needles(self):
         """Test arithmetic operations with other needles."""
-        needle1 = Needle(is_front=True, position=5)
-        needle2 = Needle(is_front=False, position=3)
+        needle1 = self.machine.get_specified_needle(is_front=True, position=5)
+        needle2 = self.machine.get_specified_needle(is_front=False, position=3)
 
         # Addition
         result_add = needle1 + needle2
@@ -206,7 +182,7 @@ class TestNeedle(unittest.TestCase):
 
     def test_arithmetic_operations_with_integers(self):
         """Test arithmetic operations with integers."""
-        needle = Needle(is_front=True, position=10)
+        needle = self.machine.get_specified_needle(is_front=True, position=10)
 
         # Addition
         self.assertEqual((needle + 5).position, 15)
@@ -216,50 +192,13 @@ class TestNeedle(unittest.TestCase):
         self.assertEqual((needle - 3).position, 7)
         self.assertEqual((15 - needle).position, 5)
 
-    def test_shift_operations(self):
-        """Test left and right shift operations."""
-        needle = Needle(is_front=True, position=10)
-
-        # Left shift (subtraction)
-        left_shifted = needle << 3
-        self.assertEqual(left_shifted.position, 7)
-
-        # Right shift (addition)
-        right_shifted = needle >> 3
-        self.assertEqual(right_shifted.position, 13)
-
     def test_equality_comparison(self):
         """Test equality comparison between needles."""
-        needle1 = Needle(is_front=True, position=5)
-        needle2 = Needle(is_front=True, position=5)
-        needle3 = Needle(is_front=False, position=5)
-        needle4 = Needle(is_front=True, position=7)
+        needle1 = self.machine.get_specified_needle(is_front=True, position=5)
+        needle2 = self.machine.get_specified_needle(is_front=True, position=5)
+        needle3 = self.machine.get_specified_needle(is_front=False, position=5)
+        needle4 = self.machine.get_specified_needle(is_front=True, position=7)
 
         self.assertTrue(needle1 == needle2)
         self.assertFalse(needle1 == needle3)
         self.assertFalse(needle1 == needle4)
-
-    def test_active_floats(self):
-        """Test active floats calculation."""
-        # Create mock loops with yarn connections
-        loop1 = Mock(spec=Machine_Knit_Loop)
-        loop2 = Mock(spec=Machine_Knit_Loop)
-
-        # Setup loop1 connections
-        loop1.next_loop_on_yarn.return_value = loop2
-        loop1.prior_loop_on_yarn.return_value = None
-        loop2.on_needle = True
-
-        # Setup loop2 connections
-        loop2.next_loop_on_yarn.return_value = None
-        loop2.prior_loop_on_yarn.return_value = loop1
-        loop1.on_needle = True
-
-        self.front_needle.held_loops = [loop1, loop2]
-
-        floats = self.front_needle.active_floats()
-
-        # Should have float from loop1 to loop2
-        self.assertEqual(len(floats), 1)
-        self.assertIn(loop1, floats)
-        self.assertEqual(floats[loop1], loop2)

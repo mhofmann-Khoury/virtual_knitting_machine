@@ -15,6 +15,10 @@ from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import N
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import (
+    Knitting_Machine_Error_Policy,
+    Machine_State_With_Policy,
+)
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine, Knitting_Machine_State
@@ -22,7 +26,7 @@ if TYPE_CHECKING:
 Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
 
-class Needle_Bed_State(Protocol[Machine_LoopT]):
+class Needle_Bed_State(Machine_State_With_Policy, Protocol[Machine_LoopT]):
     """Protocol for the readable properties of a needle bed."""
 
     @property
@@ -32,6 +36,14 @@ class Needle_Bed_State(Protocol[Machine_LoopT]):
             Knitting_Machine_State: The knitting machine this bed belongs to.
         """
         ...
+
+    @property
+    def violation_policy(self) -> Knitting_Machine_Error_Policy:
+        """
+        Returns:
+            Knitting_Machine_Error_Policy: The policy for handling machine state errors.
+        """
+        return self.knitting_machine.violation_policy
 
     @property
     def is_front(self) -> bool:

@@ -16,8 +16,6 @@ from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warn
     Out_Inactive_Carrier_Warning,
 )
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
 
@@ -33,7 +31,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
 
     def test_carrier_no_last_needle(self):
         self.system.inhook(1)
-        self.assertIsNone(self.system[1].yarn.last_needle())
+        self.assertIsNone(self.system[1].yarn.last_needle)
         self.assertTrue(self.system.yarn_is_loose(1))
 
     def test_initialization_default_carrier_count(self):
@@ -96,14 +94,14 @@ class TestYarnInsertionSystem(unittest.TestCase):
 
     def test_conflicts_with_inserting_hook_no_hook(self):
         """Test conflicts_with_inserting_hook when hook is not active."""
-        needle = Needle(True, 10)
+        needle = self.machine.get_specified_needle(True, 10)
 
         result = self.system.conflicts_with_inserting_hook(needle + 1)
         self.assertFalse(result)
 
     def test_conflicts_with_inserting_hook_leftward_conflict(self):
         """Test conflicts_with_inserting_hook with leftward direction conflict."""
-        needle = Needle(True, 10)
+        needle = self.machine.get_specified_needle(True, 10)
         self.system.inhook(1)
         self.assertEqual(len(self.system.active_carriers), 1)
         self.assertTrue(self.system[1] in self.system.active_carriers)
@@ -115,7 +113,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
 
     def test_conflicts_with_inserting_hook_leftward_no_conflict(self):
         """Test conflicts_with_inserting_hook with leftward direction no conflict."""
-        needle = Needle(True, 10)
+        needle = self.machine.get_specified_needle(True, 10)
         self.system.inhook(1)
         self.system.knitting_machine.tuck(Yarn_Carrier_Set(1), needle, Carriage_Pass_Direction.Leftward)
 
@@ -226,7 +224,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
     def test_make_loops_inactive_carrier_raises_exception(self):
         """Test make_loops with inactive carrier raises exception."""
         with self.assertRaises(Use_Inactive_Carrier_Exception):
-            self.system.make_loops([1], Needle(True, 1), Carriage_Pass_Direction.Leftward)
+            self.system.make_loops([1], self.machine.get_specified_needle(True, 1), Carriage_Pass_Direction.Leftward)
 
     def test_getitem_single_integer(self):
         """Test __getitem__ with single integer."""
@@ -235,7 +233,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
 
     def test_getitem_yarn_carrier_object(self):
         """Test __getitem__ with Yarn_Carrier object."""
-        result = self.system[Yarn_Carrier(3)]
+        result = self.system[self.machine.get_carrier(3)]
         self.assertEqual(result.carrier_id, 3)
 
     def test_getitem_yarn_carrier_set(self):

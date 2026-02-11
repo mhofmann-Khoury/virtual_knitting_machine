@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.slotted_position_protocol import Slotted_Position
 from virtual_knitting_machine.machine_components.Side_of_Needle_Bed import Side_of_Needle_Bed
+
+if TYPE_CHECKING:
+    from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
 
 
 class Needle_Bed_Position(Slotted_Position):
@@ -17,15 +20,23 @@ class Needle_Bed_Position(Slotted_Position):
 
     def __init__(
         self,
+        knitting_machine: Knitting_Machine_State,
         parking_position: Side_of_Needle_Bed = Side_of_Needle_Bed.Right_Side,
-        rightmost_slot: int = 540,
         stopping_distance: int = 10,
     ) -> None:
-        self._rightmost_slot: int = rightmost_slot
+        self._knitting_machine: Knitting_Machine_State = knitting_machine
         self._parking_position: Side_of_Needle_Bed = parking_position
         self._stopping_distance: int = stopping_distance
         self._position: Needle | Side_of_Needle_Bed = self._parking_position
         self._last_direction: Carriage_Pass_Direction = self.parked_direction.opposite()
+
+    @property
+    def knitting_machine(self) -> Knitting_Machine_State:
+        """
+        Returns:
+            Knitting_Machine_State: The knitting machine that owns this component.
+        """
+        return self._knitting_machine
 
     @property
     def position_on_bed(self) -> Needle | Side_of_Needle_Bed:
@@ -49,7 +60,7 @@ class Needle_Bed_Position(Slotted_Position):
         Returns:
             int: The slot number of the position when it is parked off the needle bed.
         """
-        return self.parking_position.slot(self._rightmost_slot)
+        return self.parking_position.slot(self.needle_count_of_machine)
 
     @property
     def parked_direction(self) -> Carriage_Pass_Direction:
@@ -84,7 +95,7 @@ class Needle_Bed_Position(Slotted_Position):
         return (
             self.position_on_bed.slot_number
             if isinstance(self.position_on_bed, Needle)
-            else self.position_on_bed.slot(self._rightmost_slot)
+            else self.position_on_bed.slot(self.needle_count_of_machine)
         )
 
     @property
@@ -127,12 +138,12 @@ class Needle_Bed_Position(Slotted_Position):
                 left, right = self.needle - 1, self.needle
             if left.slot_number < 0:
                 left = None
-            if right.slot_number > self._rightmost_slot:
+            if right.slot_number > self.needle_count_of_machine:
                 right = None
         elif self.position_on_bed is Side_of_Needle_Bed.Left_Side:
-            right = Needle(is_front=True, position=0)
+            right = self.knitting_machine.get_specified_needle(is_front=True, position=0)
         elif self.position_on_bed is Side_of_Needle_Bed.Right_Side:
-            left = Needle(is_front=True, position=self._rightmost_slot)
+            left = self.knitting_machine.get_specified_needle(is_front=True, position=self.needle_count_of_machine)
         return left, right
 
     @property

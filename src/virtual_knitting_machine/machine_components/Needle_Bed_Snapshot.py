@@ -24,7 +24,7 @@ class Needle_Bed_Snapshot(Needle_Bed_State[Machine_LoopT]):
         self._loops_to_needles: dict[Machine_LoopT, Needle[Machine_LoopT]] = {}
         self._active_needles: list[Needle[Machine_LoopT]] = []
         for n in needle_bed.loop_holding_needles:
-            n_copy = Needle[Machine_LoopT](n.is_front, n.position)
+            n_copy = Needle[Machine_LoopT](n.is_front, n.position, knitting_machine=self.knitting_machine)
             n_copy.held_loops.extend(n.held_loops)
             self._active_needles.append(n_copy)
             self._loops_to_needles.update({l: n_copy for l in n.held_loops})
@@ -34,7 +34,7 @@ class Needle_Bed_Snapshot(Needle_Bed_State[Machine_LoopT]):
 
         self._active_sliders: list[Slider_Needle[Machine_LoopT]] = []
         for n in needle_bed.loop_holding_sliders:
-            n_copy = Slider_Needle[Machine_LoopT](n.is_front, n.position)
+            n_copy = Slider_Needle[Machine_LoopT](n.is_front, n.position, knitting_machine=self.knitting_machine)
             n_copy.held_loops.extend(n.held_loops)
             self._active_sliders.append(n_copy)
             self._loops_to_needles.update({l: n_copy for l in n.held_loops})

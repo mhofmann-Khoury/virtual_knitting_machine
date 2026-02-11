@@ -7,6 +7,8 @@ as well as a dataclass specification that defines all the parameters and constra
 from dataclasses import dataclass
 from enum import Enum
 
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+
 
 class Knitting_Machine_Type(Enum):
     """An enumeration of supported knitting machine types that can be represented by this library.
@@ -112,6 +114,8 @@ class Knitting_Machine_Specification:
         "darkslateblue",
     )
     """tuple[str, ...]: A tuple containing the default names of colors to assign to yarns based on the carrier id."""
+    loop_class: type[Machine_Knit_Loop] = Machine_Knit_Loop
+    # yarn_class: type[Machine_Knit_Yarn] = Machine_Knit_Yarn[Machine_Knit_Loop]
 
     def get_yarn_color(self, carrier_id: int) -> str:
         """

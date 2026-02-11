@@ -9,7 +9,6 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn, Yarn_Properties
 
 from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
@@ -40,7 +39,6 @@ class Machine_Knit_Yarn(Yarn[Machine_LoopT]):
         self,
         carrier: Yarn_Carrier[Machine_LoopT],
         properties: Yarn_Properties | None,
-        knit_graph: Knit_Graph[Machine_LoopT] | None = None,
         instance: int = 0,
         **_kwargs: Any,
     ) -> None:
@@ -49,13 +47,9 @@ class Machine_Knit_Yarn(Yarn[Machine_LoopT]):
         Args:
             carrier (Yarn_Carrier): The yarn carrier this yarn is assigned to.
             properties (Yarn_Properties | None): Properties for this yarn, creates default if None.
-            knit_graph (Knit_Graph[Machine_Knit_Loop], optional): Knit graph that owns this yarn. Defaults to creating a new knitgraph.
             instance (int, optional): Instance number for yarn identification. Defaults to 0.
         """
-        if carrier.knitting_machine is not None:
-            knit_graph = carrier.knitting_machine.knit_graph
-        if knit_graph is None:
-            knit_graph = Knit_Graph[Machine_LoopT]()
+        knit_graph = carrier.knitting_machine.knit_graph
         super().__init__(knit_graph, properties, instance)
         self._carrier: Yarn_Carrier = carrier
         self.active_loops: dict[Machine_LoopT, Needle[Machine_LoopT]] = {}
@@ -87,6 +81,7 @@ class Machine_Knit_Yarn(Yarn[Machine_LoopT]):
         """
         return self._carrier
 
+    @property
     def last_needle(self) -> Needle[Machine_LoopT] | None:
         """Get the needle that holds the loop closest to the end of the yarn.
 
@@ -125,7 +120,7 @@ class Machine_Knit_Yarn(Yarn[Machine_LoopT]):
         Warns:
             Long_Float_Warning: If the float from the prior loop is too long for the machine specification.
         """
-        last_needle = self.last_needle()
+        last_needle = self.last_needle
         new_slot = loop.source_needle.slot_number
         max_float_length = self.carrier.machine_specification.maximum_float
         if last_needle is not None and abs(new_slot - last_needle.slot_number) > max_float_length:
@@ -134,17 +129,3 @@ class Machine_Knit_Yarn(Yarn[Machine_LoopT]):
                 stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
             )
         return super().add_loop_to_end(loop)
-
-    def __str__(self) -> str:
-        """
-        Returns:
-            str: The string specifying the instance and carrier of this yarn.
-        """
-        return f"{self._instance}_Yarn on c{self.carrier.carrier_id}"
-
-    def __repr__(self) -> str:
-        """
-        Returns:
-            str: The string specifying the instance and carrier of this yarn.
-        """
-        return str(self)

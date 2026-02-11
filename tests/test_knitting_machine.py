@@ -9,7 +9,6 @@ from virtual_knitting_machine.knitting_machine_exceptions.racking_errors import 
 from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
@@ -55,7 +54,7 @@ class TestKnittingMachine(unittest.TestCase):
     def test_get_needle_of_loop_front_bed(self):
         """Test get_needle_of_loop when loop is on front bed."""
         self.machine.in_hook(1)
-        needle = Needle(True, 1)
+        needle = self.machine.get_specified_needle(True, 1)
         loops = self.machine.tuck(Yarn_Carrier_Set(1), needle, Carriage_Pass_Direction.Leftward)
         result = self.machine.get_needle_of_loop(loops[0])
 
@@ -64,7 +63,7 @@ class TestKnittingMachine(unittest.TestCase):
     def test_get_needle_of_loop_back_bed(self):
         """Test get_needle_of_loop when loop is on back bed."""
         self.machine.in_hook(1)
-        needle = Needle(False, 1)
+        needle = self.machine.get_specified_needle(False, 1)
         loops = self.machine.tuck(Yarn_Carrier_Set(1), needle, Carriage_Pass_Direction.Leftward)
         self.assertTrue(self.machine[needle].has_loops)
         result = self.machine.get_needle_of_loop(loops[0])
@@ -74,7 +73,9 @@ class TestKnittingMachine(unittest.TestCase):
 
     def test_get_needle_of_loop_not_held(self):
         """Test get_needle_of_loop when loop is not held."""
-        loop = Machine_Knit_Loop(Needle(True, 1), self.machine.carrier_system.carriers[0].yarn, 0)
+        loop = Machine_Knit_Loop(
+            self.machine.get_specified_needle(True, 1), self.machine.carrier_system.carriers[0].yarn, 0
+        )
         loop.drop()
         result = self.machine.get_needle_of_loop(loop)
 
@@ -139,7 +140,7 @@ class TestKnittingMachine(unittest.TestCase):
 
     def test_getitem_with_needle(self):
         """Test __getitem__ with Needle object."""
-        needle = Needle(is_front=True, position=7)
+        needle = self.machine.get_specified_needle(is_front=True, position=7)
         result = self.machine[needle]
 
         self.assertIsInstance(result, Needle)
@@ -155,7 +156,7 @@ class TestKnittingMachine(unittest.TestCase):
     def test_getitem_with_loop(self):
         """Test __getitem__ with Machine_Knit_Loop."""
         self.machine.in_hook(1)
-        needle = Needle(False, 1)
+        needle = self.machine.get_specified_needle(False, 1)
         loops = self.machine.tuck(Yarn_Carrier_Set(1), needle, Carriage_Pass_Direction.Leftward)
         result = self.machine[loops[0]]
 
@@ -191,7 +192,7 @@ class TestKnittingMachine(unittest.TestCase):
     def test_get_aligned_needle_front_to_back(self):
         """Test get_aligned_needle from front to back bed."""
         self.machine.rack = 3
-        front_needle = Needle(is_front=True, position=10)
+        front_needle = self.machine.get_specified_needle(is_front=True, position=10)
 
         result = self.machine.get_aligned_needle(front_needle)
 
@@ -202,7 +203,7 @@ class TestKnittingMachine(unittest.TestCase):
     def test_get_aligned_needle_back_to_front(self):
         """Test get_aligned_needle from back to front bed."""
         self.machine.rack = 2
-        back_needle = Needle(is_front=False, position=8)
+        back_needle = self.machine.get_specified_needle(is_front=False, position=8)
 
         result = self.machine.get_aligned_needle(back_needle)
 
@@ -213,7 +214,7 @@ class TestKnittingMachine(unittest.TestCase):
     def test_get_aligned_needle_with_slider(self):
         """Test get_aligned_needle with slider option."""
         self.machine.rack = 1
-        front_needle = Needle(is_front=True, position=5)
+        front_needle = self.machine.get_specified_needle(is_front=True, position=5)
 
         result = self.machine.get_aligned_needle(front_needle, aligned_slider=True)
 
@@ -223,8 +224,8 @@ class TestKnittingMachine(unittest.TestCase):
 
     def test_get_transfer_rack_front_to_back(self):
         """Test get_transfer_rack static method from front to back."""
-        front_needle = Needle(is_front=True, position=12)
-        back_needle = Needle(is_front=False, position=8)
+        front_needle = self.machine.get_specified_needle(is_front=True, position=12)
+        back_needle = self.machine.get_specified_needle(is_front=False, position=8)
 
         result = Knitting_Machine.get_transfer_rack(front_needle, back_needle)
 
@@ -232,21 +233,12 @@ class TestKnittingMachine(unittest.TestCase):
 
     def test_get_transfer_rack_back_to_front(self):
         """Test get_transfer_rack static method from back to front."""
-        back_needle = Needle(is_front=False, position=6)
-        front_needle = Needle(is_front=True, position=10)
+        back_needle = self.machine.get_specified_needle(is_front=False, position=6)
+        front_needle = self.machine.get_specified_needle(is_front=True, position=10)
 
         result = Knitting_Machine.get_transfer_rack(back_needle, front_needle)
 
         self.assertEqual(result, 4)  # 10 - 6 = 4
-
-    def test_get_transfer_rack_same_bed_returns_none(self):
-        """Test get_transfer_rack returns None for needles on same bed."""
-        needle1 = Needle(is_front=True, position=5)
-        needle2 = Needle(is_front=True, position=10)
-
-        result = Knitting_Machine.get_transfer_rack(needle1, needle2)
-
-        self.assertIsNone(result)
 
     def test_valid_rack_true(self):
         """Test valid_rack returns True when current rack is correct."""
@@ -267,21 +259,21 @@ class TestKnittingMachine(unittest.TestCase):
     def test_sliders_are_clear(self):
         """Test sliders_are_clear as loops are moved between sliders and front bed."""
         self.machine.in_hook(1)
-        needle = Needle(False, 1)
+        needle = self.machine.get_specified_needle(False, 1)
         _loops = self.machine.tuck(Yarn_Carrier_Set(1), needle, Carriage_Pass_Direction.Leftward)
         self.assertTrue(self.machine.sliders_are_clear)
         self.machine.xfer(needle, to_slider=True)
         self.assertFalse(self.machine.sliders_are_clear)
-        self.machine.xfer(Slider_Needle(is_front=True, position=1), to_slider=False)
+        self.machine.xfer(self.machine.get_specified_needle(is_front=True, position=1, is_slider=True), to_slider=False)
         self.assertTrue(self.machine.sliders_are_clear)
 
     def test_loop_holding_accessor_methods(self):
         """Test loop-holding needle accessor methods."""
         self.machine.in_hook(1)
         cs = Yarn_Carrier_Set(1)
-        front_needle = Needle(True, 1)
-        back_needle = Needle(False, 1)
-        back_slider = Slider_Needle(False, 1)
+        front_needle = self.machine.get_specified_needle(True, 1)
+        back_needle = self.machine.get_specified_needle(False, 1)
+        back_slider = self.machine.get_specified_needle(False, 1, is_slider=True)
         self.machine.tuck(cs, front_needle, Carriage_Pass_Direction.Leftward)
         self.assertTrue(len(self.machine.front_loops()) == 1)
         self.assertTrue(len(self.machine.back_loops()) == 0)

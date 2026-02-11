@@ -79,13 +79,7 @@ class Knitting_Machine_State_Visualizer:
         self.shows_sliders: bool = self.settings.render_empty_sliders or not self.machine_state.sliders_are_clear
         self.carriers_in_legend: set[Yarn_Carrier_State] = set()
         self.needle_bed_group: Needle_Bed_Group = Needle_Bed_Group(
-            self.leftmost_slot,
-            self.rightmost_slot,
-            self.machine_state.rack,
-            self.machine_state.all_needle_rack,
-            self.machine_state.carriage.last_direction,
-            self.shows_sliders,
-            self.settings,
+            self.leftmost_slot, self.rightmost_slot, self.shows_sliders, self.settings, self.machine_state
         )
         self.loop_stacks: dict[Needle, Loop_Stack] = {}
         self.loops: dict[Machine_Knit_Loop, Loop_Circle] = {}

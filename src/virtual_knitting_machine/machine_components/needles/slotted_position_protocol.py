@@ -5,10 +5,11 @@ from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
+from virtual_knitting_machine.machine_components.machine_component_protocol import Machine_Component
 
 
 @runtime_checkable
-class Slotted_Position(Protocol):
+class Slotted_Position(Machine_Component, Protocol):
     """Protocol for machine components that have a known position relative to a needle bed slot"""
 
     @property
