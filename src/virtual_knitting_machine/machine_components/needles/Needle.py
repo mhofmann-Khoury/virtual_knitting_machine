@@ -57,9 +57,6 @@ class Needle(Slotted_Position, Generic[Machine_LoopT]):
         self._position: int = int(position)
         self.held_loops: list[Machine_LoopT] = []
         self._knitting_machine: Knitting_Machine_State[Machine_LoopT, Any] = knitting_machine
-        self.recorded_loop_at_gauge: dict[int, list[Machine_LoopT]] = {
-            1: []
-        }  # Todo: look at knitscript for uses of sheet needle to determine how to record loops.
 
     @property
     def gauged_layers(self) -> int:
