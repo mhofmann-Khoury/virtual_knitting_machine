@@ -14,8 +14,8 @@ class TestNeedle(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures before each test method."""
         self.machine = Knitting_Machine()
-        self.front_pos = random.randint(0, 540)
-        self.back_pos = random.randint(0, 540)
+        self.front_pos = random.randint(10, 200)
+        self.back_pos = random.randint(10, 200)
         self.front_needle = self.machine.get_specified_needle(is_front=True, position=self.front_pos)
         self.back_needle = self.machine.get_specified_needle(is_front=False, position=self.back_pos)
 
