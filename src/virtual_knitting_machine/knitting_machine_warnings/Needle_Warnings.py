@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import Knitting_Machine_Warning
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.needles.Needle import Needle
+    from virtual_knitting_machine.machine_components.needles.Needle import Needle, Needle_Specification
 
 
 class Needle_Warning(Knitting_Machine_Warning):
@@ -16,14 +16,14 @@ class Needle_Warning(Knitting_Machine_Warning):
     This class provides a foundation for all needle-specific warnings and includes the needle reference for detailed error reporting and debugging.
     """
 
-    def __init__(self, needle: Needle, message: str) -> None:
+    def __init__(self, needle: Needle_Specification, message: str) -> None:
         """Initialize a needle-specific warning.
 
         Args:
-            needle (Needle): The needle involved in the warning condition.
+            needle (Needle_Specification): The needle involved in the warning condition.
             message (str): The descriptive warning message about the needle state or operation.
         """
-        self.needle: Needle = needle
+        self.needle: Needle_Specification = needle
         super().__init__(message)
 
 
@@ -50,7 +50,7 @@ class Knit_on_Empty_Needle_Warning(Needle_Warning):
     This warning indicates that a knitting operation was requested on an empty needle, which may produce unexpected results or indicate a programming error in the knitting sequence.
     """
 
-    def __init__(self, needle: Needle) -> None:
+    def __init__(self, needle: Needle_Specification) -> None:
         """Initialize a knit on empty needle warning.
 
         Args:
@@ -64,10 +64,10 @@ class Xfer_Dropped_Loop_Warning(Needle_Warning):
     This occurs when trying to transfer a loop that has already been dropped from the machine, which is not physically possible as the loop is no longer held by any needle.
     """
 
-    def __init__(self, needle: Needle) -> None:
+    def __init__(self, needle: Needle_Specification) -> None:
         """Initialize a transfer dropped loop exception.
 
         Args:
-            needle (Needle): The target needle where transfer of a dropped loop was attempted.
+            needle (Needle_Specification): The target needle where transfer of a dropped loop was attempted.
         """
         super().__init__(needle, f"Cannot transfer dropped loop to target needle {needle}")

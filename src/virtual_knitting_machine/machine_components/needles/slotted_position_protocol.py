@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import Protocol, TypeVar, runtime_checkable
 
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.machine_component_protocol import Machine_Component
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
+
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
 
 @runtime_checkable
-class Slotted_Position(Machine_Component, Protocol):
+class Slotted_Position(Machine_Component[Machine_LoopT], Protocol):
     """Protocol for machine components that have a known position relative to a needle bed slot"""
 
     @property
@@ -89,3 +92,10 @@ class Slotted_Position(Machine_Component, Protocol):
         """
         dir_to_slot = self.direction_to_slot(slot)
         return direction is dir_to_slot
+
+    def __int__(self) -> int:
+        """
+        Returns:
+            int: The slot number of this position.
+        """
+        return self.slot_number

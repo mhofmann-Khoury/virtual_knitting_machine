@@ -5,6 +5,7 @@ import unittest
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
     In_Active_Carrier_Warning,
+    In_Loose_Carrier_Warning,
     Out_Inactive_Carrier_Warning,
 )
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
@@ -62,7 +63,8 @@ class TestYarnCarrier(unittest.TestCase):
         """Test bring_in method with inactive carrier."""
         self.assertFalse(self.carrier.is_active)
 
-        self.carrier.bring_in()
+        with self.assertWarns(In_Loose_Carrier_Warning):
+            self.carrier.bring_in()
 
         self.assertTrue(self.carrier.is_active)
 

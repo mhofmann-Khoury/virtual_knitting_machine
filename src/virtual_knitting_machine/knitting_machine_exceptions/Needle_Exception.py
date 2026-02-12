@@ -10,7 +10,7 @@ from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Excep
 from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import Violation
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.needles.Needle import Needle
+    from virtual_knitting_machine.machine_components.needles.Needle import Needle_Specification
 
 
 class Needle_Exception(Knitting_Machine_Exception):
@@ -18,14 +18,16 @@ class Needle_Exception(Knitting_Machine_Exception):
     This class provides a foundation for all needle-specific exceptions and includes the needle reference for detailed error reporting and debugging of needle-related operational failures.
     """
 
-    def __init__(self, needle: Needle, message: str, violation: Violation = Violation.Machine_State_Violation) -> None:
+    def __init__(
+        self, needle: Needle_Specification, message: str, violation: Violation = Violation.Machine_State_Violation
+    ) -> None:
         """Initialize a needle-specific exception.
 
         Args:
-            needle (Needle): The needle involved in the exception condition.
+            needle (Needle_Specification): The needle involved in the exception condition.
             message (str): The descriptive error message about the needle state or operation failure.
         """
-        self.needle = needle
+        self.needle: Needle_Specification = needle
         super().__init__(message, violation)
 
 
@@ -35,10 +37,10 @@ class Slider_Loop_Exception(Needle_Exception):
     which is not allowed as slider needles can only hold and transfer loops but cannot be used for loop formation operations.
     """
 
-    def __init__(self, needle: Needle) -> None:
+    def __init__(self, needle: Needle_Specification) -> None:
         """Initialize a slider loop formation exception.
 
         Args:
-            needle (Needle): The slider needle on which loop formation was attempted.
+            needle (Needle_Specification): The slider needle on which loop formation was attempted.
         """
         super().__init__(needle, f"Slider {needle} cannot form a new loop", violation=Violation.MAKE_LOOP_ON_SLIDER)

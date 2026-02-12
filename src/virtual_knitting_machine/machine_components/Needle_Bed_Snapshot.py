@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypeVar, cast, overload
 
 from virtual_knitting_machine.machine_components.Needle_Bed import Needle_Bed, Needle_Bed_State
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Needle import Needle, Needle_Specification
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
@@ -99,7 +99,7 @@ class Needle_Bed_Snapshot(Needle_Bed_State[Machine_LoopT]):
         """
         return self._loops_to_needles[cast(Machine_LoopT, loop)] if loop in self._loops_to_needles else None
 
-    def slider_is_active(self, slider: int | Slider_Needle) -> bool:
+    def slider_is_active(self, slider: int | Needle_Specification) -> bool:
         """
         Args:
             slider: The slider or index of a slider on this needle bed.
@@ -107,12 +107,12 @@ class Needle_Bed_Snapshot(Needle_Bed_State[Machine_LoopT]):
         Returns:
             bool: True if the given slider is on this bed and holds at least one loop, False otherwise.
         """
-        if isinstance(slider, Slider_Needle) and slider.is_front != self.is_front:
+        if not isinstance(slider, int) and (slider.is_front != self.is_front or not slider.is_slider):
             return False
         else:
             return int(slider) in self._active_sliders_by_position
 
-    def needle_is_active(self, needle: int | Needle) -> bool:
+    def needle_is_active(self, needle: int | Needle_Specification) -> bool:
         """
         Args:
             needle: THe needle or index of a needl on this needle bed.
@@ -136,7 +136,7 @@ class Needle_Bed_Snapshot(Needle_Bed_State[Machine_LoopT]):
         """
         if isinstance(item, Machine_Knit_Loop):
             return self.loop_is_active(item)
-        elif isinstance(item, Needle) and item.is_front != self.is_front:
+        elif isinstance(item, Needle_Specification) and item.is_front != self.is_front:
             return False
         elif isinstance(item, Slider_Needle):
             return self.slider_is_active(item)
@@ -149,17 +149,17 @@ class Needle_Bed_Snapshot(Needle_Bed_State[Machine_LoopT]):
     def __getitem__(self, item: Machine_Knit_Loop) -> Needle[Machine_LoopT] | None: ...
 
     @overload
-    def __getitem__(self, item: Needle | int) -> Needle[Machine_LoopT]: ...
+    def __getitem__(self, item: Needle_Specification | int) -> Needle[Machine_LoopT]: ...
 
     @overload
     def __getitem__(self, item: slice) -> list[Needle[Machine_LoopT]]: ...
 
     def __getitem__(
-        self, item: Machine_Knit_Loop | Needle | slice | int
+        self, item: Machine_Knit_Loop | Needle_Specification | slice | int
     ) -> Needle[Machine_LoopT] | list[Needle[Machine_LoopT]] | None:
         """
         Args:
-            item (Machine_Knit_Loop | Needle | slice | int):
+            item (Machine_Knit_Loop | Needle_Specification | slice | int):
                 The active needle or loop to find in this snapshot.
                 If item is an integer, the position is assumed to be a needle index, not a slider index or loop id.
 
@@ -181,7 +181,7 @@ class Needle_Bed_Snapshot(Needle_Bed_State[Machine_LoopT]):
             return self._loops_to_needles[cast(Machine_LoopT, item)]
         elif item.is_front != self.is_front:
             raise KeyError(f"{item} is not on {self}")
-        elif isinstance(item, Slider_Needle):
+        elif item.is_slider:
             if item.position not in self._active_sliders_by_position:
                 raise KeyError(f"{item} was not an active slider on {self} at the time of the snapshot.")
             return self._active_sliders_by_position[item.position]

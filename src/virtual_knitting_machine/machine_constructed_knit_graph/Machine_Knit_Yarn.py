@@ -49,8 +49,7 @@ class Machine_Knit_Yarn(Yarn[Machine_LoopT]):
             properties (Yarn_Properties | None): Properties for this yarn, creates default if None.
             instance (int, optional): Instance number for yarn identification. Defaults to 0.
         """
-        knit_graph = carrier.knitting_machine.knit_graph
-        super().__init__(knit_graph, properties, instance)
+        super().__init__(carrier.knitting_machine.knit_graph, properties, instance)
         self._carrier: Yarn_Carrier = carrier
         self.active_loops: dict[Machine_LoopT, Needle[Machine_LoopT]] = {}
 

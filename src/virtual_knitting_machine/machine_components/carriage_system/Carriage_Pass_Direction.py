@@ -11,7 +11,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.needles.Needle import Needle
+    from virtual_knitting_machine.machine_components.needles.Needle import Needle_Specification
 
 
 class Carriage_Pass_Direction(Enum):
@@ -35,16 +35,23 @@ class Carriage_Pass_Direction(Enum):
         else:
             return Carriage_Pass_Direction.Leftward
 
-    def sort_needles(self, needles: Iterable[Needle], racking: int = 0) -> list[Needle]:
+    def sort_needles(
+        self, needles: Iterable[Needle_Specification], racking: int | None = None
+    ) -> list[Needle_Specification]:
         """Return needles sorted in this direction at given racking.
 
         Args:
-            needles (Iterable[Needle]): Needles to be sorted in pass direction.
-            racking (int, optional): The racking to sort needles in, sets back bed offset. Defaults to 0.
+            needles (Iterable[Needle_Specification]): Needles to be sorted in pass direction.
+            racking (int, optional):
+                The racking to sort needles in, sets back bed offset.
+                Defaults to the racking of the first Needle with a specified machine or 0 if no needle on a machine is included.
 
         Returns:
-            list[Needle]: List of needles sorted in the pass direction.
+            list[Needle_Specification]: List of needles sorted in the pass direction.
         """
+        if racking is None:
+            racking = next((n.machine_racking for n in needles if hasattr(n, "machine_racking")), 0)
+
         ascending = self is Carriage_Pass_Direction.Rightward
 
         position_sorted = sorted(

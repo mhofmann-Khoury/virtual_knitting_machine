@@ -14,7 +14,8 @@ from knit_graphs.Pull_Direction import Pull_Direction
 from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import Slider_Loop_Exception
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.needles.Needle import Needle
+    from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
+    from virtual_knitting_machine.machine_components.needles.Needle import Needle, Needle_Specification
     from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import Machine_Knit_Yarn
 
 
@@ -59,6 +60,14 @@ class Machine_Knit_Loop(Loop):
             raise Slider_Loop_Exception(self.source_needle)
 
     @property
+    def knitting_machine(self) -> Knitting_Machine_State[Self, Any]:
+        """
+        Returns:
+            Knitting_Machine_State[Self, Any]: The knitting machine state that made this loop.
+        """
+        return self.source_needle.knitting_machine
+
+    @property
     def loop_count_on_machine(self) -> int:
         """
         Returns:
@@ -67,7 +76,7 @@ class Machine_Knit_Loop(Loop):
         return self._loop_count_on_machine
 
     @property
-    def holding_needle(self) -> Needle | None:
+    def holding_needle(self) -> Needle[Self] | None:
         """Get the needle currently holding this loop or None if not on a needle.
 
         Returns:
@@ -78,7 +87,7 @@ class Machine_Knit_Loop(Loop):
         return self.last_needle
 
     @property
-    def last_needle(self) -> Needle:
+    def last_needle(self) -> Needle[Self]:
         """Get the last needle that held this loop before it was dropped.
 
         Returns:
@@ -105,7 +114,7 @@ class Machine_Knit_Loop(Loop):
         return self._dropped
 
     @property
-    def source_needle(self) -> Needle:
+    def source_needle(self) -> Needle[Self]:
         """Get the needle this loop was created on.
 
         Returns:
@@ -142,14 +151,15 @@ class Machine_Knit_Loop(Loop):
         """
         return len(self.needle_history) > 1 and any(self.source_needle != n for n in self.needle_history[1:])
 
-    def transfer_loop(self, target_needle: Needle) -> None:
+    def transfer_loop(self, target_needle: Needle_Specification) -> None:
         """Add target needle to the end of needle history for loop transfer operation.
 
         Args:
             target_needle (Needle): The needle the loop is transferred to.
 
         """
-        self.needle_history.append(target_needle)
+        target_on_machine = self.knitting_machine[target_needle]
+        self.needle_history.append(target_on_machine)  # type: ignore[arg-type]
 
     def drop(self) -> None:
         """Mark the loop as dropped by adding None to end of needle history."""

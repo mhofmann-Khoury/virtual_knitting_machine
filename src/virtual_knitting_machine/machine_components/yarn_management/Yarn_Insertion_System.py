@@ -16,7 +16,7 @@ from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_Sta
 )
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.machine_component_protocol import Machine_Component
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Needle import Needle_Specification
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier, Yarn_Carrier_State
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
@@ -118,18 +118,18 @@ class Yarn_Insertion_System_State(Machine_Component, Protocol[Machine_LoopT, Car
             active_floats.update(carrier.yarn.active_floats())
         return active_floats
 
-    def conflicts_with_inserting_hook(self, needle: Needle) -> bool:
+    def conflicts_with_inserting_hook(self, needle: Needle_Specification) -> bool:
         """Check if a needle position conflicts with the inserting hook position.
 
         Args:
-            needle (Needle): The needle-position to check for compliance.
+            needle (Needle_Specification): The needle-position to check for compliance.
 
         Returns:
             bool: True if inserting hook conflicts with a needle slot because the slot is to the right of the hook's current position. False otherwise.
         """
         if self.hook_position is None:
             return False
-        return self.hook_position <= needle.slot_number
+        return self.hook_position <= needle.slot_by_racking(self.machine_racking)
 
     def missing_carriers(
         self, carrier_ids: Sequence[int | Yarn_Carrier_State] | Sequence[int] | Sequence[Yarn_Carrier_State]
@@ -404,13 +404,16 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
 
     @checked_operation
     def position_carrier_at_needle(
-        self, carrier_id: int | Yarn_Carrier, needle: Needle | None, direction: Carriage_Pass_Direction | None = None
+        self,
+        carrier_id: int | Yarn_Carrier,
+        needle: Needle_Specification | None,
+        direction: Carriage_Pass_Direction | None = None,
     ) -> None:
         """Update the needle-slot position of a specific carrier.
 
         Args:
             carrier_id (int | Yarn_Carrier): The carrier to update.
-            needle (Needle | None): The needle to position the carrier relative to.
+            needle (Needle_Specification | None): The needle to position the carrier relative to.
             direction (Carriage_Pass_Direction, optional): The direction of the carrier movement. If this is not provided, the direction will be inferred.
 
         Raises:
@@ -426,7 +429,7 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
     def make_loops(
         self,
         carrier_ids: Sequence[int | Yarn_Carrier] | Yarn_Carrier_Set | Sequence[int] | Sequence[Yarn_Carrier],
-        needle: Needle,
+        needle: Needle_Specification,
         direction: Carriage_Pass_Direction,
         **_loop_kwargs: Any,
     ) -> list[Machine_LoopT]:
@@ -434,16 +437,16 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
 
         Args:
             carrier_ids (list[int | Yarn_Carrier] | Yarn_Carrier_Set): The carriers to make the loops with on this needle.
-            needle (Needle): The needle to make the loops on.
+            needle (Needle_Specification): The needle to make the loops on.
             direction (Carriage_Pass_Direction): The carriage direction for this operation.
 
         Returns:
             list[Machine_Knit_Loop]: The set of loops made on this machine.
         """
-        needle = self.knitting_machine[needle]
+        needle_on_machine = self.knitting_machine[needle]
         if self.searching_for_position:  # mark inserting hook position
             # Position yarn inserting hook at the needle slot to the right of the needle.
-            self._hook_position = needle.slot_number + 1
+            self._hook_position = needle_on_machine.slot_number + 1
             self.hook_input_direction = direction
             self._searching_for_position = False
         loops: list[Machine_LoopT] = []
@@ -451,7 +454,7 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
             carrier = self[cid]
             float_source_loop = carrier.yarn.last_loop
             float_source_needle = float_source_loop.holding_needle if float_source_loop is not None else None
-            loop = carrier.make_loop(needle, **_loop_kwargs)
+            loop = carrier.make_loop(needle_on_machine, **_loop_kwargs)
             carrier.yarn.add_loop_to_end(loop)
             if float_source_needle is not None:
                 float_source_needle = self.knitting_machine[float_source_needle]

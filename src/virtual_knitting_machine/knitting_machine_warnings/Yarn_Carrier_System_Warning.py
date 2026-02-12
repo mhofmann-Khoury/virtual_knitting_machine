@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import Knitting_Machine_Warning
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Needle import Needle_Specification
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier_State
@@ -104,18 +104,22 @@ class Long_Float_Warning(Yarn_Carrier_Warning):
     """
 
     def __init__(
-        self, carrier_id: int | Yarn_Carrier_State, prior_needle: Needle, next_needle: Needle, max_float_len: int
+        self,
+        carrier_id: int | Yarn_Carrier_State,
+        prior_needle: Needle_Specification,
+        next_needle: Needle_Specification,
+        max_float_len: int,
     ) -> None:
         """Initialize a long float warning.
 
         Args:
             carrier_id (int | Yarn_Carrier): The carrier creating the long float.
-            prior_needle (Needle): The needle where the float begins.
-            next_needle (Needle): The needle where the float ends.
+            prior_needle (Needle_Specification): The needle where the float begins.
+            next_needle (Needle_Specification): The needle where the float ends.
             max_float_len (int): The maximum allowed float length that was exceeded.
         """
-        self.prior_needle: Needle = prior_needle
-        self.next_needle: Needle = next_needle
+        self.prior_needle: Needle_Specification = prior_needle
+        self.next_needle: Needle_Specification = next_needle
         self.max_float_len: int = max_float_len
         super().__init__(
             carrier_id,

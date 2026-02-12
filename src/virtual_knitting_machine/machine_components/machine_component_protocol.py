@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar
 
+from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import (
     Knitting_Machine_Error_Policy,
     Machine_State_With_Policy,
@@ -13,10 +14,12 @@ if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
     from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
-class Machine_Component(Machine_State_With_Policy, Protocol):
+
+class Machine_Component(Machine_State_With_Policy, Protocol[Machine_LoopT]):
     @property
-    def knitting_machine(self) -> Knitting_Machine_State:
+    def knitting_machine(self) -> Knitting_Machine_State[Machine_LoopT, Any]:
         """
         Returns:
             Knitting_Machine_State: The knitting machine that owns this component.

@@ -21,7 +21,7 @@ from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warn
 )
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needle_bed_position import Needle_Bed_Position, Relative_to_Needle_Bed
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Needle import Needle, Needle_Specification
 from virtual_knitting_machine.machine_components.Side_of_Needle_Bed import Side_of_Needle_Bed
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Yarn import Machine_Knit_Yarn
@@ -273,7 +273,9 @@ class Yarn_Carrier(Yarn_Carrier_State[Machine_LoopT]):
         self._is_hooked = hook_state
 
     @checked_operation
-    def set_position(self, needle: Needle | None, direction: Carriage_Pass_Direction | None = None) -> None:
+    def set_position(
+        self, needle: Needle_Specification | None, direction: Carriage_Pass_Direction | None = None
+    ) -> None:
         """
         Set the position of this carrier to the given needle or set it to be off the needle bed.
 

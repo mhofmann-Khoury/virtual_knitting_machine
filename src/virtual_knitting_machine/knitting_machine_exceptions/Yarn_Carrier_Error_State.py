@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import Knitting_Machine_Exception
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Needle import Needle_Specification
 from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import Violation
 
 if TYPE_CHECKING:
@@ -55,7 +55,7 @@ class Hooked_Carrier_Exception(Yarn_Carrier_Exception):
 
 
 class Blocked_by_Yarn_Inserting_Hook_Exception(Yarn_Carrier_Exception):
-    def __init__(self, hooked_carrier_id: int | Yarn_Carrier_State, needle: Needle) -> None:
+    def __init__(self, hooked_carrier_id: int | Yarn_Carrier_State, needle: Needle_Specification) -> None:
         super().__init__(
             hooked_carrier_id,
             f"Cannot use {needle} because it is blocked by the yarn inserting hook holding carrier {hooked_carrier_id}.",

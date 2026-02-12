@@ -6,9 +6,10 @@ Slider needles are commonly used in knitting machines for loop manipulation oper
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, TypeGuard, TypeVar
 
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Needle import Needle, Needle_Specification
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 if TYPE_CHECKING:
@@ -31,17 +32,6 @@ class Slider_Needle(Needle[Machine_LoopT]):
     ) -> None:
         super().__init__(is_front, position, knitting_machine)
 
-    def __str__(self) -> str:
-        """Return string representation of the slider needle.
-
-        Returns:
-            str: String representation with 's' suffix (e.g., 'fs5' for front slider at position 5, 'bs3' for back slider at position 3).
-        """
-        if self.is_front:
-            return f"fs{self.position}"
-        else:
-            return f"bs{self.position}"
-
     @property
     def is_slider(self) -> bool:
         """
@@ -49,3 +39,14 @@ class Slider_Needle(Needle[Machine_LoopT]):
             bool: Always returns True for Slider_Needle instances.
         """
         return True
+
+    @staticmethod
+    def iterates_over_sliders(sliders: Iterable[Needle_Specification]) -> TypeGuard[Slider_Needle]:
+        """
+        Args:
+            sliders (Iterable[Needle_Specification]): The needles to iterate over and determine that they are all Sliders.
+
+        Returns:
+            bool, TypeGuard[Needle]: Returns true if all elements in sliders are Slider Needle objects. Typing system will recognize this guarantee.
+        """
+        return all(isinstance(n, Slider_Needle) for n in sliders)
