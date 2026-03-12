@@ -310,12 +310,7 @@ class Yarn_Carrier(Yarn_Carrier_State[Machine_LoopT]):
             if not self.is_active:
                 raise Use_Inactive_Carrier_Exception(self)
         assert self.violation_policy.proceed
-        return cast(
-            Machine_LoopT,
-            self.machine_specification.loop_class(
-                cast(Needle[Machine_Knit_Loop], needle), cast(Machine_Knit_Yarn[Machine_Knit_Loop], self.yarn)
-            ),
-        )
+        return cast(Machine_LoopT, self.machine_specification.make_loop(source_needle=needle, yarn=self.yarn))
 
     def bring_in(self) -> None:
         """Record bring-in operation to activate the carrier without using insertion hook.

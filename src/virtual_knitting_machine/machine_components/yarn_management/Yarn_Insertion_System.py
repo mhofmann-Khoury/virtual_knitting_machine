@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, overload
 
 from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
@@ -18,7 +18,6 @@ from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_D
 from virtual_knitting_machine.machine_components.machine_component_protocol import Machine_Component
 from virtual_knitting_machine.machine_components.needles.Needle import Needle_Specification
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier, Yarn_Carrier_State
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import checked_operation
 from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import Violation
@@ -428,7 +427,7 @@ class Yarn_Insertion_System(Yarn_Insertion_System_State[Machine_LoopT, Yarn_Carr
 
     def make_loops(
         self,
-        carrier_ids: Sequence[int | Yarn_Carrier] | Yarn_Carrier_Set | Sequence[int] | Sequence[Yarn_Carrier],
+        carrier_ids: Iterable[int | Yarn_Carrier] | Iterable[int] | Iterable[Yarn_Carrier],
         needle: Needle_Specification,
         direction: Carriage_Pass_Direction,
         **_loop_kwargs: Any,

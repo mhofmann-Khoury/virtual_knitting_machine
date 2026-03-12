@@ -35,10 +35,10 @@ class Machine_Component(Machine_State_With_Policy, Protocol[Machine_LoopT]):
         return self.knitting_machine.violation_policy
 
     @property
-    def machine_specification(self) -> Knitting_Machine_Specification:
+    def machine_specification(self) -> Knitting_Machine_Specification[Machine_LoopT]:
         """
         Returns:
-            Knitting_Machine_Specification: The machine specification of the machine associated with this component.
+            Knitting_Machine_Specification[Machine_LoopT]: The machine specification of the machine associated with this component.
         """
         return self.knitting_machine.machine_specification
 

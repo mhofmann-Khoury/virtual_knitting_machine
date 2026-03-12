@@ -12,8 +12,10 @@ class TestSliderNeedle(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures before each test method."""
         self.machine = Knitting_Machine()
-        self.front_slider = self.machine.get_specified_needle(is_front=True, position=5, is_slider=True)
-        self.back_slider = self.machine.get_specified_needle(is_front=False, position=10, is_slider=True)
+        self.front_pos = 5
+        self.back_pos = 10
+        self.front_slider = self.machine.get_specified_needle(is_front=True, position=self.front_pos, is_slider=True)
+        self.back_slider = self.machine.get_specified_needle(is_front=False, position=self.back_pos, is_slider=True)
 
     def test_initialization(self):
         """Test slider needle initialization."""
@@ -26,6 +28,62 @@ class TestSliderNeedle(unittest.TestCase):
         self.assertFalse(self.back_slider.is_front)
         self.assertEqual(self.back_slider.position, 10)
         self.assertTrue(self.back_slider.is_slider)
+
+    def test_opposite_needle(self):
+        """Test getting needle on opposite bed."""
+        front_opposite = self.front_slider.opposite()
+        back_opposite = self.back_slider.opposite()
+
+        self.assertFalse(front_opposite.is_front)
+        self.assertEqual(front_opposite.position, self.front_pos)
+        self.assertTrue(front_opposite.is_slider)
+
+        self.assertTrue(back_opposite.is_front)
+        self.assertEqual(back_opposite.position, self.back_pos)
+        self.assertTrue(front_opposite.is_slider)
+
+    def test_opposite_position(self):
+        """Test getting needle on opposite bed."""
+        front_opposite = self.front_slider.opposite()
+        back_opposite = self.back_slider.opposite()
+
+        self.assertFalse(front_opposite.is_front)
+        self.assertEqual(front_opposite.position, self.front_pos)
+        self.assertTrue(front_opposite.is_slider)
+
+        self.assertTrue(back_opposite.is_front)
+        self.assertEqual(back_opposite.position, self.back_pos)
+        self.assertTrue(front_opposite.is_slider)
+
+    def test_offset_needle(self):
+        """Test getting offset needle on same bed."""
+        positive_offset = 3
+        offset_positive = self.front_slider.needle_position.offset(positive_offset)
+        negative_offset = -2
+        offset_negative = self.front_slider.needle_position.offset(negative_offset)
+
+        self.assertTrue(offset_positive.is_front)
+        self.assertEqual(offset_positive.position, self.front_pos + positive_offset)
+        self.assertTrue(offset_positive.is_slider)
+
+        self.assertTrue(offset_negative.is_front)
+        self.assertEqual(offset_negative.position, self.front_pos + negative_offset)
+        self.assertTrue(offset_negative.is_slider)
+
+    def test_offset_needle_position(self):
+        """Test getting offset needle on same bed."""
+        positive_offset = 3
+        offset_positive = self.front_slider.needle_position.offset(positive_offset)
+        negative_offset = -2
+        offset_negative = self.front_slider.needle_position.offset(negative_offset)
+
+        self.assertTrue(offset_positive.is_front)
+        self.assertEqual(offset_positive.position, self.front_pos + positive_offset)
+        self.assertTrue(offset_positive.is_slider)
+
+        self.assertTrue(offset_negative.is_front)
+        self.assertEqual(offset_negative.position, self.front_pos + negative_offset)
+        self.assertTrue(offset_negative.is_slider)
 
     def test_is_slider_property(self):
         """Test is_slider property returns True for slider needles."""

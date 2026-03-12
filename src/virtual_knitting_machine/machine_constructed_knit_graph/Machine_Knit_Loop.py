@@ -29,35 +29,27 @@ class Machine_Knit_Loop(Loop):
         needle_history (list[Needle | None]): The list of needles in the order that they held loops. The last element will be None if the loop is dropped from a needle.
     """
 
-    _Machine_Loop_Count: int = (
-        0  # The number of loops that have been made since the beginning of the machine knitting session.
-    )
-
     def __init__(
         self,
         source_needle: Needle[Self],
         yarn: Machine_Knit_Yarn[Self],
-        loop_id: int | None = None,
-        **_loop_kwargs: Any,
     ) -> None:
         """Initialize a machine knit loop with yarn and source needle information.
 
         Args:
             source_needle (Needle): The needle this loop was created on.
             yarn (Machine_Knit_Yarn[Self]): The yarn this loop is part of.
-            loop_id (int, optional): A unique identifier for the loop, must be non-negative. Defaults to the next id of the knitgraph that owns the given yarn.
 
         Raises:
             Slider_Loop_Exception: If attempting to create a loop on a slider needle.
         """
-        self._loop_count_on_machine: int = Machine_Knit_Loop._Machine_Loop_Count
-        super().__init__(yarn, loop_id)
-        Machine_Knit_Loop._Machine_Loop_Count += 1  # next instance will be a later loop.
-        self.yarn: Machine_Knit_Yarn[Self] = yarn  # redeclare yarn with correct typing.
         self.needle_history: list[Needle[Self]] = [source_needle]
         self._dropped: bool = False
         if self.source_needle.is_slider:
             raise Slider_Loop_Exception(self.source_needle)
+        self._loop_count_on_machine: int = self.knitting_machine.knit_graph.loop_count
+        super().__init__(yarn)
+        self.yarn: Machine_Knit_Yarn[Self] = yarn  # redeclare yarn with correct typing.
 
     @property
     def knitting_machine(self) -> Knitting_Machine_State[Self, Any]:

@@ -6,6 +6,7 @@ as well as a dataclass specification that defines all the parameters and constra
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Generic, TypeVar, cast
 
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
@@ -80,8 +81,11 @@ class Knitting_Position(Enum):
         return hash(str(self))
 
 
+Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
+
+
 @dataclass(frozen=True)
-class Knitting_Machine_Specification:
+class Knitting_Machine_Specification(Generic[Machine_LoopT]):
     """The complete specification of a knitting machine including machine type, physical constraints, and operational parameters.
 
     This dataclass defines all the configurable parameters that determine machine capabilities,
@@ -114,8 +118,6 @@ class Knitting_Machine_Specification:
         "darkslateblue",
     )
     """tuple[str, ...]: A tuple containing the default names of colors to assign to yarns based on the carrier id."""
-    loop_class: type[Machine_Knit_Loop] = Machine_Knit_Loop
-    # yarn_class: type[Machine_Knit_Yarn] = Machine_Knit_Yarn[Machine_Knit_Loop]
 
     def get_yarn_color(self, carrier_id: int) -> str:
         """
@@ -134,3 +136,19 @@ class Knitting_Machine_Specification:
             return self.carrier_colors[carrier_id]
         else:
             return "black"
+
+    @staticmethod
+    def make_loop(**loop_kwargs: Any) -> Machine_LoopT:
+        """
+
+        Args:
+            **loop_kwargs (Any): Open signature support specialized loop types in subclasses.
+
+        Expected Args:
+             source_needle (Needle[Machine_LoopT]): The needle that the loop is formed on.
+             yarn (Machine_Knit_Yarn[Machine_LoopT]): The yarn that the loop is formed from.
+
+        Returns:
+            Machine_LoopT: The type of loop that will be instantiated on a knitting machine.
+        """
+        return cast(Machine_LoopT, Machine_Knit_Loop(**loop_kwargs))

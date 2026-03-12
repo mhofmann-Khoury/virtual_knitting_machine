@@ -87,22 +87,54 @@ class TestNeedle(unittest.TestCase):
 
         self.assertFalse(front_opposite.is_front)
         self.assertEqual(front_opposite.position, self.front_pos)
+        self.assertFalse(front_opposite.is_slider)
 
         self.assertTrue(back_opposite.is_front)
         self.assertEqual(back_opposite.position, self.back_pos)
+        self.assertFalse(front_opposite.is_slider)
+
+    def test_opposite_position(self):
+        """Test getting needle on opposite bed."""
+        front_opposite = self.front_needle.opposite()
+        back_opposite = self.back_needle.opposite()
+
+        self.assertFalse(front_opposite.is_front)
+        self.assertEqual(front_opposite.position, self.front_pos)
+        self.assertFalse(front_opposite.is_slider)
+
+        self.assertTrue(back_opposite.is_front)
+        self.assertEqual(back_opposite.position, self.back_pos)
+        self.assertFalse(front_opposite.is_slider)
 
     def test_offset_needle(self):
         """Test getting offset needle on same bed."""
         positive_offset = 3
-        offset_positive = self.front_needle.offset(positive_offset)
+        offset_positive = self.front_needle.needle_position.offset(positive_offset)
         negative_offset = -2
-        offset_negative = self.front_needle.offset(negative_offset)
+        offset_negative = self.front_needle.needle_position.offset(negative_offset)
 
         self.assertTrue(offset_positive.is_front)
         self.assertEqual(offset_positive.position, self.front_pos + positive_offset)
+        self.assertFalse(offset_positive.is_slider)
 
         self.assertTrue(offset_negative.is_front)
         self.assertEqual(offset_negative.position, self.front_pos + negative_offset)
+        self.assertFalse(offset_negative.is_slider)
+
+    def test_offset_needle_position(self):
+        """Test getting offset needle on same bed."""
+        positive_offset = 3
+        offset_positive = self.front_needle.needle_position.offset(positive_offset)
+        negative_offset = -2
+        offset_negative = self.front_needle.needle_position.offset(negative_offset)
+
+        self.assertTrue(offset_positive.is_front)
+        self.assertEqual(offset_positive.position, self.front_pos + positive_offset)
+        self.assertFalse(offset_positive.is_slider)
+
+        self.assertTrue(offset_negative.is_front)
+        self.assertEqual(offset_negative.position, self.front_pos + negative_offset)
+        self.assertFalse(offset_negative.is_slider)
 
     def test_slot_number(self):
         """Test racked position calculation for front bed alignment."""

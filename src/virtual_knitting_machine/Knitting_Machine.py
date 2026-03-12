@@ -47,10 +47,10 @@ class Knitting_Machine_State(Machine_State_With_Policy, Container, Protocol[Mach
     """
 
     @property
-    def machine_specification(self) -> Knitting_Machine_Specification:
+    def machine_specification(self) -> Knitting_Machine_Specification[Machine_LoopT]:
         """
         Returns:
-            Knitting_Machine_Specification: The specification of this machine.
+            Knitting_Machine_Specification[Machine_LoopT]: The specification of this machine.
         """
         ...
 
@@ -539,8 +539,10 @@ class Knitting_Machine(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier]):
         self._violation_policy: Knitting_Machine_Error_Policy = (
             violation_policy if violation_policy is not None else Knitting_Machine_Error_Policy()
         )
-        self._machine_specification: Knitting_Machine_Specification = (
-            machine_specification if machine_specification is not None else Knitting_Machine_Specification()
+        self._machine_specification: Knitting_Machine_Specification[Machine_LoopT] = (
+            machine_specification
+            if machine_specification is not None
+            else Knitting_Machine_Specification[Machine_LoopT]()
         )
         if knit_graph is None:
             knit_graph = Knit_Graph[Machine_LoopT]()
@@ -563,10 +565,10 @@ class Knitting_Machine(Knitting_Machine_State[Machine_LoopT, Yarn_Carrier]):
         return self._violation_policy
 
     @property
-    def machine_specification(self) -> Knitting_Machine_Specification:
+    def machine_specification(self) -> Knitting_Machine_Specification[Machine_LoopT]:
         """
         Returns:
-            Knitting_Machine_Specification: The specification of this machine.
+            Knitting_Machine_Specification[Machine_LoopT]: The specification of this machine.
         """
         return self._machine_specification
 

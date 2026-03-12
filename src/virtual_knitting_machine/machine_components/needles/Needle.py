@@ -270,7 +270,7 @@ class Needle_Position(Needle_Specification):
         Returns:
             Needle: The needle offset spaces away on the same bed.
         """
-        return self.__class__(self.is_front, self.position + offset, not self.is_slider)
+        return self.__class__(self.is_front, self.position + offset, self.is_slider)
 
 
 class Needle(Needle_Specification, Slotted_Position[Machine_LoopT]):
@@ -386,6 +386,14 @@ class Needle(Needle_Specification, Slotted_Position[Machine_LoopT]):
             bool: True if needle is holding loops, False otherwise.
         """
         return len(self.held_loops) > 0
+
+    @property
+    def needle_position(self) -> Needle_Position:
+        """
+        Returns:
+            Needle_Position: The Needle_Position of this needle, not associated with the knitting machine.
+        """
+        return Needle_Position(self.is_front, self.position, self.is_slider)
 
     def opposite(self) -> Self:
         """

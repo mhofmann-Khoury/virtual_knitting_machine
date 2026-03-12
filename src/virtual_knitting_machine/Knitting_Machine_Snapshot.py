@@ -68,7 +68,7 @@ class Knitting_Machine_Snapshot(Knitting_Machine_State[Machine_LoopT, Yarn_Carri
         return self._carriage_snapshot
 
     @property
-    def machine_specification(self) -> Knitting_Machine_Specification:
+    def machine_specification(self) -> Knitting_Machine_Specification[Machine_LoopT]:
         """
         Returns:
             Knitting_Machine_Specification: The specification of the knitting machine this snapshot was created from.
