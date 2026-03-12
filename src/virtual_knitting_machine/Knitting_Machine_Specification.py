@@ -118,6 +118,7 @@ class Knitting_Machine_Specification(Generic[Machine_LoopT]):
         "darkslateblue",
     )
     """tuple[str, ...]: A tuple containing the default names of colors to assign to yarns based on the carrier id."""
+    loop_class: type[Machine_Knit_Loop] = Machine_Knit_Loop
 
     def get_yarn_color(self, carrier_id: int) -> str:
         """
@@ -137,8 +138,7 @@ class Knitting_Machine_Specification(Generic[Machine_LoopT]):
         else:
             return "black"
 
-    @staticmethod
-    def make_loop(**loop_kwargs: Any) -> Machine_LoopT:
+    def make_loop(self, **loop_kwargs: Any) -> Machine_LoopT:
         """
 
         Args:
@@ -151,4 +151,4 @@ class Knitting_Machine_Specification(Generic[Machine_LoopT]):
         Returns:
             Machine_LoopT: The type of loop that will be instantiated on a knitting machine.
         """
-        return cast(Machine_LoopT, Machine_Knit_Loop(**loop_kwargs))
+        return cast(Machine_LoopT, self.loop_class(**loop_kwargs))
