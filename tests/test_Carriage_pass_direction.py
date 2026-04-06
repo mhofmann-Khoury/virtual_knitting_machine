@@ -120,12 +120,8 @@ class TestCarriagePassDirection(unittest.TestCase):
 
         # Check rightward order (ascending positions)
         rightward_positions = [n.position for n in sorted_rightward]
-        self.assertTrue(
-            all(rightward_positions[i] <= rightward_positions[i + 1] for i in range(len(rightward_positions) - 1))
-        )
+        self.assertTrue(all(rightward_positions[i] <= rightward_positions[i + 1] for i in range(len(rightward_positions) - 1)))
 
         # Check leftward order (descending positions)
         leftward_positions = [n.position for n in sorted_leftward]
-        self.assertTrue(
-            all(leftward_positions[i] >= leftward_positions[i + 1] for i in range(len(leftward_positions) - 1))
-        )
+        self.assertTrue(all(leftward_positions[i] >= leftward_positions[i + 1] for i in range(len(leftward_positions) - 1)))

@@ -15,17 +15,10 @@ from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Setting
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carriage_element import Carriage_Element
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carrier_legend import Carrier_Legend
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.carrier_triangle import Carrier_Triangle
-from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.float_path import (
-    Float_Orientation_To_Neighbors,
-    Float_Path,
-)
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.float_path import Float_Orientation_To_Neighbors, Float_Path
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.loop_circle import Loop_Circle, Loop_Stack
-from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_bed_visualizer_group import (
-    Needle_Bed_Group,
-)
-from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.yarn_inserting_hook_block import (
-    Yarn_Inserting_Hook_Block,
-)
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_bed_visualizer_group import Needle_Bed_Group
+from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.yarn_inserting_hook_block import Yarn_Inserting_Hook_Block
 
 
 def format_svg(svg_file: str) -> None:
@@ -78,9 +71,7 @@ class Knitting_Machine_State_Visualizer:
         self.rightmost_slot: int = rs
         self.shows_sliders: bool = self.settings.render_empty_sliders or not self.machine_state.sliders_are_clear
         self.carriers_in_legend: set[Yarn_Carrier_State] = set()
-        self.needle_bed_group: Needle_Bed_Group = Needle_Bed_Group(
-            self.leftmost_slot, self.rightmost_slot, self.shows_sliders, self.settings, self.machine_state
-        )
+        self.needle_bed_group: Needle_Bed_Group = Needle_Bed_Group(self.leftmost_slot, self.rightmost_slot, self.shows_sliders, self.settings, self.machine_state)
         self.loop_stacks: dict[Needle, Loop_Stack] = {}
         self.loops: dict[Machine_Knit_Loop, Loop_Circle] = {}
         self._add_active_loops()
@@ -169,11 +160,7 @@ class Knitting_Machine_State_Visualizer:
             assert needle_2 is not None
             loops_crossed = self.machine_state.loops_crossed_by_float(loop1, loop2)
             # filter to loops that share a bed with at least one loop in the float
-            loops_crossed = {
-                l
-                for l in loops_crossed
-                if l.holding_needle is not None and l.holding_needle.is_front in (needle_1.is_front, needle_2.is_front)
-            }
+            loops_crossed = {l for l in loops_crossed if l.holding_needle is not None and l.holding_needle.is_front in (needle_1.is_front, needle_2.is_front)}
             orientation = Float_Orientation_To_Neighbors.Along_Bed
             if len(loops_crossed) > 0:
                 if not any(l > loop1 or l > loop2 for l in loops_crossed):  # All loops are older than float
@@ -256,13 +243,8 @@ class Knitting_Machine_State_Visualizer:
             float: The minimum x-coordinate of the viewport.
         """
         min_x = 0.0
-        if (
-            self.machine_state.all_needle_rack
-            and self.machine_state.carriage.last_direction is Carriage_Pass_Direction.Leftward
-        ):
-            min_x = self.settings.all_needle_shift(
-                self.machine_state.all_needle_rack, self.machine_state.carriage.last_direction
-            )
+        if self.machine_state.all_needle_rack and self.machine_state.carriage.last_direction is Carriage_Pass_Direction.Leftward:
+            min_x = self.settings.all_needle_shift(self.machine_state.all_needle_rack, self.machine_state.carriage.last_direction)
         if self.settings.render_left_labels:
             min_x -= self.settings.side_label_width(self.shows_sliders)
         return min_x

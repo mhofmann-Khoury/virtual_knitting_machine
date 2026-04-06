@@ -35,9 +35,7 @@ class Carriage_Pass_Direction(Enum):
         else:
             return Carriage_Pass_Direction.Leftward
 
-    def sort_needles(
-        self, needles: Iterable[Needle_Specification], racking: int | None = None
-    ) -> list[Needle_Specification]:
+    def sort_needles(self, needles: Iterable[Needle_Specification], racking: int | None = None) -> list[Needle_Specification]:
         """Return needles sorted in this direction at given racking.
 
         Args:

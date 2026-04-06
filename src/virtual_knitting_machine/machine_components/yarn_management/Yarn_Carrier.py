@@ -10,15 +10,9 @@ from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, runtime_checkabl
 from knit_graphs.Knit_Graph import Knit_Graph
 from knit_graphs.Yarn import Yarn_Properties
 
-from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Use_Inactive_Carrier_Exception
-from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
-    get_user_warning_stack_level_from_virtual_knitting_machine_package,
-)
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
-    In_Active_Carrier_Warning,
-    In_Loose_Carrier_Warning,
-    Out_Inactive_Carrier_Warning,
-)
+from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Use_Inactive_Carrier_Error
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import get_user_warning_stack_level_from_virtual_knitting_machine_package
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import In_Active_Carrier_Warning, In_Loose_Carrier_Warning, Out_Inactive_Carrier_Warning
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needle_bed_position import Needle_Bed_Position, Relative_to_Needle_Bed
 from virtual_knitting_machine.machine_components.needles.Needle import Needle, Needle_Specification
@@ -101,12 +95,7 @@ class Yarn_Carrier_State(Relative_to_Needle_Bed, Protocol[Machine_LoopT]):
             bool: True if this carrier is equal to the other. Carrier sets are equal if they only contain this carrier.
         """
         if isinstance(other, Yarn_Carrier_State):
-            return (
-                self.carrier_id == other.carrier_id
-                and self.position_on_bed == other.position_on_bed
-                and self.is_active == other.is_active
-                and self.is_hooked == other.is_hooked
-            )
+            return self.carrier_id == other.carrier_id and self.position_on_bed == other.position_on_bed and self.is_active == other.is_active and self.is_hooked == other.is_hooked
         elif isinstance(other, int):
             return self.carrier_id == int(other)
         elif isinstance(other, (Yarn_Carrier_Set, Sequence)):
@@ -181,12 +170,8 @@ class Yarn_Carrier(Yarn_Carrier_State[Machine_LoopT]):
                 name=f"yarn-from-c{carrier_id}",
                 color=self._machine_state.machine_specification.get_yarn_color(self.carrier_id),
             )
-        knit_graph: Knit_Graph[Machine_LoopT] | None = (
-            self.knitting_machine.knit_graph if self.knitting_machine is not None else None
-        )
-        self._yarn: Machine_Knit_Yarn[Machine_LoopT] = Machine_Knit_Yarn[Machine_LoopT](
-            self, yarn_properties, knit_graph=knit_graph
-        )
+        knit_graph: Knit_Graph[Machine_LoopT] | None = self.knitting_machine.knit_graph if self.knitting_machine is not None else None
+        self._yarn: Machine_Knit_Yarn[Machine_LoopT] = Machine_Knit_Yarn[Machine_LoopT](self, yarn_properties, knit_graph=knit_graph)
 
     @property
     def knitting_machine(self) -> Knitting_Machine[Machine_LoopT]:
@@ -273,9 +258,7 @@ class Yarn_Carrier(Yarn_Carrier_State[Machine_LoopT]):
         self._is_hooked = hook_state
 
     @checked_operation
-    def set_position(
-        self, needle: Needle_Specification | None, direction: Carriage_Pass_Direction | None = None
-    ) -> None:
+    def set_position(self, needle: Needle_Specification | None, direction: Carriage_Pass_Direction | None = None) -> None:
         """
         Set the position of this carrier to the given needle or set it to be off the needle bed.
 
@@ -288,7 +271,7 @@ class Yarn_Carrier(Yarn_Carrier_State[Machine_LoopT]):
         """
         with self.handle_violations(handler=self.activate):
             if not self.is_active:
-                raise Use_Inactive_Carrier_Exception(self)
+                raise Use_Inactive_Carrier_Error(self)
         if self.violation_policy.proceed:
             self.position_on_bed.set_position(needle, direction)
 
@@ -308,7 +291,7 @@ class Yarn_Carrier(Yarn_Carrier_State[Machine_LoopT]):
         """
         with self.handle_violations(handler=self.activate):
             if not self.is_active:
-                raise Use_Inactive_Carrier_Exception(self)
+                raise Use_Inactive_Carrier_Error(self)
         assert self.violation_policy.proceed
         return cast(Machine_LoopT, self.machine_specification.make_loop(source_needle=needle, yarn=self.yarn))
 

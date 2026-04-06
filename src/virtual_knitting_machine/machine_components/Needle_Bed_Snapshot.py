@@ -28,9 +28,7 @@ class Needle_Bed_Snapshot(Needle_Bed_State[Machine_LoopT]):
             n_copy.held_loops.extend(n.held_loops)
             self._active_needles.append(n_copy)
             self._loops_to_needles.update({l: n_copy for l in n.held_loops})
-        self._active_needles_by_position: dict[int, Needle[Machine_LoopT]] = {
-            n.position: n for n in self._active_needles
-        }
+        self._active_needles_by_position: dict[int, Needle[Machine_LoopT]] = {n.position: n for n in self._active_needles}
 
         self._active_sliders: list[Slider_Needle[Machine_LoopT]] = []
         for n in needle_bed.loop_holding_sliders:
@@ -38,9 +36,7 @@ class Needle_Bed_Snapshot(Needle_Bed_State[Machine_LoopT]):
             n_copy.held_loops.extend(n.held_loops)
             self._active_sliders.append(n_copy)
             self._loops_to_needles.update({l: n_copy for l in n.held_loops})
-        self._active_sliders_by_position: dict[int, Slider_Needle[Machine_LoopT]] = {
-            n.position: n for n in self._active_sliders
-        }
+        self._active_sliders_by_position: dict[int, Slider_Needle[Machine_LoopT]] = {n.position: n for n in self._active_sliders}
 
     @property
     def knitting_machine(self) -> Knitting_Machine_Snapshot[Machine_LoopT]:
@@ -154,9 +150,7 @@ class Needle_Bed_Snapshot(Needle_Bed_State[Machine_LoopT]):
     @overload
     def __getitem__(self, item: slice) -> list[Needle[Machine_LoopT]]: ...
 
-    def __getitem__(
-        self, item: Machine_Knit_Loop | Needle_Specification | slice | int
-    ) -> Needle[Machine_LoopT] | list[Needle[Machine_LoopT]] | None:
+    def __getitem__(self, item: Machine_Knit_Loop | Needle_Specification | slice | int) -> Needle[Machine_LoopT] | list[Needle[Machine_LoopT]] | None:
         """
         Args:
             item (Machine_Knit_Loop | Needle_Specification | slice | int):

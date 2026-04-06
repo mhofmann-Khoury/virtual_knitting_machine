@@ -5,7 +5,7 @@ standardizing error message formatting and handling behavior across the virtual 
 from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import Violation
 
 
-class Knitting_Machine_Exception(Exception):
+class Knitting_Machine_Error(Exception):
     """Superclass for all exceptions that would put the virtual knitting machine in an error state.
     This class provides standardized exception message formatting and serves as the base for all
     machine-specific exceptions that indicate critical operational failures requiring immediate attention and program termination.

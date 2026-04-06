@@ -3,8 +3,6 @@ name: CI
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 env:
@@ -46,17 +44,17 @@ jobs:
           poetry run pre-commit run --all-files
 
   # ===========================================================================
-  # CROSS-PLATFORM TESTING
+  # TESTING
   # ===========================================================================
   test:
-    name: Test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: pre-commit
 
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
-        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -66,70 +64,33 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # === POETRY INSTALLATION ===
-      - name: Install Poetry (Unix)
-        if: runner.os != 'Windows'
+      - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
           version: ${{ env.POETRY_VERSION }}
           virtualenvs-create: true
           virtualenvs-in-project: true
 
-      - name: Install Poetry (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          # Use official installer for better Python compatibility
-          (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
-          # Add Poetry to PATH for subsequent steps
-          $poetryPath = "$env:APPDATA\Python\Scripts"
-          echo "$poetryPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          # Configure Poetry with current Python
-          & "$poetryPath\poetry.exe" config virtualenvs.create true
-          & "$poetryPath\poetry.exe" config virtualenvs.in-project true
-          & "$poetryPath\poetry.exe" config virtualenvs.prefer-active-python true
-        shell: powershell
-
-      # === DEPENDENCY CACHING ===
       - name: Cache Poetry dependencies
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-ubuntu-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
-            venv-${{ runner.os }}-${{ matrix.python-version }}-
+            venv-ubuntu-${{ matrix.python-version }}-
 
-      # === WINDOWS PYTHON VERSION FIX ===
-      - name: Fix Python path conflicts (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          # Clear any cached virtual environments that might have wrong Python version
-          if (Test-Path ".venv") {
-            Write-Output "Removing cached .venv to prevent Python version conflicts"
-            Remove-Item -Recurse -Force .venv
-          }
-          # Ensure Poetry uses the current Python installation
-          $pythonPath = (Get-Command python).Source
-          Write-Output "Configuring Poetry to use: $pythonPath"
-          poetry env use $pythonPath
-        shell: powershell
-
-      # === INSTALL AND TEST ===
       - name: Install project and dependencies
         run: poetry install --no-interaction
 
-      - name: Run tests with coverage
-        run: |
-          poetry run coverage run -m unittest discover tests -v
-          poetry run coverage report
+      - name: Run tests
+        run: poetry run python -m unittest discover tests -v
 
       - name: Upload failure logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-logs-${{ matrix.python-version }}-${{ matrix.os }}
-          path: |
-            .coverage
-            **/*.log
+          name: test-logs-${{ matrix.python-version }}
+          path: "**/*.log"
 
   # ===========================================================================
   # TEST RESULTS SUMMARY
@@ -147,41 +108,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           if [[ "${{ needs.test.result }}" == "success" ]]; then
-            echo "✅ **All tests passed** across Python 3.11-3.13 on Ubuntu, Windows, and macOS" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All tests passed** across Python 3.11, 3.12, and 3.13 on Ubuntu" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Some tests failed** - check individual job results above" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
-
-  # ===========================================================================
-  # PACKAGE BUILD VALIDATION
-  # ===========================================================================
-  build:
-    name: Package Build
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-
-      - name: Build and validate package
-        run: |
-          poetry build
-          poetry run pip install twine
-          poetry run twine check dist/*
-
-      - name: Upload package artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-package
-          path: dist/

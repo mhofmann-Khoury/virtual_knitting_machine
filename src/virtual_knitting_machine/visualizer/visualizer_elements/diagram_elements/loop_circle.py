@@ -85,9 +85,7 @@ class Loop_Stack(Visualizer_Group):
             else:
                 y = self.settings.loop_stack_top + loop_radius
             for i, loop in enumerate(reversed(loops)):
-                loop_circle = Loop_Circle(
-                    loop=loop, diagram_settings=self.settings, radius=loop_radius, y=y + (i * y_shift)
-                )
+                loop_circle = Loop_Circle(loop=loop, diagram_settings=self.settings, radius=loop_radius, y=y + (i * y_shift))
                 self.loop_circles.insert(0, loop_circle)
         for loop_circle in self.loop_circles:
             self.add_child(loop_circle)

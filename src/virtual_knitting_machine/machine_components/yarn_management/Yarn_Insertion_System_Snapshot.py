@@ -8,10 +8,7 @@ from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_D
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Snapshot import Yarn_Carrier_Snapshot
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import (
-    Yarn_Insertion_System,
-    Yarn_Insertion_System_State,
-)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System, Yarn_Insertion_System_State
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
 
 if TYPE_CHECKING:
@@ -35,23 +32,13 @@ class Yarn_Insertion_System_Snapshot(Yarn_Insertion_System_State[Machine_LoopT, 
     ):
         self._machine_snapshot: Knitting_Machine_Snapshot[Machine_LoopT] = machine_snapshot
         self._yarn_insertion_system: Yarn_Insertion_System[Machine_LoopT] = yarn_insertion_system
-        self._carriers: list[Yarn_Carrier_Snapshot[Machine_LoopT]] = [
-            Yarn_Carrier_Snapshot[Machine_LoopT](c, self.knitting_machine) for c in yarn_insertion_system.carriers
-        ]
+        self._carriers: list[Yarn_Carrier_Snapshot[Machine_LoopT]] = [Yarn_Carrier_Snapshot[Machine_LoopT](c, self.knitting_machine) for c in yarn_insertion_system.carriers]
         self._hook_position: int | None = self.yarn_insertion_system.hook_position
         self._hook_input_direction: Carriage_Pass_Direction | None = self.yarn_insertion_system.hook_input_direction
         self._searching_for_position: bool = self.yarn_insertion_system.searching_for_position
-        self._hooked_carrier_id: int | None = (
-            self.yarn_insertion_system.hooked_carrier.carrier_id
-            if isinstance(self.yarn_insertion_system.hooked_carrier, Yarn_Carrier)
-            else None
-        )
-        self.active_loops_by_carrier: dict[
-            Yarn_Carrier_Snapshot[Machine_LoopT], dict[Machine_LoopT, Needle[Machine_LoopT]]
-        ] = {c: c.yarn.active_loops for c in self._carriers}
-        self.active_floats_by_carrier: dict[
-            Yarn_Carrier_Snapshot[Machine_LoopT], dict[Machine_LoopT, Machine_LoopT]
-        ] = {c: c.yarn.active_floats() for c in self._carriers}
+        self._hooked_carrier_id: int | None = self.yarn_insertion_system.hooked_carrier.carrier_id if isinstance(self.yarn_insertion_system.hooked_carrier, Yarn_Carrier) else None
+        self.active_loops_by_carrier: dict[Yarn_Carrier_Snapshot[Machine_LoopT], dict[Machine_LoopT, Needle[Machine_LoopT]]] = {c: c.yarn.active_loops for c in self._carriers}
+        self.active_floats_by_carrier: dict[Yarn_Carrier_Snapshot[Machine_LoopT], dict[Machine_LoopT, Machine_LoopT]] = {c: c.yarn.active_floats() for c in self._carriers}
         self._active_floats: dict[Machine_LoopT, Machine_LoopT] = {}
         for floats in self.active_floats_by_carrier.values():
             self._active_floats.update(floats)

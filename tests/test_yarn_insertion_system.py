@@ -4,17 +4,9 @@ import unittest
 import warnings
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import (
-    Hooked_Carrier_Exception,
-    Inserting_Hook_In_Use_Exception,
-    Use_Inactive_Carrier_Exception,
-)
+from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Hooked_Carrier_Error, Inserting_Hook_In_Use_Error, Use_Inactive_Carrier_Error
 from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
-    In_Active_Carrier_Warning,
-    In_Loose_Carrier_Warning,
-    Out_Inactive_Carrier_Warning,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import In_Active_Carrier_Warning, In_Loose_Carrier_Warning, Out_Inactive_Carrier_Warning
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System
@@ -174,7 +166,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
         """Test inhook when hook is in use by different carrier raises exception."""
         self.system._hooked_carrier = self.system.carriers[1]  # Carrier 2 is hooked
 
-        with self.assertRaises(Inserting_Hook_In_Use_Exception):
+        with self.assertRaises(Inserting_Hook_In_Use_Error):
             self.system.inhook(1)  # Try to hook carrier 1
 
     def test_inhook_same_carrier_already_hooked(self):
@@ -208,7 +200,7 @@ class TestYarnInsertionSystem(unittest.TestCase):
         carrier.is_active = True
         carrier.is_hooked = True
 
-        with self.assertRaises(Hooked_Carrier_Exception):
+        with self.assertRaises(Hooked_Carrier_Error):
             self.system.out(1)
 
     def test_outhook_hooked_carrier_raises_exception(self):
@@ -216,14 +208,14 @@ class TestYarnInsertionSystem(unittest.TestCase):
         carrier = self.system.carriers[0]
         carrier.is_hooked = True
 
-        with self.assertRaises(Hooked_Carrier_Exception):
+        with self.assertRaises(Hooked_Carrier_Error):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", Out_Inactive_Carrier_Warning)
                 self.system.outhook(1)
 
     def test_make_loops_inactive_carrier_raises_exception(self):
         """Test make_loops with inactive carrier raises exception."""
-        with self.assertRaises(Use_Inactive_Carrier_Exception):
+        with self.assertRaises(Use_Inactive_Carrier_Error):
             self.system.make_loops([1], self.machine.get_specified_needle(True, 1), Carriage_Pass_Direction.Leftward)
 
     def test_getitem_single_integer(self):

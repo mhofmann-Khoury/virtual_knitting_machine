@@ -92,13 +92,9 @@ class Knitting_Machine_Specification(Generic[Machine_LoopT]):
     limitations, and behavior during knitting operations.
     """
 
-    machine: Knitting_Machine_Type = (
-        Knitting_Machine_Type.SWG091N2
-    )  # Knitting_Machine_Type: The type of knitting machine being represented
+    machine: Knitting_Machine_Type = Knitting_Machine_Type.SWG091N2  # Knitting_Machine_Type: The type of knitting machine being represented
     gauge: int = 15  # int: The gauge of the knitting machine needles
-    position: Knitting_Position = (
-        Knitting_Position.Right
-    )  # Knitting_Position: The positioning configuration for knitting operations
+    position: Knitting_Position = Knitting_Position.Right  # Knitting_Position: The positioning configuration for knitting operations
     carrier_count: int = 10  # int: Number of yarn carriers available on the machine
     needle_count: int = 540  # int: Total number of needles on each bed of the machine
     maximum_rack: int = 4  # int: Maximum racking distance the machine can achieve

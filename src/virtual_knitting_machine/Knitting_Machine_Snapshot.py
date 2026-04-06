@@ -9,13 +9,9 @@ from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Mac
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Snapshot import Carriage_Snapshot
 from virtual_knitting_machine.machine_components.Needle_Bed_Snapshot import Needle_Bed_Snapshot
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Snapshot import Yarn_Carrier_Snapshot
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System_Snapshot import (
-    Yarn_Insertion_System_Snapshot,
-)
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System_Snapshot import Yarn_Insertion_System_Snapshot
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
-from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import (
-    Knitting_Machine_Error_Policy,
-)
+from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import Knitting_Machine_Error_Policy
 
 Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
@@ -31,16 +27,12 @@ class Knitting_Machine_Snapshot(Knitting_Machine_State[Machine_LoopT, Yarn_Carri
     def __init__(self, machine_state: Knitting_Machine[Machine_LoopT]):
         self._gauge: int = machine_state.gauged_layers
         self._machine_state: Knitting_Machine[Machine_LoopT] = machine_state
-        self._last_loop_id: int | None = (
-            machine_state.knit_graph.last_loop.loop_id if machine_state.knit_graph.last_loop is not None else None
-        )
+        self._last_loop_id: int | None = machine_state.knit_graph.last_loop.loop_id if machine_state.knit_graph.last_loop is not None else None
         self._rack: int = machine_state.rack
         self._all_needle_rack: bool = machine_state.all_needle_rack
         self._front_bed_snapshot: Needle_Bed_Snapshot = Needle_Bed_Snapshot(self._machine_state.front_bed, self)
         self._back_bed_snapshot: Needle_Bed_Snapshot = Needle_Bed_Snapshot(self._machine_state.back_bed, self)
-        self._carrier_system_snapshot: Yarn_Insertion_System_Snapshot = Yarn_Insertion_System_Snapshot(
-            self._machine_state.carrier_system, self
-        )
+        self._carrier_system_snapshot: Yarn_Insertion_System_Snapshot = Yarn_Insertion_System_Snapshot(self._machine_state.carrier_system, self)
         self._carriage_snapshot: Carriage_Snapshot = Carriage_Snapshot(machine_state.carriage, self)
 
     @property

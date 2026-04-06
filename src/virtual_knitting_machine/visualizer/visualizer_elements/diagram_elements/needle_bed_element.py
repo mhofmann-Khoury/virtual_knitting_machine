@@ -10,12 +10,7 @@ from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Settings
 from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_box import Needle_Box
-from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import (
-    Text_Anchor,
-    Text_Baseline,
-    Text_Element,
-    Visualizer_Element,
-)
+from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_element import Text_Anchor, Text_Baseline, Text_Element, Visualizer_Element
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_group import Visualizer_Group
 
 
@@ -60,9 +55,7 @@ class Needle_Bed_Element(Visualizer_Group):
 
         self.right_label: Text_Element | None = (
             Text_Element(
-                x=self.settings.white_space_padding
-                + (self.settings.Needle_Width * self.needle_count)
-                + self.settings.Needle_Width,
+                x=self.settings.white_space_padding + (self.settings.Needle_Width * self.needle_count) + self.settings.Needle_Width,
                 y=self.settings.Needle_Width // 2,
                 label=self.bed_label,
                 name=f"{self.bed_label}_right_label",
@@ -128,9 +121,7 @@ class Needle_Bed_Element(Visualizer_Group):
         if isinstance(needle, Needle) and not self.on_bed(needle):
             raise KeyError(f"{needle} does not belong to this bed")
         if int(needle) not in self:
-            raise KeyError(
-                f"{needle} outside the bounds of the diagram from {self.leftmost_needle} to {self.rightmost_needle}"
-            )
+            raise KeyError(f"{needle} outside the bounds of the diagram from {self.leftmost_needle} to {self.rightmost_needle}")
         return int(needle) - self.leftmost_needle
 
     def _build_needles(self) -> None:
@@ -193,9 +184,7 @@ class Needle_Bed_Element(Visualizer_Group):
         Returns:
             bool: True if this bed should also have labels
         """
-        return (not self.is_slider) and (
-            (self.is_front and self.settings.render_front_labels) or (self.is_back and self.settings.render_back_labels)
-        )
+        return (not self.is_slider) and ((self.is_front and self.settings.render_front_labels) or (self.is_back and self.settings.render_back_labels))
 
     @property
     def unique_bed_name(self) -> str:

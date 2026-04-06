@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Self
 from knit_graphs.Loop import Loop
 from knit_graphs.Pull_Direction import Pull_Direction
 
-from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import Slider_Loop_Exception
+from virtual_knitting_machine.knitting_machine_exceptions.Needle_Exception import Slider_Loop_Error
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State
@@ -46,7 +46,7 @@ class Machine_Knit_Loop(Loop):
         self.needle_history: list[Needle[Self]] = [source_needle]
         self._dropped: bool = False
         if self.source_needle.is_slider:
-            raise Slider_Loop_Exception(self.source_needle)
+            raise Slider_Loop_Error(self.source_needle)
         self._loop_count_on_machine: int = self.knitting_machine.knit_graph.loop_count
         super().__init__(yarn)
         self.yarn: Machine_Knit_Yarn[Self] = yarn  # redeclare yarn with correct typing.

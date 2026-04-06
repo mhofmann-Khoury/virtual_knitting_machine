@@ -33,9 +33,7 @@ class Carrier_Legend(Visualizer_Group):
         Returns:
             float: The width of the carrier legend based on the width of the labels.
         """
-        return (
-            max(c_label.approximate_label_width for c_label in self.carrier_labels) + self.settings.white_space_padding
-        )
+        return max(c_label.approximate_label_width for c_label in self.carrier_labels) + self.settings.white_space_padding
 
     def height(self) -> float:
         """

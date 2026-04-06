@@ -40,9 +40,7 @@ class Needle_Holds_Too_Many_Loops(Needle_Warning):
             max_loop_allowance (int): The maximum number of loops the needle is allowed to hold.
         """
         self.max_loop_allowance: int = max_loop_allowance
-        super().__init__(
-            needle, f"{needle} has reached maximum hold with loops {needle.held_loops} >= {max_loop_allowance}"
-        )
+        super().__init__(needle, f"{needle} has reached maximum hold with loops {needle.held_loops} >= {max_loop_allowance}")
 
 
 class Knit_on_Empty_Needle_Warning(Needle_Warning):

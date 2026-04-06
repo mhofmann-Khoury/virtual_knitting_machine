@@ -79,11 +79,7 @@ class Needle_Bed_Position(Slotted_Position[Machine_LoopT]):
         Returns:
             Carriage_Pass_Direction: The direction of movement from a parked position.
         """
-        return (
-            Carriage_Pass_Direction.Leftward
-            if self._parking_position is Side_of_Needle_Bed.Right_Side
-            else Carriage_Pass_Direction.Rightward
-        )
+        return Carriage_Pass_Direction.Leftward if self._parking_position is Side_of_Needle_Bed.Right_Side else Carriage_Pass_Direction.Rightward
 
     @property
     def needle(self) -> Needle_Specification | None:
@@ -190,9 +186,7 @@ class Needle_Bed_Position(Slotted_Position[Machine_LoopT]):
         """
         self.set_position(None)
 
-    def set_position(
-        self, needle: Needle_Specification | None, direction: Carriage_Pass_Direction | None = None
-    ) -> None:
+    def set_position(self, needle: Needle_Specification | None, direction: Carriage_Pass_Direction | None = None) -> None:
         """
         Sets the position based on the given needle and current racking of the machine state.
 

@@ -9,13 +9,9 @@ from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any, Concatenate, ParamSpec, Protocol, TypeVar
 
-from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import Knitting_Machine_Exception
+from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Error import Knitting_Machine_Error
 from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import Passed_Machine_Error_Warning
-from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import (
-    Violation,
-    ViolationAction,
-    ViolationResponse,
-)
+from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import Violation, ViolationAction, ViolationResponse
 
 
 class Machine_State_With_Policy(Protocol):
@@ -59,7 +55,7 @@ class Machine_State_With_Policy(Protocol):
             yield
         except Exception as violation_exception:
             if response_policy is None:
-                if isinstance(violation_exception, Knitting_Machine_Exception):
+                if isinstance(violation_exception, Knitting_Machine_Error):
                     response: ViolationResponse = self.violation_policy.response_for(violation_exception.violation)
                 else:
                     response: ViolationResponse = self.violation_policy.default
@@ -69,9 +65,7 @@ class Machine_State_With_Policy(Protocol):
                 response: ViolationResponse = response_policy
             self.violation_policy.check_violation(response, violation_exception, handler)
             if not prior_policy_prevent_proceed:
-                self.violation_policy.proceed = (
-                    False  # Regardless of current result, stop procedure based on prior violations.
-                )
+                self.violation_policy.proceed = False  # Regardless of current result, stop procedure based on prior violations.
 
 
 P = ParamSpec("P")
@@ -102,12 +96,8 @@ def checked_operation(method: Callable[Concatenate[Any, P], R]) -> Callable[Conc
 class Knitting_Machine_Error_Policy:
     """Controls how the virtual knitting machine responds to constraint violations."""
 
-    _responses: dict[Violation, ViolationResponse] = field(
-        default_factory=dict
-    )  # Mapping of violation types to responses to those violations.
-    default: ViolationResponse = field(
-        default_factory=lambda: ViolationResponse(ViolationAction.RAISE, handle=False)
-    )  # The default behavior for violations with no specific policy assigned.
+    _responses: dict[Violation, ViolationResponse] = field(default_factory=dict)  # Mapping of violation types to responses to those violations.
+    default: ViolationResponse = field(default_factory=lambda: ViolationResponse(ViolationAction.RAISE, handle=False))  # The default behavior for violations with no specific policy assigned.
     proceed: bool = True  # True if the policy allows the next operation to proceed. False otherwise.
 
     def set_response_for(self, violation: Violation, response: ViolationResponse | None = None) -> None:

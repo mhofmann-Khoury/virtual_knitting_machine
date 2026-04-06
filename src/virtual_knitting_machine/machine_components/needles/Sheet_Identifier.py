@@ -37,9 +37,7 @@ class Sheet_Identifier:
         """
         return self._gauge
 
-    def needle(
-        self, is_front: bool, position_in_sheet: int, machine_state: Knitting_Machine_State, is_slider: bool = False
-    ) -> Needle:
+    def needle(self, is_front: bool, position_in_sheet: int, machine_state: Knitting_Machine_State, is_slider: bool = False) -> Needle:
         """Gets a needle within the sheet with specified position
 
         Args:
@@ -51,9 +49,7 @@ class Sheet_Identifier:
         Returns:
             Needle: The needle in the machine state at the given sheet position.
         """
-        return machine_state.get_specified_needle(
-            is_front, Needle.needle_position_from_sheet_and_gauge(position_in_sheet, self.sheet, self.gauge), is_slider
-        )
+        return machine_state.get_specified_needle(is_front, Needle.needle_position_from_sheet_and_gauge(position_in_sheet, self.sheet, self.gauge), is_slider)
 
     def __str__(self) -> str:
         return f"s{self.sheet}:g{self.gauge}"

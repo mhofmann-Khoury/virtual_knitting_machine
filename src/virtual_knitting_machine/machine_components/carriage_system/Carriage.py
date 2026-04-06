@@ -12,9 +12,7 @@ from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop i
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-    from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import (
-        Carriage_Pass_Direction,
-    )
+    from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 
 Machine_LoopT = TypeVar("Machine_LoopT", bound=Machine_Knit_Loop)
 
@@ -46,9 +44,7 @@ class Carriage(Carriage_State[Machine_LoopT]):
             knitting_machine (Knitting_Machine): The knitting machine this carriage belongs to.
         """
         self._knitting_machine: Knitting_Machine[Machine_LoopT] = knitting_machine
-        self._position: Needle_Bed_Position = Needle_Bed_Position(
-            self.knitting_machine, parking_position=Side_of_Needle_Bed.Left_Side, stopping_distance=0
-        )
+        self._position: Needle_Bed_Position = Needle_Bed_Position(self.knitting_machine, parking_position=Side_of_Needle_Bed.Left_Side, stopping_distance=0)
         self._last_set_direction: Carriage_Pass_Direction = self._position.last_direction
 
     @property

@@ -20,9 +20,7 @@ class Yarn_Carrier_Snapshot(Yarn_Carrier_State[Machine_LoopT]):
     A snapshot of the state of a carrier at the time this instance was created.
     """
 
-    def __init__(
-        self, yarn_carrier: Yarn_Carrier[Machine_LoopT], machine_snapshot: Knitting_Machine_Snapshot[Machine_LoopT]
-    ):
+    def __init__(self, yarn_carrier: Yarn_Carrier[Machine_LoopT], machine_snapshot: Knitting_Machine_Snapshot[Machine_LoopT]):
         self._carrier_id: int = yarn_carrier.carrier_id
         self._is_active: bool = yarn_carrier.is_active
         self._is_hooked: bool = yarn_carrier.is_hooked

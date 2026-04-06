@@ -27,9 +27,7 @@ class Slider_Needle(Needle[Machine_LoopT]):
     This class inherits all functionality from the base Needle class but overrides specific properties to indicate its slider nature.
     """
 
-    def __init__(
-        self, is_front: bool, position: int, knitting_machine: Knitting_Machine_State[Machine_LoopT, Any]
-    ) -> None:
+    def __init__(self, is_front: bool, position: int, knitting_machine: Knitting_Machine_State[Machine_LoopT, Any]) -> None:
         super().__init__(is_front, position, knitting_machine)
 
     @property

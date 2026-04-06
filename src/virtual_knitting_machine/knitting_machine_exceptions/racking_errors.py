@@ -2,11 +2,11 @@
 This module provides exception classes for racking-related critical errors including attempts to exceed the machine's maximum racking capabilities,
 which would cause physical damage or operational failures on real knitting machines."""
 
-from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import Knitting_Machine_Exception
+from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Error import Knitting_Machine_Error
 from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import Violation
 
 
-class Max_Rack_Exception(Knitting_Machine_Exception, ValueError):
+class Max_Rack_Error(Knitting_Machine_Error, ValueError):
     """Exception for racking operations that exceed the machine's maximum racking capability.
     This exception occurs when attempting to set a racking value that exceeds the physical limitations of the knitting machine,
     preventing potential mechanical damage and ensuring operation within safe parameters."""

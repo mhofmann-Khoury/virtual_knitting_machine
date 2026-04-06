@@ -8,17 +8,12 @@ import warnings
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, overload
 
-from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
-    get_user_warning_stack_level_from_virtual_knitting_machine_package,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import get_user_warning_stack_level_from_virtual_knitting_machine_package
 from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import Needle_Holds_Too_Many_Loops
 from virtual_knitting_machine.machine_components.needles.Needle import Needle, Needle_Specification
 from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
-from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import (
-    Knitting_Machine_Error_Policy,
-    Machine_State_With_Policy,
-)
+from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import Knitting_Machine_Error_Policy, Machine_State_With_Policy
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine, Knitting_Machine_State
@@ -270,9 +265,7 @@ class Needle_Bed_State(Machine_State_With_Policy, Protocol[Machine_LoopT]):
     @overload
     def __getitem__(self, item: slice) -> list[Needle[Machine_LoopT]]: ...
 
-    def __getitem__(
-        self, item: Machine_Knit_Loop | Needle_Specification | slice | int
-    ) -> Needle[Machine_LoopT] | list[Needle[Machine_LoopT]] | None:
+    def __getitem__(self, item: Machine_Knit_Loop | Needle_Specification | slice | int) -> Needle[Machine_LoopT] | list[Needle[Machine_LoopT]] | None:
         """Get an indexed needle on the bed, or find needle holding a specific loop.
 
         Args:
@@ -314,14 +307,8 @@ class Needle_Bed(Needle_Bed_State[Machine_LoopT]):
         """
         self._knitting_machine: Knitting_Machine[Machine_LoopT] = knitting_machine
         self._is_front: bool = is_front
-        self._needles: list[Needle[Machine_LoopT]] = [
-            Needle[Machine_LoopT](self._is_front, i, knitting_machine=self.knitting_machine)
-            for i in range(0, self.needle_count)
-        ]
-        self._sliders: list[Slider_Needle[Machine_LoopT]] = [
-            Slider_Needle[Machine_LoopT](self._is_front, i, knitting_machine=self.knitting_machine)
-            for i in range(0, self.needle_count)
-        ]
+        self._needles: list[Needle[Machine_LoopT]] = [Needle[Machine_LoopT](self._is_front, i, knitting_machine=self.knitting_machine) for i in range(0, self.needle_count)]
+        self._sliders: list[Slider_Needle[Machine_LoopT]] = [Slider_Needle[Machine_LoopT](self._is_front, i, knitting_machine=self.knitting_machine) for i in range(0, self.needle_count)]
         self._active_sliders: set[Slider_Needle] = set()
 
     @property
@@ -366,9 +353,7 @@ class Needle_Bed(Needle_Bed_State[Machine_LoopT]):
         """
         return len(self._active_sliders) == 0
 
-    def add_loops(
-        self, needle: Needle_Specification, loops: list[Machine_LoopT], drop_prior_loops: bool = True
-    ) -> list[Machine_LoopT]:
+    def add_loops(self, needle: Needle_Specification, loops: list[Machine_LoopT], drop_prior_loops: bool = True) -> list[Machine_LoopT]:
         """Add loops to a given needle, optionally dropping existing loops as if a knit operation took place.
 
         Args:
@@ -388,9 +373,7 @@ class Needle_Bed(Needle_Bed_State[Machine_LoopT]):
         needle_on_machine.add_loops(loops)
         if len(needle_on_machine.held_loops) >= self._knitting_machine.machine_specification.maximum_loop_hold:
             warnings.warn(
-                Needle_Holds_Too_Many_Loops(
-                    needle_on_machine, self._knitting_machine.machine_specification.maximum_loop_hold
-                ),
+                Needle_Holds_Too_Many_Loops(needle_on_machine, self._knitting_machine.machine_specification.maximum_loop_hold),
                 stacklevel=get_user_warning_stack_level_from_virtual_knitting_machine_package(),
             )
         if isinstance(needle_on_machine, Slider_Needle):

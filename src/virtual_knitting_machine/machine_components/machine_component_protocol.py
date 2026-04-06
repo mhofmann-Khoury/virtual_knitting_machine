@@ -5,10 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar
 
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop
-from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import (
-    Knitting_Machine_Error_Policy,
-    Machine_State_With_Policy,
-)
+from virtual_knitting_machine.machine_state_violation_handling.machine_state_violation_policy import Knitting_Machine_Error_Policy, Machine_State_With_Policy
 
 if TYPE_CHECKING:
     from virtual_knitting_machine.Knitting_Machine import Knitting_Machine_State

@@ -41,9 +41,7 @@ class In_Active_Carrier_Warning(Yarn_Carrier_Warning):
         Args:
             carrier_id (int | Yarn_Carrier): The carrier that is already active but was requested to be brought in.
         """
-        super().__init__(
-            carrier_id, f"Tried to bring in {carrier_id} but it is already active", ignore_instruction=True
-        )
+        super().__init__(carrier_id, f"Tried to bring in {carrier_id} but it is already active", ignore_instruction=True)
 
 
 class In_Loose_Carrier_Warning(Yarn_Carrier_Warning):
@@ -75,9 +73,7 @@ class Out_Inactive_Carrier_Warning(Yarn_Carrier_Warning):
         Args:
             carrier_id (int | Yarn_Carrier): The inactive carrier that was requested to be brought out.
         """
-        super().__init__(
-            carrier_id, f"Cannot bring carrier {carrier_id} out because it is not active.", ignore_instruction=True
-        )
+        super().__init__(carrier_id, f"Cannot bring carrier {carrier_id} out because it is not active.", ignore_instruction=True)
 
 
 class Duplicate_Carriers_In_Set(Yarn_Carrier_Warning):
@@ -93,9 +89,7 @@ class Duplicate_Carriers_In_Set(Yarn_Carrier_Warning):
             carrier_set (list[int]): The original carrier set containing duplicates.
         """
         self.carrier_set: list[int] = carrier_set
-        super().__init__(
-            carrier_id, f"Removed last duplicate {carrier_id} form {carrier_set}", ignore_instruction=False
-        )
+        super().__init__(carrier_id, f"Removed last duplicate {carrier_id} form {carrier_set}", ignore_instruction=False)
 
 
 class Long_Float_Warning(Yarn_Carrier_Warning):

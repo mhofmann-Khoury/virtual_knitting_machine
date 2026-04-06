@@ -38,16 +38,10 @@ class TestKnitting_Machine_State_Visualizer(TestCase):
             direction (Carriage_Pass_Direction, optional): The direction to tuck in. Defaults to Leftward
         """
         if isinstance(needle_range, int):
-            self.machine.tuck(
-                Yarn_Carrier_Set(carrier_id), self.machine.get_specified_needle(is_front, needle_range), direction
-            )
+            self.machine.tuck(Yarn_Carrier_Set(carrier_id), self.machine.get_specified_needle(is_front, needle_range), direction)
         else:
-            for n in range(
-                needle_range.start, needle_range.stop, needle_range.step if needle_range.step is not None else 1
-            ):
-                self.machine.tuck(
-                    Yarn_Carrier_Set(carrier_id), self.machine.get_specified_needle(is_front, n), direction
-                )
+            for n in range(needle_range.start, needle_range.stop, needle_range.step if needle_range.step is not None else 1):
+                self.machine.tuck(Yarn_Carrier_Set(carrier_id), self.machine.get_specified_needle(is_front, n), direction)
 
     def xfer_to_sliders(self, start_front: bool = True):
         loops = self.machine.front_loops() if start_front else self.machine.back_loops()

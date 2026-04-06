@@ -8,19 +8,14 @@ import warnings
 from collections.abc import Iterator, Sequence
 from typing import TYPE_CHECKING, overload
 
-from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
-    get_user_warning_stack_level_from_virtual_knitting_machine_package,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import get_user_warning_stack_level_from_virtual_knitting_machine_package
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Duplicate_Carriers_In_Set
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier_State
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import (
-        Yarn_Insertion_System,
-        Yarn_Insertion_System_State,
-    )
+    from virtual_knitting_machine.machine_components.yarn_management.Yarn_Insertion_System import Yarn_Insertion_System, Yarn_Insertion_System_State
 
 
 class Yarn_Carrier_Set(Sequence[int]):
@@ -31,9 +26,7 @@ class Yarn_Carrier_Set(Sequence[int]):
 
     def __init__(
         self,
-        carrier_ids: (
-            Sequence[int | Yarn_Carrier_State] | Sequence[int] | Sequence[Yarn_Carrier_State] | int | Yarn_Carrier_State
-        ),
+        carrier_ids: Sequence[int | Yarn_Carrier_State] | Sequence[int] | Sequence[Yarn_Carrier_State] | int | Yarn_Carrier_State,
     ) -> None:
         """Initialize a yarn carrier set with one or more carrier identifiers.
 

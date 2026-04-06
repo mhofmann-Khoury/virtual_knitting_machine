@@ -35,7 +35,7 @@ class Diagram_Settings:
 
     # Stroke Widths
     Needle_Stroke_Width: int = 1  # The width of lines surrounding needle squares.
-    Loop_Stroke_Width: int = 2  # The width of the circle-strokes for loops.
+    Loop_Stroke_Width: int = 1  # The width of the circle-strokes for loops.
     Carrier_Stroke_Width: int = 1  # The width of triangle carrier outline.
 
     # Rendering Options

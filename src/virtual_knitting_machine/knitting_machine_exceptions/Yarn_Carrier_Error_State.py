@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Exception import Knitting_Machine_Exception
+from virtual_knitting_machine.knitting_machine_exceptions.Knitting_Machine_Error import Knitting_Machine_Error
 from virtual_knitting_machine.machine_components.needles.Needle import Needle_Specification
 from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import Violation
 
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier_State
 
 
-class Yarn_Carrier_Exception(Knitting_Machine_Exception):
+class Yarn_Carrier_Error(Knitting_Machine_Error):
     """Base class for exceptions related to yarn carrier operations and states.
     This class provides a foundation for all yarn carrier-specific exceptions and includes
     the carrier ID reference for detailed error reporting and debugging of carrier-related operational failures."""
@@ -36,7 +36,7 @@ class Yarn_Carrier_Exception(Knitting_Machine_Exception):
         super().__init__(message, violation=violation)
 
 
-class Hooked_Carrier_Exception(Yarn_Carrier_Exception):
+class Hooked_Carrier_Error(Yarn_Carrier_Error):
     """Exception for attempting hook operations on carriers that are already on the yarn inserting hook.
     This exception occurs when trying to perform an operation that requires the carrier to not be on the insertion hook,
     such as an outhook operation, when the carrier is currently connected to the hook."""
@@ -54,7 +54,7 @@ class Hooked_Carrier_Exception(Yarn_Carrier_Exception):
         )
 
 
-class Blocked_by_Yarn_Inserting_Hook_Exception(Yarn_Carrier_Exception):
+class Blocked_by_Yarn_Inserting_Hook_Error(Yarn_Carrier_Error):
     def __init__(self, hooked_carrier_id: int | Yarn_Carrier_State, needle: Needle_Specification) -> None:
         super().__init__(
             hooked_carrier_id,
@@ -63,7 +63,7 @@ class Blocked_by_Yarn_Inserting_Hook_Exception(Yarn_Carrier_Exception):
         )
 
 
-class Inserting_Hook_In_Use_Exception(Yarn_Carrier_Exception, ValueError):
+class Inserting_Hook_In_Use_Error(Yarn_Carrier_Error, ValueError):
     """Exception for attempting to use the yarn inserting hook when it is already occupied by another carrier.
     This exception occurs when trying to perform hook operations while the insertion hook is already in use by a different carrier, preventing conflicts in hook operations.
     """
@@ -81,7 +81,7 @@ class Inserting_Hook_In_Use_Exception(Yarn_Carrier_Exception, ValueError):
         )
 
 
-class Use_Inactive_Carrier_Exception(Yarn_Carrier_Exception):
+class Use_Inactive_Carrier_Error(Yarn_Carrier_Error):
     """Exception for attempting to use carriers that are not in active state.
     This exception occurs when trying to perform knitting operations with a carrier that is not active (still on grippers or otherwise unavailable),
     which would result in no yarn being fed to the needles."""
@@ -92,6 +92,4 @@ class Use_Inactive_Carrier_Exception(Yarn_Carrier_Exception):
         Args:
             carrier_id (int | Yarn_Carrier): The inactive carrier that was attempted to be used.
         """
-        super().__init__(
-            carrier_id, f"Cannot use inactive yarn on carrier {carrier_id}.", violation=Violation.INACTIVE_CARRIER
-        )
+        super().__init__(carrier_id, f"Cannot use inactive yarn on carrier {carrier_id}.", violation=Violation.INACTIVE_CARRIER)

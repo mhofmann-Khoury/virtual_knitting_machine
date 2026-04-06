@@ -1,3 +1,5 @@
+"""Modula containing structures for tracking responses to machine-state violations."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -30,9 +32,7 @@ class Violation(Enum):
 
     Machine_State_Violation = auto()  # The default violation type for machine state errors.
     YARN_CARRIER_VIOLATION = auto()  # The default violation type for all errors involving yarn carriers.
-    INSERTING_HOOK_IN_USE = (
-        auto()
-    )  # Violation that the yarn-inserting hook cannot be used by another carrier until it has been released.
+    INSERTING_HOOK_IN_USE = auto()  # Violation that the yarn-inserting hook cannot be used by another carrier until it has been released.
     HOOKED_CARRIER = auto()  # Violation that a carrier cannot complete an action while on the yarn-inserting hook.
     BlOCKED_BY_HOOK = auto()  # Violation that a needle is blocked by the yarn inserting hook.
     INACTIVE_CARRIER = auto()  # Violation when using an inactive carrier for an operation.

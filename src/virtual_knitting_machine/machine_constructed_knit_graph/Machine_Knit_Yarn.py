@@ -11,9 +11,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from knit_graphs.Yarn import Yarn, Yarn_Properties
 
-from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
-    get_user_warning_stack_level_from_virtual_knitting_machine_package,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import get_user_warning_stack_level_from_virtual_knitting_machine_package
 from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import Long_Float_Warning
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_constructed_knit_graph.Machine_Knit_Loop import Machine_Knit_Loop

@@ -9,9 +9,7 @@ from virtual_knitting_machine.visualizer.diagram_settings import Diagram_Setting
 from virtual_knitting_machine.visualizer.visualizer_elements.visualizer_shapes import Rect_Element
 
 if TYPE_CHECKING:
-    from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_bed_element import (
-        Needle_Bed_Element,
-    )
+    from virtual_knitting_machine.visualizer.visualizer_elements.diagram_elements.needle_bed_element import Needle_Bed_Element
 
 
 class Needle_Box(Rect_Element):

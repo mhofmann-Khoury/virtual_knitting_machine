@@ -94,9 +94,7 @@ class Polygon_Element(Visualizer_Shape):
         Args:
             exclude_index (int, optional): If an index is provided, that point is assumed to be the origin of the polygon element and should not be modified. Defaults to modifying all vertices.
         """
-        self._points = [
-            (v[0] + self.x, v[1] + self.y) if i != exclude_index else (v[0], v[1]) for i, v in enumerate(self._points)
-        ]
+        self._points = [(v[0] + self.x, v[1] + self.y) if i != exclude_index else (v[0], v[1]) for i, v in enumerate(self._points)]
 
     @property
     def x_coordinates(self) -> list[float]:
@@ -270,9 +268,7 @@ class Rect_Element(Visualizer_Shape):
         self.height: float = height
 
     def _build_svg_element(self) -> Rect:
-        return Rect(
-            insert=(self.global_x, self.global_y), id=self.name, size=(self.width, self.height), **self._element_kwargs
-        )
+        return Rect(insert=(self.global_x, self.global_y), id=self.name, size=(self.width, self.height), **self._element_kwargs)
 
 
 class Circle_Element(Visualizer_Shape):

@@ -3,17 +3,9 @@
 import unittest
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import (
-    In_Active_Carrier_Warning,
-    In_Loose_Carrier_Warning,
-    Out_Inactive_Carrier_Warning,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Yarn_Carrier_System_Warning import In_Active_Carrier_Warning, In_Loose_Carrier_Warning, Out_Inactive_Carrier_Warning
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import (
-    Violation,
-    ViolationAction,
-    ViolationResponse,
-)
+from virtual_knitting_machine.machine_state_violation_handling.machine_state_violations import Violation, ViolationAction, ViolationResponse
 
 
 class TestYarnCarrier(unittest.TestCase):

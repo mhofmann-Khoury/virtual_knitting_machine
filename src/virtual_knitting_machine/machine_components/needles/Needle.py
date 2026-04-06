@@ -13,9 +13,7 @@ from typing import TYPE_CHECKING, Any, Protocol, Self, TypeGuard, TypeVar, cast,
 
 from knit_graphs.Pull_Direction import Pull_Direction
 
-from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import (
-    get_user_warning_stack_level_from_virtual_knitting_machine_package,
-)
+from virtual_knitting_machine.knitting_machine_warnings.Knitting_Machine_Warning import get_user_warning_stack_level_from_virtual_knitting_machine_package
 from virtual_knitting_machine.knitting_machine_warnings.Needle_Warnings import Xfer_Dropped_Loop_Warning
 
 #
@@ -160,9 +158,7 @@ class Needle_Specification(Protocol):
             return True
         elif isinstance(other, float):  # rare case of float that floored to same value.
             return self.position < other
-        return (
-            isinstance(other, Needle_Specification) and self.is_front and not other.is_front
-        )  # Equal position needles are ordered front then back in a leftward direction.
+        return isinstance(other, Needle_Specification) and self.is_front and not other.is_front  # Equal position needles are ordered front then back in a leftward direction.
 
     def __eq__(self, other: object) -> bool:
         """Check equality with another needle.
@@ -174,11 +170,7 @@ class Needle_Specification(Protocol):
             bool: True if needles are equal (same bed, position, and slider status).
         """
         return (
-            isinstance(other, Needle_Specification)
-            and self.__class__ == other.__class__
-            and self.is_front == other.is_front
-            and self.is_slider == other.is_slider
-            and self.position == other.position
+            isinstance(other, Needle_Specification) and self.__class__ == other.__class__ and self.is_front == other.is_front and self.is_slider == other.is_slider and self.position == other.position
         )
 
     def __int__(self) -> int:
@@ -411,9 +403,7 @@ class Needle(Needle_Specification, Slotted_Position[Machine_LoopT]):
         Returns:
             Needle: The needle offset spaces away on the same bed.
         """
-        return cast(
-            Self, self.knitting_machine.get_specified_needle(self.is_front, self.position + offset, self.is_slider)
-        )
+        return cast(Self, self.knitting_machine.get_specified_needle(self.is_front, self.position + offset, self.is_slider))
 
     def main_needle(self) -> Needle[Machine_LoopT]:
         """Get the non-slider needle at this needle position.
@@ -546,6 +536,4 @@ class Needle(Needle_Specification, Slotted_Position[Machine_LoopT]):
         Returns:
             Needle: New needle with the difference position on the same bed.
         """
-        return cast(
-            Self, self.knitting_machine.get_specified_needle(self.is_front, other - self.position, self.is_slider)
-        )
+        return cast(Self, self.knitting_machine.get_specified_needle(self.is_front, other - self.position, self.is_slider))

@@ -12,7 +12,7 @@ build-backend = "poetry.core.masonry.api"  # Use Poetry's build system
 # All the information about your project that will appear on PyPI
 [tool.poetry]
 name = "virtual-knitting-machine"
-version = "0.0.30"
+version = "0.0.31"
 description = 'A data structure representing the state and operations of a virtual V-Bed with sliders whole garment knitting machine based on the whole garment knitting machines made by Shima Seiki.'
 authors = ["Megan Hofmann <m.hofmann@northeastern.edu>"]       # Primary authors
 maintainers = ["Megan Hofmann <m.hofmann@northeastern.edu>"]   # Current maintainers
@@ -83,28 +83,23 @@ exclude = [
 # These are packages your project needs to run in production
 [tool.poetry.dependencies]
 python = ">=3.11,<3.14"                        # Minimum Python version (allows 3.11.x, 3.12.x, etc.)
-knit-graphs = ">=0.1.3"
+knit-graphs = ">=0.1.4"
 svgwrite = ">=1.4.3"
 webcolors = ">=25.10.0"
 
 # =============================================================================
 # DEVELOPMENT DEPENDENCIES
 # =============================================================================
-# These packages are only needed during development and testing
 [tool.poetry.group.dev.dependencies]
-importlib-resources = ">=6.5.2"
-coverage = "^7.3.0"
-black = "^24.10.0"
+black = "^26.3.1"
 ruff = "^0.7.4"
 isort = "^5.13.2"
 mypy = "^1.13.0"
 pre-commit = "^3.8.0"
-twine = "^5.1.0"
 
 # =============================================================================
 # DOCUMENTATION-SPECIFIC DEPENDENCIES
 # =============================================================================
-# Separate dependency group for building documentation (allows selective installation)
 [tool.poetry.group.docs.dependencies]
 sphinx = "^7.4.0"
 sphinx-rtd-theme = "^3.0.0"
@@ -115,7 +110,7 @@ myst-parser = "^4.0.0"
 # BLACK CODE FORMATTER CONFIGURATION
 # =============================================================================
 [tool.black]
-line-length = 120
+line-length = 200
 target-version = ["py311"]
 extend-exclude = "tests"
 
@@ -123,7 +118,7 @@ extend-exclude = "tests"
 # RUFF LINTER CONFIGURATION
 # =============================================================================
 [tool.ruff]
-line-length = 120
+line-length = 200
 target-version = "py311"
 
 exclude = [
@@ -153,11 +148,10 @@ select = [
 
 ignore = [
     "E501",   # Line too long (handled by Black)
-    "E741",   # Ambiguous variable name (l, O, I) - allow single-letter loop variables
+    "E741",   # Ambiguous variable name (l, O, I)
     "N801",   # CapWords convention ignored
-    "N999",   # Module name conventions ignored
     "N802",
-    "N818",
+    "N999",   # Module name conventions ignored
     "UP038",  # Use older isinstance tuple syntax for mypy compatibility
 ]
 
@@ -175,7 +169,7 @@ indent-style = "space"
 # =============================================================================
 [tool.isort]
 profile = "black"
-line_length = 120
+line_length = 200
 multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0
@@ -188,6 +182,7 @@ skip_glob = ["tests/*"]
 # MYPY STATIC TYPE CHECKER CONFIGURATION
 # =============================================================================
 [tool.mypy]
+myyp_path = "src"
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
@@ -207,11 +202,6 @@ allow_redefinition = true
 allow_untyped_globals = true
 implicit_reexport = true
 
-# Added to fix duplicate module name error
-mypy_path = "src"
-# Removed: namespace_packages = false
-# Removed: explicit_package_bases = true
-
 disable_error_code = [
     "attr-defined",
     "no-redef",
@@ -226,34 +216,3 @@ module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 check_untyped_defs = false
-
-# =============================================================================
-# COVERAGE.PY CONFIGURATION
-# =============================================================================
-[tool.coverage.run]
-source = ["src"]
-omit = [
-    "*/tests/*",
-    "*/test_*",
-    "*/__pycache__/*",
-    "*/site-packages/*",
-    "*/.venv/*",
-]
-branch = true
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "if settings.DEBUG",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if 0:",
-    "if __name__ == .__main__.:",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
-]
-show_missing = true
-skip_covered = false
-skip_empty = true

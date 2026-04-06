@@ -5,7 +5,7 @@ import unittest
 from knit_graphs.Knit_Graph import Knit_Graph
 
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-from virtual_knitting_machine.knitting_machine_exceptions.racking_errors import Max_Rack_Exception
+from virtual_knitting_machine.knitting_machine_exceptions.racking_errors import Max_Rack_Error
 from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
@@ -73,9 +73,7 @@ class TestKnittingMachine(unittest.TestCase):
 
     def test_get_needle_of_loop_not_held(self):
         """Test get_needle_of_loop when loop is not held."""
-        loop = Machine_Knit_Loop(
-            self.machine.get_specified_needle(True, 1), self.machine.carrier_system.carriers[0].yarn
-        )
+        loop = Machine_Knit_Loop(self.machine.get_specified_needle(True, 1), self.machine.carrier_system.carriers[0].yarn)
         loop.drop()
         result = self.machine.get_needle_of_loop(loop)
 
@@ -120,7 +118,7 @@ class TestKnittingMachine(unittest.TestCase):
         """Test rack property setter raises exception when exceeding max rack."""
         max_rack = self.machine.max_rack
 
-        with self.assertRaises(Max_Rack_Exception):
+        with self.assertRaises(Max_Rack_Error):
             self.machine.rack = max_rack + 1
 
     def test_get_carrier_single_integer(self):
